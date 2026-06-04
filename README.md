@@ -47,7 +47,10 @@ En Render configurar:
 PRODE_ADMIN_PIN=456149
 MONGODB_URI=mongodb+srv://...
 MONGODB_DB=copa_kahl
+PRODE_EDIT_DEADLINE=2026-06-11T23:59:00-03:00
 ```
+
+`PRODE_EDIT_DEADLINE` define hasta cuando los participantes pueden editar con nombre y PIN. Si no esta configurada, la edicion queda abierta.
 
 ## Fixture
 

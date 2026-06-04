@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Award, BookOpenCheck, Brackets, ClipboardList, LockKeyhole, Table2, Trophy } from "lucide-react";
+import { Award, BookOpenCheck, Brackets, ClipboardList, LockKeyhole, PencilLine, Table2, Trophy } from "lucide-react";
 import "./styles.css";
 
 export const metadata: Metadata = {
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 
 const navItems = [
   { href: "/", label: "Pronósticos", icon: ClipboardList },
+  { href: "/editar", label: "Editar", icon: PencilLine },
   { href: "/eliminatorias", label: "Eliminatorias", icon: Brackets },
   { href: "/reglas", label: "Reglas", icon: BookOpenCheck },
   { href: "/campeones", label: "Campeones", icon: Award },

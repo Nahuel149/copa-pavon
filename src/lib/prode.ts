@@ -61,7 +61,9 @@ export type Submission = {
   name: string;
   normalizedName: string;
   clan: ClanId;
+  pinHash?: string;
   createdAt: string;
+  updatedAt?: string;
   predictions: Prediction[];
   groupPredictions: GroupPrediction[];
   knockoutPredictions: KnockoutPrediction[];

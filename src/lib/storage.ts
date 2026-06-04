@@ -60,11 +60,18 @@ function cleanSubmission(submission: WithId<MongoSubmission> | MongoSubmission):
     name: submission.name,
     normalizedName: submission.normalizedName,
     clan: parseClan(submission.clan),
+    pinHash: typeof submission.pinHash === "string" ? submission.pinHash : undefined,
     createdAt: submission.createdAt,
+    updatedAt: typeof submission.updatedAt === "string" ? submission.updatedAt : undefined,
     predictions: Array.isArray(submission.predictions) ? submission.predictions : [],
     groupPredictions: Array.isArray(submission.groupPredictions) ? submission.groupPredictions : [],
     knockoutPredictions: Array.isArray(submission.knockoutPredictions) ? submission.knockoutPredictions : [],
   };
+}
+
+export function publicSubmission(submission: Submission): Omit<Submission, "pinHash"> {
+  const { pinHash: _pinHash, ...safeSubmission } = submission;
+  return safeSubmission;
 }
 
 async function ensureStoreFile() {
@@ -91,6 +98,8 @@ export async function readSubmissionStore(): Promise<SubmissionStore> {
       ? parsed.submissions.map((submission) => ({
           ...submission,
           clan: parseClan(submission.clan),
+          pinHash: typeof submission.pinHash === "string" ? submission.pinHash : undefined,
+          updatedAt: typeof submission.updatedAt === "string" ? submission.updatedAt : undefined,
           groupPredictions: Array.isArray(submission.groupPredictions) ? submission.groupPredictions : [],
           knockoutPredictions: Array.isArray(submission.knockoutPredictions) ? submission.knockoutPredictions : [],
         }))
@@ -163,6 +172,41 @@ export async function appendKnockoutPredictions(normalizedName: string, predicti
   await fs.writeFile(tempPath, JSON.stringify(store, null, 2), "utf8");
   await fs.rename(tempPath, storePath);
   return { ok: true as const };
+}
+
+export async function findSubmissionByNormalizedName(normalizedName: string) {
+  const collections = await getMongoCollections();
+  if (collections) {
+    const submission = await collections.submissions.findOne({ normalizedName });
+    return submission ? cleanSubmission(submission) : null;
+  }
+
+  const store = await readSubmissionStore();
+  return store.submissions.find((submission) => submission.normalizedName === normalizedName) ?? null;
+}
+
+export async function updateSubmissionPredictions(submission: Submission) {
+  const updates = {
+    name: submission.name,
+    clan: parseClan(submission.clan),
+    predictions: submission.predictions,
+    groupPredictions: submission.groupPredictions,
+    updatedAt: new Date().toISOString(),
+  };
+  const collections = await getMongoCollections();
+  if (collections) {
+    await collections.submissions.updateOne({ normalizedName: submission.normalizedName }, { $set: updates });
+    return { ok: true as const, updatedAt: updates.updatedAt };
+  }
+
+  const store = await readSubmissionStore();
+  const index = store.submissions.findIndex((item) => item.normalizedName === submission.normalizedName);
+  if (index === -1) return { ok: false as const, reason: "missing-submission" };
+  store.submissions[index] = { ...store.submissions[index], ...updates };
+  const tempPath = `${storePath}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify(store, null, 2), "utf8");
+  await fs.rename(tempPath, storePath);
+  return { ok: true as const, updatedAt: updates.updatedAt };
 }
 
 async function ensureResultsFile() {

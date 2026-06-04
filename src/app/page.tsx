@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ClipboardCheck, Loader2, Save, Send, Shield, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, KeyRound, Loader2, Save, Send, Shield, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
@@ -42,9 +42,10 @@ const initialGroupDraft = groups.reduce<GroupDraftState>((draft, group) => {
   return draft;
 }, {} as GroupDraftState);
 
-function toPayload(name: string, clan: ClanId, predictions: DraftState, groupPredictions: GroupDraftState) {
+function toPayload(name: string, pin: string, clan: ClanId, predictions: DraftState, groupPredictions: GroupDraftState) {
   return {
     name,
+    pin,
     clan,
     predictions: matches.map((match) => {
       const value = predictions[match.id];
@@ -91,6 +92,7 @@ function readSavedGroupDraft(): SavedGroupDraft | null {
 
 export default function HomePage() {
   const [name, setName] = useState("");
+  const [pin, setPin] = useState("");
   const [clan, setClan] = useState<ClanId>(defaultClan);
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [predictions, setPredictions] = useState<DraftState>(initialDraft);
@@ -108,11 +110,13 @@ export default function HomePage() {
   const totalItems = matches.length + groups.length;
   const progress = Math.round((completedTotal / totalItems) * 100);
   const missingName = name.trim().length < 2;
+  const missingPin = !/^\d{4,10}$/.test(pin.trim());
   const missingMatches = matches.length - completedMatches;
   const missingGroups = groups.length - completedGroups;
-  const canSubmit = !missingName && missingMatches === 0 && missingGroups === 0 && status !== "saving";
+  const canSubmit = !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
   const validationMessages = [
     ...(missingName ? ["Poné tu nombre arriba para identificar tu prode."] : []),
+    ...(missingPin ? ["Elegí un PIN de 4 a 10 números para poder editar hasta la fecha límite."] : []),
     ...(missingMatches > 0 ? [`Faltan ${missingMatches} pronósticos de partidos.`] : []),
     ...(missingGroups > 0 ? [`Faltan ${missingGroups} predicciones de grupos.`] : []),
   ];
@@ -152,6 +156,7 @@ export default function HomePage() {
   function clearDraft() {
     window.localStorage.removeItem(groupDraftStorageKey);
     setName("");
+    setPin("");
     setClan(defaultClan);
     setActiveRound(1);
     setPredictions(initialDraft);
@@ -197,7 +202,7 @@ export default function HomePage() {
     const response = await fetch("/api/submissions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toPayload(name, clan, predictions, groupPredictions)),
+      body: JSON.stringify(toPayload(name, pin, clan, predictions, groupPredictions)),
     });
 
     const body = (await response.json()) as { id?: string; createdAt?: string; errors?: string[] };
@@ -219,7 +224,7 @@ export default function HomePage() {
           <div>
             <p className="eyebrow">Enviado</p>
             <h1>Pronóstico guardado.</h1>
-            <p className="heroCopy">Ticket definitivo para {name.trim()} en {clanLabel(clan)}.</p>
+            <p className="heroCopy">Ticket guardado para {name.trim()} en {clanLabel(clan)}. Podés editar con tu PIN hasta la fecha límite.</p>
           </div>
           <div className="scoreSeal" aria-label={`${completedTotal} pronósticos completos`}>
             <CheckCircle2 size={34} aria-hidden="true" />
@@ -509,6 +514,30 @@ export default function HomePage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="pinPanel" aria-label="PIN de edición">
+        <div>
+          <p className="eyebrow">Edición</p>
+          <h2>Elegí tu PIN.</h2>
+          <p>Con tu nombre y este PIN vas a poder editar tus pronósticos hasta la fecha límite. Guardalo, no se puede recuperar.</p>
+        </div>
+        <label className="pinInput">
+          <span>PIN</span>
+          <div>
+            <KeyRound size={18} aria-hidden="true" />
+            <input
+              autoComplete="new-password"
+              disabled={status === "saving"}
+              inputMode="numeric"
+              maxLength={10}
+              onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="4 a 10 números"
+              type="password"
+              value={pin}
+            />
+          </div>
+        </label>
       </section>
 
       <div className="submitDock">

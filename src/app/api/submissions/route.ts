@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
-import { appendSubmission, readSubmissionStore } from "@/lib/storage";
+import { createPinHash, validateParticipantPin } from "@/lib/pin";
 import { validateSubmission } from "@/lib/prode";
+import { appendSubmission, publicSubmission, readSubmissionStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
 
   const store = await readSubmissionStore();
   return NextResponse.json({
-    submissions: store.submissions.toSorted((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    submissions: store.submissions.toSorted((a, b) => b.createdAt.localeCompare(a.createdAt)).map(publicSubmission),
   });
 }
 
@@ -34,15 +35,21 @@ export async function POST(request: Request) {
   }
 
   const result = validateSubmission(payload as Parameters<typeof validateSubmission>[0]);
+  const pinError = validateParticipantPin((payload as { pin?: unknown }).pin);
   if (!result.ok) {
-    return NextResponse.json({ errors: result.errors.slice(0, 12) }, { status: 400 });
+    return NextResponse.json({ errors: [...result.errors, ...(pinError ? [pinError] : [])].slice(0, 12) }, { status: 400 });
+  }
+  if (pinError) {
+    return NextResponse.json({ errors: [pinError] }, { status: 400 });
   }
 
+  const pin = String((payload as { pin: string }).pin).trim();
   const submission = {
     id: randomUUID(),
     name: result.name,
     normalizedName: result.normalizedName,
     clan: result.clan,
+    pinHash: createPinHash(pin),
     createdAt: new Date().toISOString(),
     predictions: result.predictions,
     groupPredictions: result.groupPredictions,

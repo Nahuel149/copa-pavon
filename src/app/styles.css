@@ -105,7 +105,7 @@ a {
 
 .masthead nav {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   border-left: 1px solid rgba(5, 5, 5, 0.15);
 }
 
@@ -299,6 +299,7 @@ a {
 .errorPanel,
 .validationPanel,
 .clanPanel,
+.pinPanel,
 .rulePanel,
 .rulesFlow,
 .scoreRuleGrid,
@@ -373,6 +374,64 @@ a {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 700;
   opacity: 0.78;
+}
+
+.pinPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.45fr);
+  gap: 18px;
+  align-items: center;
+  padding: 20px;
+  background: rgba(248, 255, 244, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.pinPanel h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.45rem, 2.7vw, 2.2rem);
+  line-height: 1.02;
+}
+
+.pinPanel p:not(.eyebrow) {
+  margin: 0;
+  max-width: 680px;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.55;
+}
+
+.pinInput {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.pinInput > span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pinInput > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 54px;
+  padding: 0 12px;
+  border: 3px solid var(--ink);
+  background: #fff;
+}
+
+.pinInput input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
 }
 
 .heroControl {
@@ -1541,6 +1600,7 @@ tbody tr.relegationRow:hover {
   .groupGrid,
   .resultGrid,
   .clanPanel,
+  .pinPanel,
   .rulePanel,
   .rulesFlow,
   .scoreRuleGrid,
@@ -1587,6 +1647,7 @@ tbody tr.relegationRow:hover {
   .rulesCallout,
   .relegationPanel,
   .clanPanel,
+  .pinPanel,
   .draftPanel,
   .tableNote,
   .receiptPanel {
