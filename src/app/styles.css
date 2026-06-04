@@ -1282,6 +1282,22 @@ tbody tr:hover {
   background: #fff3d4;
 }
 
+tbody tr.leaderRow {
+  background: #dff5dc;
+}
+
+tbody tr.leaderRow:hover {
+  background: #c9edc4;
+}
+
+tbody tr.relegationRow {
+  background: #ffe0d8;
+}
+
+tbody tr.relegationRow:hover {
+  background: #ffcfc3;
+}
+
 .tableButton {
   min-height: 32px;
   padding: 0 10px;
