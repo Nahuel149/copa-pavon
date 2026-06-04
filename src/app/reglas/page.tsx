@@ -1,0 +1,159 @@
+import Link from "next/link";
+import { ArrowRight, BadgeCheck, Brackets, ClipboardList, Medal, RefreshCw, ShieldCheck, Target } from "lucide-react";
+import { KahlImageScatter } from "@/app/components/KahlImageScatter";
+import { choiceMatches, exactScoreMatches, groups, matches } from "@/lib/matches";
+
+const ruleSteps = [
+  {
+    title: "1. Cargá tu nombre",
+    copy: "Usá siempre el mismo nombre. El envío de fase de grupos queda cerrado y no se puede editar.",
+    icon: ClipboardList,
+  },
+  {
+    title: "2. Completá todo",
+    copy: "El formulario no deja enviar si falta un partido, un resultado exacto o un top 2 de grupo.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "3. Seguí la tabla",
+    copy: "Cuando admin carga resultados oficiales, la tabla recalcula los puntos acumulados automáticamente.",
+    icon: RefreshCw,
+  },
+];
+
+const scoringRules = [
+  {
+    label: "Resultado exacto",
+    points: "2 pts",
+    copy: `${exactScoreMatches.length} partidos de fase de grupos y todos los cruces de eliminatorias piden marcador exacto.`,
+  },
+  {
+    label: "Ganador / empate",
+    points: "1 pt",
+    copy: `${choiceMatches.length} partidos de fase de grupos piden elegir local, empate o visitante.`,
+  },
+  {
+    label: "Top 2 de grupo",
+    points: "5 pts",
+    copy: "Si acertás los dos clasificados del grupo, suma aunque el orden de 1º y 2º esté invertido.",
+  },
+];
+
+export default function ReglasPage() {
+  return (
+    <div className="pageStack">
+      <section className="heroBand rulesHero">
+        <div>
+          <p className="eyebrow">Reglas</p>
+          <h1>Cómo se juega.</h1>
+          <p className="heroCopy">
+            El prode mezcla marcadores exactos, 1X2 y clasificados por grupo. Los puntos se acumulan solos cuando se
+            cargan los resultados oficiales.
+          </p>
+        </div>
+        <Link className="primaryAction light" href="/">
+          <ClipboardList size={18} aria-hidden="true" />
+          Ir al formulario
+        </Link>
+      </section>
+
+      <KahlImageScatter page="reglas" count={5} />
+
+      <section className="metricGrid" aria-label="Resumen del prode">
+        <article className="metric">
+          <Target size={20} aria-hidden="true" />
+          <span>Partidos fase grupos</span>
+          <strong>{matches.length}</strong>
+        </article>
+        <article className="metric">
+          <BadgeCheck size={20} aria-hidden="true" />
+          <span>Exactos en grupos</span>
+          <strong>{exactScoreMatches.length}</strong>
+        </article>
+        <article className="metric alert">
+          <Medal size={20} aria-hidden="true" />
+          <span>Grupos con top 2</span>
+          <strong>{groups.length}</strong>
+        </article>
+      </section>
+
+      <section className="rulesFlow" aria-label="Qué tiene que hacer cada participante">
+        {ruleSteps.map((step) => {
+          const Icon = step.icon;
+          return (
+            <article key={step.title}>
+              <Icon size={24} aria-hidden="true" />
+              <h2>{step.title}</h2>
+              <p>{step.copy}</p>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="sectionHeader">
+        <p className="eyebrow">Puntaje</p>
+        <h2>Cómo suma cada acierto.</h2>
+      </section>
+
+      <section className="scoreRuleGrid" aria-label="Sistema de puntos">
+        {scoringRules.map((rule) => (
+          <article key={rule.label}>
+            <span>{rule.label}</span>
+            <strong>{rule.points}</strong>
+            <p>{rule.copy}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="rulesDetailGrid" aria-label="Detalles importantes">
+        <article>
+          <p className="eyebrow">Fase de grupos</p>
+          <h2>Híbrido por fecha</h2>
+          <p>
+            Hay 10 partidos importantes por fecha con marcador exacto. El resto se juega con 1X2: gana local, empate o
+            gana visitante.
+          </p>
+        </article>
+        <article>
+          <p className="eyebrow">Clasificados</p>
+          <h2>Top 2 por grupo</h2>
+          <p>
+            Se eligen dos equipos por grupo. Si los dos equipos son correctos, sumás 5 puntos. Si acertás uno solo o
+            ninguno, suma 0.
+          </p>
+        </article>
+        <article>
+          <p className="eyebrow">Eliminatorias</p>
+          <h2>Siempre exacto</h2>
+          <p>
+            Cuando admin cargue los cruces, cada participante completa marcadores exactos. Cada acierto exacto vale 2
+            puntos.
+          </p>
+        </article>
+        <article>
+          <p className="eyebrow">Tabla</p>
+          <h2>Acumulado automático</h2>
+          <p>
+            La tabla toma todos los envíos guardados y los compara contra los resultados oficiales cargados en admin.
+            Cada nuevo resultado recalcula totales, desempates y columnas de puntos.
+          </p>
+        </article>
+      </section>
+
+      <section className="rulesCallout">
+        <Brackets size={28} aria-hidden="true" />
+        <div>
+          <h2>Importante</h2>
+          <p>
+            El envío es definitivo. Antes de mandar, revisá nombre, partidos y grupos. Después podés volver para cargar
+            eliminatorias cuando los cruces estén disponibles.
+          </p>
+        </div>
+        <Link className="primaryAction" href="/tabla">
+          Ver tabla
+          <ArrowRight size={18} aria-hidden="true" />
+        </Link>
+      </section>
+    </div>
+  );
+}
