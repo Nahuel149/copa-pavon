@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Brackets, CheckCircle2, Loader2, Send, Target } from "lucide-react";
+import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { knockoutStageLabels, type KnockoutFixture } from "@/lib/matches";
 import { countCompleteKnockoutPredictions } from "@/lib/prode";
@@ -11,6 +11,13 @@ type FixtureResponse = {
 };
 
 type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string }>;
+type SavedKnockoutDraft = {
+  name: string;
+  predictions: KnockoutDraft;
+  savedAt: string;
+};
+
+const knockoutDraftStorageKey = "copa-kahl-knockout-draft-v1";
 
 function draftFromFixtures(fixtures: KnockoutFixture[]) {
   return fixtures.reduce<KnockoutDraft>((draft, fixture) => {
@@ -19,12 +26,34 @@ function draftFromFixtures(fixtures: KnockoutFixture[]) {
   }, {});
 }
 
+function readSavedKnockoutDraft(fixtures: KnockoutFixture[]): SavedKnockoutDraft | null {
+  try {
+    const raw = window.localStorage.getItem(knockoutDraftStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SavedKnockoutDraft>;
+    if (!parsed.predictions) return null;
+    const baseDraft = draftFromFixtures(fixtures);
+    return {
+      name: typeof parsed.name === "string" ? parsed.name : "",
+      predictions: fixtures.reduce<KnockoutDraft>((draft, fixture) => {
+        draft[fixture.id] = parsed.predictions?.[fixture.id] ?? baseDraft[fixture.id];
+        return draft;
+      }, {}),
+      savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function EliminatoriasPage() {
   const [fixtures, setFixtures] = useState<KnockoutFixture[]>([]);
   const [predictions, setPredictions] = useState<KnockoutDraft>({});
   const [name, setName] = useState("");
   const [status, setStatus] = useState<"loading" | "idle" | "saving" | "done">("loading");
   const [errors, setErrors] = useState<string[]>([]);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
 
   const completed = countCompleteKnockoutPredictions(predictions, fixtures);
   const missingName = name.trim().length < 2;
@@ -46,12 +75,43 @@ export default function EliminatoriasPage() {
     async function loadFixtures() {
       const response = await fetch("/api/knockout-fixtures", { cache: "no-store" });
       const body = (await response.json()) as FixtureResponse;
-      setFixtures(body.fixtures ?? []);
-      setPredictions(draftFromFixtures(body.fixtures ?? []));
+      const loadedFixtures = body.fixtures ?? [];
+      const savedDraft = readSavedKnockoutDraft(loadedFixtures);
+      setFixtures(loadedFixtures);
+      if (savedDraft) {
+        setName(savedDraft.name);
+        setPredictions(savedDraft.predictions);
+        setDraftStatus(`Restaurado: ${new Date(savedDraft.savedAt).toLocaleString("es-AR")}`);
+      } else {
+        setPredictions(draftFromFixtures(loadedFixtures));
+        setDraftStatus("Se guarda provisorio en este navegador.");
+      }
+      setDraftReady(true);
       setStatus("idle");
     }
     void loadFixtures();
   }, []);
+
+  useEffect(() => {
+    if (!draftReady || status === "done" || status === "loading") return;
+    const timeoutId = window.setTimeout(() => {
+      saveDraft("Guardado provisorio automático");
+    }, 450);
+    return () => window.clearTimeout(timeoutId);
+  }, [draftReady, name, predictions, status]);
+
+  function saveDraft(message = "Guardado provisorio listo") {
+    const savedAt = new Date().toISOString();
+    window.localStorage.setItem(knockoutDraftStorageKey, JSON.stringify({ name, predictions, savedAt }));
+    setDraftStatus(`${message}: ${new Date(savedAt).toLocaleTimeString("es-AR")}`);
+  }
+
+  function clearDraft() {
+    window.localStorage.removeItem(knockoutDraftStorageKey);
+    setName("");
+    setPredictions(draftFromFixtures(fixtures));
+    setDraftStatus("Guardado provisorio borrado.");
+  }
 
   function setScore(fixtureId: string, side: "homeGoals" | "awayGoals", value: string) {
     const cleanValue = value.replace(/\D/g, "").slice(0, 2);
@@ -90,6 +150,7 @@ export default function EliminatoriasPage() {
       return;
     }
 
+    window.localStorage.removeItem(knockoutDraftStorageKey);
     setStatus("done");
   }
 
@@ -146,6 +207,24 @@ export default function EliminatoriasPage() {
       </section>
 
       <KahlImageScatter page="eliminatorias" count={4} variant="compact" />
+
+      <section className="draftPanel" aria-live="polite">
+        <div>
+          <p className="eyebrow">Provisorio</p>
+          <h2>No pierdas tus cruces.</h2>
+          <p>{draftStatus}</p>
+        </div>
+        <div className="draftActions">
+          <button className="primaryAction light" onClick={() => saveDraft()} type="button">
+            <Save size={18} aria-hidden="true" />
+            Guardar provisorio
+          </button>
+          <button className="primaryAction light" onClick={clearDraft} type="button">
+            <Trash2 size={18} aria-hidden="true" />
+            Borrar provisorio
+          </button>
+        </div>
+      </section>
 
       {validationMessages.length > 0 ? (
         <section className="validationPanel" id="knockoutValidationSummary" aria-live="polite">

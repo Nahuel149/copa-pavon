@@ -291,7 +291,8 @@ a {
 .rulesCallout,
 .championCard,
 .relegationPanel,
-.adminLockedPanel {
+.adminLockedPanel,
+.draftPanel {
   background: var(--panel);
   border: 3px solid var(--line);
   box-shadow: 6px 6px 0 rgba(5, 5, 5, 0.16);
@@ -416,6 +417,35 @@ a {
 
 .metric.alert {
   background: #fff3ef;
+}
+
+.draftPanel {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  background: #f8fff4;
+}
+
+.draftPanel h2 {
+  margin: 0 0 6px;
+  font-size: clamp(1.45rem, 2.8vw, 2.2rem);
+  line-height: 1;
+}
+
+.draftPanel p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.5;
+}
+
+.draftActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .imageScatter {
@@ -1462,6 +1492,7 @@ tbody tr:hover {
 
   .rulesCallout,
   .relegationPanel,
+  .draftPanel,
   .tableNote,
   .receiptPanel {
     display: grid;

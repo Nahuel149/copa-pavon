@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ClipboardCheck, Loader2, Send, Table2, Target, Trophy, Users } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Loader2, Save, Send, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
@@ -17,6 +17,15 @@ type ChoiceDraft = { type: "choice"; choice: PredictionChoice | "" };
 type DraftPrediction = ScoreDraft | ChoiceDraft;
 type DraftState = Record<string, DraftPrediction>;
 type GroupDraftState = Record<GroupId, { first: string; second: string }>;
+type SavedGroupDraft = {
+  name: string;
+  activeRound: MatchRound;
+  predictions: DraftState;
+  groupPredictions: GroupDraftState;
+  savedAt: string;
+};
+
+const groupDraftStorageKey = "copa-kahl-group-draft-v1";
 
 const initialDraft = matches.reduce<DraftState>((draft, match) => {
   draft[match.id] = match.exactScore ? { type: "score", homeGoals: "", awayGoals: "" } : { type: "choice", choice: "" };
@@ -55,6 +64,24 @@ function toPayload(name: string, predictions: DraftState, groupPredictions: Grou
   };
 }
 
+function readSavedGroupDraft(): SavedGroupDraft | null {
+  try {
+    const raw = window.localStorage.getItem(groupDraftStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SavedGroupDraft>;
+    if (!parsed.predictions || !parsed.groupPredictions) return null;
+    return {
+      name: typeof parsed.name === "string" ? parsed.name : "",
+      activeRound: parsed.activeRound === 1 || parsed.activeRound === 2 || parsed.activeRound === 3 ? parsed.activeRound : 1,
+      predictions: { ...initialDraft, ...parsed.predictions },
+      groupPredictions: { ...initialGroupDraft, ...parsed.groupPredictions },
+      savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function HomePage() {
   const [name, setName] = useState("");
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
@@ -63,6 +90,8 @@ export default function HomePage() {
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
   const [errors, setErrors] = useState<string[]>([]);
   const [receipt, setReceipt] = useState<{ id: string; createdAt: string } | null>(null);
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
 
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
   const completedMatches = countCompletePredictions(predictions);
@@ -79,6 +108,46 @@ export default function HomePage() {
     ...(missingMatches > 0 ? [`Faltan ${missingMatches} pronósticos de partidos.`] : []),
     ...(missingGroups > 0 ? [`Faltan ${missingGroups} predicciones de grupos.`] : []),
   ];
+
+  useEffect(() => {
+    const savedDraft = readSavedGroupDraft();
+    if (savedDraft) {
+      setName(savedDraft.name);
+      setActiveRound(savedDraft.activeRound);
+      setPredictions(savedDraft.predictions);
+      setGroupPredictions(savedDraft.groupPredictions);
+      setDraftStatus(`Restaurado: ${new Date(savedDraft.savedAt).toLocaleString("es-AR")}`);
+    } else {
+      setDraftStatus("Se guarda provisorio en este navegador.");
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady || status === "done") return;
+    const timeoutId = window.setTimeout(() => {
+      saveDraft("Guardado provisorio automático");
+    }, 450);
+    return () => window.clearTimeout(timeoutId);
+  }, [draftReady, name, activeRound, predictions, groupPredictions, status]);
+
+  function saveDraft(message = "Guardado provisorio listo") {
+    const savedAt = new Date().toISOString();
+    window.localStorage.setItem(
+      groupDraftStorageKey,
+      JSON.stringify({ name, activeRound, predictions, groupPredictions, savedAt }),
+    );
+    setDraftStatus(`${message}: ${new Date(savedAt).toLocaleTimeString("es-AR")}`);
+  }
+
+  function clearDraft() {
+    window.localStorage.removeItem(groupDraftStorageKey);
+    setName("");
+    setActiveRound(1);
+    setPredictions(initialDraft);
+    setGroupPredictions(initialGroupDraft);
+    setDraftStatus("Guardado provisorio borrado.");
+  }
 
   function setScore(matchId: string, side: "homeGoals" | "awayGoals", value: string) {
     const cleanValue = value.replace(/\D/g, "").slice(0, 2);
@@ -129,6 +198,7 @@ export default function HomePage() {
     }
 
     setReceipt({ id: body.id ?? "", createdAt: body.createdAt ?? new Date().toISOString() });
+    window.localStorage.removeItem(groupDraftStorageKey);
     setStatus("done");
   }
 
@@ -188,6 +258,24 @@ export default function HomePage() {
       </section>
 
       <KahlImageScatter page="home" count={5} />
+
+      <section className="draftPanel" aria-live="polite">
+        <div>
+          <p className="eyebrow">Provisorio</p>
+          <h2>No pierdas tu progreso.</h2>
+          <p>{draftStatus}</p>
+        </div>
+        <div className="draftActions">
+          <button className="primaryAction light" onClick={() => saveDraft()} type="button">
+            <Save size={18} aria-hidden="true" />
+            Guardar provisorio
+          </button>
+          <button className="primaryAction light" onClick={clearDraft} type="button">
+            <Trash2 size={18} aria-hidden="true" />
+            Borrar provisorio
+          </button>
+        </div>
+      </section>
 
       {validationMessages.length > 0 ? (
         <section className="validationPanel" id="validationSummary" aria-live="polite">
