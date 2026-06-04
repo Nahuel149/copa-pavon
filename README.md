@@ -34,13 +34,19 @@ Desde el panel admin se cargan:
 
 ## Datos
 
-Los envios se guardan en `data/submissions.json` y los resultados/configuracion en `data/results.json`. Ambos se crean automaticamente y quedan ignorados por git. Los envios de fase de grupos son definitivos; eliminatorias se agregan por nombre de participante y tambien quedan cerradas por cruce.
+En produccion los envios y resultados se guardan en MongoDB si existe `MONGODB_URI`. La app usa la base `MONGODB_DB` o `copa_kahl` por defecto, con estas colecciones:
 
-En Render conviene agregar un disk persistente y configurar:
+- `submissions`: pronosticos, clan, nombre, fase de grupos y eliminatorias.
+- `results`: resultados oficiales, top 2 reales por grupo y cruces de eliminatorias.
+
+Si `MONGODB_URI` no esta configurada, la app usa fallback local en `data/submissions.json` y `data/results.json`. Ese modo sirve para desarrollo, pero no es persistente en Render.
+
+En Render configurar:
 
 ```text
 PRODE_ADMIN_PIN=456149
-PRODE_DATA_DIR=/var/data
+MONGODB_URI=mongodb+srv://...
+MONGODB_DB=copa_kahl
 ```
 
 ## Fixture
