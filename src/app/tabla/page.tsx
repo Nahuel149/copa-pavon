@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Brackets, RefreshCw, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
-import { clanLabel, clans, type ClanId, type StandingRow } from "@/lib/prode";
+import { type ClanId, type StandingRow } from "@/lib/prode";
 
 type StandingsResponse = {
   standings: StandingRow[];
@@ -26,6 +26,8 @@ export default function TablaPage() {
     updatedAt: "",
   });
   const [status, setStatus] = useState<"loading" | "ready">("loading");
+  const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
+  const relegationCount = rows.length > 10 ? 3 : 2;
 
   async function loadStandings() {
     setStatus("loading");
@@ -65,56 +67,50 @@ export default function TablaPage() {
 
       <KahlImageScatter page="tabla" count={4} variant="compact" />
 
-      {clans.map((clan) => {
-        const rows = data.standingsByClan?.[clan.id] ?? data.standings.filter((row) => row.clan === clan.id);
-        const relegationCount = rows.length > 10 ? 3 : 2;
-        return (
-          <section className="tableShell" key={clan.id}>
-            <div className="tableNote">
-              <strong>Tabla {clanLabel(clan.id)}</strong>
-              <span>
-                Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y
-                cruces de eliminatorias.
-              </span>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Participante</th>
-                  <th>Puntos</th>
-                  <th>Exactos</th>
+      <section className="tableShell">
+        <div className="tableNote">
+          <strong>Tabla</strong>
+          <span>
+            Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
+            de eliminatorias.
+          </span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Participante</th>
+              <th>Puntos</th>
+              <th>Exactos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => {
+              const isLeader = index === 0;
+              const isRelegation = rows.length > 1 && index >= rows.length - relegationCount;
+              return (
+                <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""} key={row.submissionId}>
+                  <td>{index + 1}</td>
+                  <td>{row.name}</td>
+                  <td>{row.totalPoints}</td>
+                  <td>{row.exactHits + row.knockoutExactHits}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, index) => {
-                  const isLeader = index === 0;
-                  const isRelegation = rows.length > 1 && index >= rows.length - relegationCount;
-                  return (
-                    <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""} key={row.submissionId}>
-                      <td>{index + 1}</td>
-                      <td>{row.name}</td>
-                      <td>{row.totalPoints}</td>
-                      <td>{row.exactHits + row.knockoutExactHits}</td>
-                    </tr>
-                  );
-                })}
-                {rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={4}>La tabla aparece cuando haya envios guardados en {clanLabel(clan.id)}.</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </section>
-        );
-      })}
+              );
+            })}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={4}>La tabla aparece cuando haya envios guardados.</td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </section>
 
       <section className="metricGrid" aria-label="Estado de tabla">
         <article className="metric">
           <Users size={20} aria-hidden="true" />
           <span>Participantes</span>
-          <strong>{data.standings.length}</strong>
+          <strong>{rows.length}</strong>
         </article>
         <article className="metric">
           <Trophy size={20} aria-hidden="true" />

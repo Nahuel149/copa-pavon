@@ -1,16 +1,12 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { CheckCircle2, KeyRound, Loader2, Save, Shield, Target, Trophy } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2, Save, Target, Trophy } from "lucide-react";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
-  clanLabel,
-  clans,
   countCompleteGroupPredictions,
   countCompletePredictions,
-  defaultClan,
-  type ClanId,
   type Prediction,
   type PredictionChoice,
   type Submission,
@@ -52,11 +48,10 @@ function groupDraftFromSubmission(submission: Submission) {
   return draft;
 }
 
-function toPayload(name: string, pin: string, clan: ClanId, predictions: DraftState, groupPredictions: GroupDraftState) {
+function toPayload(name: string, pin: string, predictions: DraftState, groupPredictions: GroupDraftState) {
   return {
     name,
     pin,
-    clan,
     predictions: matches.map((match) => {
       const value = predictions[match.id];
       if (value.type === "score") {
@@ -75,7 +70,6 @@ function toPayload(name: string, pin: string, clan: ClanId, predictions: DraftSt
 export default function EditarPage() {
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
-  const [clan, setClan] = useState<ClanId>(defaultClan);
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [predictions, setPredictions] = useState<DraftState>(initialDraft);
   const [groupPredictions, setGroupPredictions] = useState<GroupDraftState>(initialGroupDraft);
@@ -115,7 +109,6 @@ export default function EditarPage() {
       return;
     }
     setName(body.submission.name);
-    setClan(body.submission.clan);
     setPredictions(draftFromSubmission(body.submission.predictions));
     setGroupPredictions(groupDraftFromSubmission(body.submission));
     setEditWindow(body.editWindow ?? { open: true, deadline: null });
@@ -131,7 +124,7 @@ export default function EditarPage() {
     const response = await fetch("/api/edit-submission", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toPayload(name, pin, clan, predictions, groupPredictions)),
+      body: JSON.stringify(toPayload(name, pin, predictions, groupPredictions)),
     });
     const body = (await response.json()) as { updatedAt?: string; editWindow?: EditWindow; errors?: string[] };
     if (!response.ok) {
@@ -223,7 +216,7 @@ export default function EditarPage() {
           <section className="metricGrid" aria-label="Estado de edición">
             <article className="metric"><Target size={20} aria-hidden="true" /><span>Exactos fase grupos</span><strong>{exactScoreMatches.length}</strong></article>
             <article className="metric"><Trophy size={20} aria-hidden="true" /><span>1X2 fase grupos</span><strong>{choiceMatches.length}</strong></article>
-            <article className="metric alert"><Shield size={20} aria-hidden="true" /><span>Clan</span><strong>{clanLabel(clan)}</strong></article>
+            <article className="metric alert"><CheckCircle2 size={20} aria-hidden="true" /><span>Completos</span><strong>{completedTotal}/{totalItems}</strong></article>
           </section>
 
           <section className="roundStrip" aria-label="Fechas">
@@ -280,18 +273,6 @@ export default function EditarPage() {
                 </article>
               );
             })}
-          </section>
-
-          <section className="clanPanel" aria-label="Elegir clan">
-            <div><p className="eyebrow">Clan</p><h2>Clan del participante.</h2><p>River Plate queda por defecto. Cambialo sólo si jugás con La Batata.</p></div>
-            <div className="clanOptions">
-              {clans.map((option) => (
-                <button className={clan === option.id ? "clanButton selected" : "clanButton"} disabled={!editWindow.open || status === "saving"} key={option.id} onClick={() => setClan(option.id)} type="button">
-                  <Shield size={18} aria-hidden="true" />
-                  <span><strong>{option.name}</strong><small>{option.hint}</small></span>
-                </button>
-              ))}
-            </div>
           </section>
 
           <div className="submitDock">

@@ -68,12 +68,13 @@ export async function PUT(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ errors: result.errors.slice(0, 12) }, { status: 400 });
   }
+  const payloadHasClan = Object.prototype.hasOwnProperty.call(payload as object, "clan");
 
   const saved = await updateSubmissionPredictions({
     ...auth.submission,
     name: result.name,
     normalizedName: auth.submission.normalizedName,
-    clan: result.clan,
+    clan: payloadHasClan ? result.clan : auth.submission.clan,
     predictions: result.predictions,
     groupPredictions: result.groupPredictions,
   });
