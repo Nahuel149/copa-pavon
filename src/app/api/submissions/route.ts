@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     id: randomUUID(),
     name: result.name,
     normalizedName: result.normalizedName,
+    clan: result.clan,
     createdAt: new Date().toISOString(),
     predictions: result.predictions,
     groupPredictions: result.groupPredictions,

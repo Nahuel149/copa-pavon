@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Brackets, RefreshCw, Table2, Trophy, Users } from "lucide-react";
+import { Brackets, RefreshCw, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
-import type { StandingRow } from "@/lib/prode";
+import { clanLabel, clans, type ClanId, type StandingRow } from "@/lib/prode";
 
 type StandingsResponse = {
   standings: StandingRow[];
+  standingsByClan: Record<ClanId, StandingRow[]>;
   playedMatches: number;
   decidedGroups: number;
   knockoutFixtures: number;
@@ -17,6 +18,7 @@ type StandingsResponse = {
 export default function TablaPage() {
   const [data, setData] = useState<StandingsResponse>({
     standings: [],
+    standingsByClan: { "river-plate": [], "la-batata": [] },
     playedMatches: 0,
     decidedGroups: 0,
     knockoutFixtures: 0,
@@ -63,48 +65,53 @@ export default function TablaPage() {
 
       <KahlImageScatter page="tabla" count={4} variant="compact" />
 
-      <section className="tableShell">
-        <div className="tableNote">
-          <strong>Tabla</strong>
-          <span>
-            Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
-            de eliminatorias.
-          </span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Participante</th>
-              <th>Total</th>
-              <th>Partidos</th>
-              <th>Grupos</th>
-              <th>Elim.</th>
-              <th>Exactos</th>
-              <th>Ganadores</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.standings.map((row, index) => (
-              <tr key={row.submissionId}>
-                <td>{index + 1}</td>
-                <td>{row.name}</td>
-                <td>{row.totalPoints}</td>
-                <td>{row.matchPoints}</td>
-                <td>{row.groupPoints}</td>
-                <td>{row.knockoutPoints}</td>
-                <td>{row.exactHits + row.knockoutExactHits}</td>
-                <td>{row.winnerHits}</td>
-              </tr>
-            ))}
-            {data.standings.length === 0 ? (
-              <tr>
-                <td colSpan={8}>La tabla aparece cuando haya envíos guardados.</td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </section>
+      {clans.map((clan) => {
+        const rows = data.standingsByClan?.[clan.id] ?? data.standings.filter((row) => row.clan === clan.id);
+        return (
+          <section className="tableShell" key={clan.id}>
+            <div className="tableNote">
+              <strong>Tabla {clanLabel(clan.id)}</strong>
+              <span>
+                Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y
+                cruces de eliminatorias.
+              </span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Participante</th>
+                  <th>Total</th>
+                  <th>Partidos</th>
+                  <th>Grupos</th>
+                  <th>Elim.</th>
+                  <th>Exactos</th>
+                  <th>Ganadores</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, index) => (
+                  <tr key={row.submissionId}>
+                    <td>{index + 1}</td>
+                    <td>{row.name}</td>
+                    <td>{row.totalPoints}</td>
+                    <td>{row.matchPoints}</td>
+                    <td>{row.groupPoints}</td>
+                    <td>{row.knockoutPoints}</td>
+                    <td>{row.exactHits + row.knockoutExactHits}</td>
+                    <td>{row.winnerHits}</td>
+                  </tr>
+                ))}
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>La tabla aparece cuando haya envios guardados en {clanLabel(clan.id)}.</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </section>
+        );
+      })}
 
       <section className="metricGrid" aria-label="Estado de tabla">
         <article className="metric">

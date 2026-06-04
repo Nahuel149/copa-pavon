@@ -3,6 +3,7 @@ import { groups, matches, type KnockoutFixture } from "./matches";
 import {
   buildStandings,
   countCompleteKnockoutPredictions,
+  defaultClan,
   getOutcome,
   normalizeName,
   scoreSubmission,
@@ -41,6 +42,7 @@ function submissionFromPayload(name = "Nahuel") {
     id: `s-${name}`,
     name,
     normalizedName: normalizeName(name),
+    clan: result.clan,
     createdAt: new Date().toISOString(),
     predictions: result.predictions,
     groupPredictions: result.groupPredictions,
@@ -66,6 +68,7 @@ describe("prode validation", () => {
     const result = validateSubmission(validPayload());
     expect(result.ok).toBe(true);
     if (result.ok) {
+      expect(result.clan).toBe(defaultClan);
       expect(result.predictions).toHaveLength(72);
       expect(result.predictions.filter((prediction) => prediction.type === "score")).toHaveLength(30);
       expect(result.predictions.filter((prediction) => prediction.type === "choice")).toHaveLength(42);

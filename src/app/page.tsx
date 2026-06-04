@@ -2,13 +2,17 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ClipboardCheck, Loader2, Save, Send, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Loader2, Save, Send, Shield, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
+  clanLabel,
+  clans,
   countCompleteGroupPredictions,
   countCompletePredictions,
+  defaultClan,
+  type ClanId,
   type PredictionChoice,
 } from "@/lib/prode";
 
@@ -19,6 +23,7 @@ type DraftState = Record<string, DraftPrediction>;
 type GroupDraftState = Record<GroupId, { first: string; second: string }>;
 type SavedGroupDraft = {
   name: string;
+  clan: ClanId;
   activeRound: MatchRound;
   predictions: DraftState;
   groupPredictions: GroupDraftState;
@@ -37,9 +42,10 @@ const initialGroupDraft = groups.reduce<GroupDraftState>((draft, group) => {
   return draft;
 }, {} as GroupDraftState);
 
-function toPayload(name: string, predictions: DraftState, groupPredictions: GroupDraftState) {
+function toPayload(name: string, clan: ClanId, predictions: DraftState, groupPredictions: GroupDraftState) {
   return {
     name,
+    clan,
     predictions: matches.map((match) => {
       const value = predictions[match.id];
       if (value.type === "score") {
@@ -72,6 +78,7 @@ function readSavedGroupDraft(): SavedGroupDraft | null {
     if (!parsed.predictions || !parsed.groupPredictions) return null;
     return {
       name: typeof parsed.name === "string" ? parsed.name : "",
+      clan: parsed.clan === "la-batata" ? "la-batata" : defaultClan,
       activeRound: parsed.activeRound === 1 || parsed.activeRound === 2 || parsed.activeRound === 3 ? parsed.activeRound : 1,
       predictions: { ...initialDraft, ...parsed.predictions },
       groupPredictions: { ...initialGroupDraft, ...parsed.groupPredictions },
@@ -84,6 +91,7 @@ function readSavedGroupDraft(): SavedGroupDraft | null {
 
 export default function HomePage() {
   const [name, setName] = useState("");
+  const [clan, setClan] = useState<ClanId>(defaultClan);
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [predictions, setPredictions] = useState<DraftState>(initialDraft);
   const [groupPredictions, setGroupPredictions] = useState<GroupDraftState>(initialGroupDraft);
@@ -113,6 +121,7 @@ export default function HomePage() {
     const savedDraft = readSavedGroupDraft();
     if (savedDraft) {
       setName(savedDraft.name);
+      setClan(savedDraft.clan);
       setActiveRound(savedDraft.activeRound);
       setPredictions(savedDraft.predictions);
       setGroupPredictions(savedDraft.groupPredictions);
@@ -129,13 +138,13 @@ export default function HomePage() {
       saveDraft("Guardado provisorio automático");
     }, 450);
     return () => window.clearTimeout(timeoutId);
-  }, [draftReady, name, activeRound, predictions, groupPredictions, status]);
+  }, [draftReady, name, clan, activeRound, predictions, groupPredictions, status]);
 
   function saveDraft(message = "Guardado provisorio listo") {
     const savedAt = new Date().toISOString();
     window.localStorage.setItem(
       groupDraftStorageKey,
-      JSON.stringify({ name, activeRound, predictions, groupPredictions, savedAt }),
+      JSON.stringify({ name, clan, activeRound, predictions, groupPredictions, savedAt }),
     );
     setDraftStatus(`${message}: ${new Date(savedAt).toLocaleTimeString("es-AR")}`);
   }
@@ -143,6 +152,7 @@ export default function HomePage() {
   function clearDraft() {
     window.localStorage.removeItem(groupDraftStorageKey);
     setName("");
+    setClan(defaultClan);
     setActiveRound(1);
     setPredictions(initialDraft);
     setGroupPredictions(initialGroupDraft);
@@ -187,7 +197,7 @@ export default function HomePage() {
     const response = await fetch("/api/submissions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toPayload(name, predictions, groupPredictions)),
+      body: JSON.stringify(toPayload(name, clan, predictions, groupPredictions)),
     });
 
     const body = (await response.json()) as { id?: string; createdAt?: string; errors?: string[] };
@@ -209,7 +219,7 @@ export default function HomePage() {
           <div>
             <p className="eyebrow">Enviado</p>
             <h1>Pronóstico guardado.</h1>
-            <p className="heroCopy">Ticket definitivo para {name.trim()}.</p>
+            <p className="heroCopy">Ticket definitivo para {name.trim()} en {clanLabel(clan)}.</p>
           </div>
           <div className="scoreSeal" aria-label={`${completedTotal} pronósticos completos`}>
             <CheckCircle2 size={34} aria-hidden="true" />
@@ -474,10 +484,37 @@ export default function HomePage() {
         </section>
       ) : null}
 
+      <section className="clanPanel" aria-label="Elegir clan">
+        <div>
+          <p className="eyebrow">Clan</p>
+          <h2>River Plate queda por defecto.</h2>
+          <p>Si sos del grupo de River no hace falta tocar nada. Si jugás con La Batata, seleccioná ese clan antes de enviar.</p>
+        </div>
+        <div className="clanOptions" role="radiogroup" aria-label="Clan del participante">
+          {clans.map((option) => (
+            <button
+              className={clan === option.id ? "clanButton selected" : "clanButton"}
+              key={option.id}
+              onClick={() => setClan(option.id)}
+              type="button"
+              role="radio"
+              aria-checked={clan === option.id}
+              disabled={status === "saving"}
+            >
+              <Shield size={18} aria-hidden="true" />
+              <span>
+                <strong>{option.name}</strong>
+                <small>{option.hint}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <div className="submitDock">
         <div>
           <span>{name.trim() || "Sin nombre"}</span>
-          <strong>{completedTotal}/{totalItems}</strong>
+          <strong>{clanLabel(clan)}</strong>
         </div>
         <button className="primaryAction" disabled={!canSubmit} type="submit">
           {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}

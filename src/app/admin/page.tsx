@@ -17,6 +17,7 @@ import {
 } from "@/lib/matches";
 import {
   buildStandings,
+  clanLabel,
   serializeKnockoutPrediction,
   serializePrediction,
   type GroupPrediction,
@@ -137,6 +138,7 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
   const standingById = new Map(standings.map((standing) => [standing.submissionId, standing]));
   const header = [
     "Nombre",
+    "Clan",
     "Fecha",
     "Total",
     "Partidos",
@@ -156,6 +158,7 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
     const byKnockout = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
     return [
       submission.name,
+      clanLabel(submission.clan),
       new Date(submission.createdAt).toLocaleString("es-AR"),
       standing?.totalPoints ?? 0,
       standing?.matchPoints ?? 0,
@@ -429,6 +432,7 @@ export default function AdminPage() {
             <tr>
               <th>#</th>
               <th>Participante</th>
+              <th>Clan</th>
               <th>Total</th>
               <th>Partidos</th>
               <th>Grupos</th>
@@ -442,6 +446,7 @@ export default function AdminPage() {
               <tr key={row.submissionId}>
                 <td>{index + 1}</td>
                 <td>{row.name}</td>
+                <td>{clanLabel(row.clan)}</td>
                 <td>{row.totalPoints}</td>
                 <td>{row.matchPoints}</td>
                 <td>{row.groupPoints}</td>
@@ -452,7 +457,7 @@ export default function AdminPage() {
             ))}
             {standings.length === 0 ? (
               <tr>
-                <td colSpan={8}>Sin tabla todavía.</td>
+                <td colSpan={9}>Sin tabla todavía.</td>
               </tr>
             ) : null}
           </tbody>
@@ -616,6 +621,7 @@ export default function AdminPage() {
             <thead>
               <tr>
                 <th>Nombre</th>
+                <th>Clan</th>
                 <th>Fecha</th>
                 <th>Partidos</th>
                 <th>Grupos</th>
@@ -627,6 +633,7 @@ export default function AdminPage() {
               {submissions.map((submission) => (
                 <tr key={submission.id}>
                   <td>{submission.name}</td>
+                  <td>{clanLabel(submission.clan)}</td>
                   <td>{new Date(submission.createdAt).toLocaleString("es-AR")}</td>
                   <td>{submission.predictions.length}</td>
                   <td>{submission.groupPredictions?.length ?? 0}</td>
@@ -647,7 +654,7 @@ export default function AdminPage() {
               ))}
               {submissions.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>Sin envíos cargados.</td>
+                  <td colSpan={7}>Sin envíos cargados.</td>
                 </tr>
               ) : null}
             </tbody>
@@ -685,7 +692,7 @@ export default function AdminPage() {
           {detailSubmissions.map((submission) => (
               <div key={submission.id}>
                 <div className="sectionHeader">
-                  <p className="eyebrow">Detalle</p>
+                  <p className="eyebrow">Detalle · {clanLabel(submission.clan)}</p>
                   <h2>{submission.name}</h2>
                 </div>
                 <div className="predictionGrid">

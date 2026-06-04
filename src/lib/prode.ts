@@ -39,10 +39,28 @@ export type KnockoutPrediction = {
   awayGoals: number;
 };
 
+export type ClanId = "river-plate" | "la-batata";
+
+export const defaultClan: ClanId = "river-plate";
+
+export const clans: Array<{ id: ClanId; name: string; hint: string }> = [
+  {
+    id: "river-plate",
+    name: "River Plate",
+    hint: "Clan por defecto",
+  },
+  {
+    id: "la-batata",
+    name: "La Batata",
+    hint: "Seleccionar solo si jugás con ese grupo",
+  },
+];
+
 export type Submission = {
   id: string;
   name: string;
   normalizedName: string;
+  clan: ClanId;
   createdAt: string;
   predictions: Prediction[];
   groupPredictions: GroupPrediction[];
@@ -82,6 +100,7 @@ export type ResultStore = {
 export type StandingRow = {
   submissionId: string;
   name: string;
+  clan: ClanId;
   totalPoints: number;
   matchPoints: number;
   groupPoints: number;
@@ -117,6 +136,7 @@ type RawKnockoutPrediction = {
 
 export type RawSubmission = {
   name?: unknown;
+  clan?: unknown;
   predictions?: unknown;
   groupPredictions?: unknown;
 };
@@ -131,6 +151,7 @@ export type ValidationResult =
       ok: true;
       name: string;
       normalizedName: string;
+      clan: ClanId;
       predictions: Prediction[];
       groupPredictions: GroupPrediction[];
     }
@@ -161,6 +182,14 @@ export function choiceLabel(choice: PredictionChoice, home: string, away: string
   return "Empate";
 }
 
+export function parseClan(value: unknown): ClanId {
+  return clans.some((clan) => clan.id === value) ? (value as ClanId) : defaultClan;
+}
+
+export function clanLabel(clanId: ClanId) {
+  return clans.find((clan) => clan.id === clanId)?.name ?? "River Plate";
+}
+
 function parseGoal(value: unknown) {
   if (typeof value === "number" && Number.isInteger(value)) return value;
   if (typeof value === "string" && /^\d+$/.test(value.trim())) return Number(value);
@@ -185,6 +214,7 @@ export function validateSubmission(payload: RawSubmission): ValidationResult {
   const errors: string[] = [];
   const name = typeof payload.name === "string" ? payload.name.trim().replace(/\s+/g, " ") : "";
   const normalizedName = normalizeName(name);
+  const clan = parseClan(payload.clan);
 
   if (name.length < 2) errors.push("Ingresá un nombre de al menos 2 caracteres.");
   if (name.length > 80) errors.push("El nombre no puede superar 80 caracteres.");
@@ -292,7 +322,7 @@ export function validateSubmission(payload: RawSubmission): ValidationResult {
   }
 
   if (errors.length > 0) return { ok: false, errors };
-  return { ok: true, name, normalizedName, predictions, groupPredictions };
+  return { ok: true, name, normalizedName, clan, predictions, groupPredictions };
 }
 
 export function validateKnockoutSubmission(
@@ -516,6 +546,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   return {
     submissionId: submission.id,
     name: submission.name,
+    clan: parseClan(submission.clan),
     totalPoints: matchPoints + groupPoints + knockoutPoints,
     matchPoints,
     groupPoints,

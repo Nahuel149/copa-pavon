@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildStandings } from "@/lib/prode";
+import { buildStandings, clans } from "@/lib/prode";
 import { readResultStore, readSubmissionStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -7,8 +7,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
+  const standings = buildStandings(submissionStore.submissions, results);
   return NextResponse.json({
-    standings: buildStandings(submissionStore.submissions, results),
+    standings,
+    standingsByClan: Object.fromEntries(
+      clans.map((clan) => [clan.id, standings.filter((standing) => standing.clan === clan.id)]),
+    ),
     playedMatches: results.matchResults.length,
     decidedGroups: results.groupResults.length,
     knockoutFixtures: results.knockoutFixtures.length,

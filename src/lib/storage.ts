@@ -1,6 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import {
+  defaultClan,
+  parseClan,
   validateResultStore,
   type KnockoutPrediction,
   type ResultStore,
@@ -29,6 +31,7 @@ export async function readSubmissionStore(): Promise<SubmissionStore> {
     submissions: Array.isArray(parsed.submissions)
       ? parsed.submissions.map((submission) => ({
           ...submission,
+          clan: parseClan(submission.clan),
           groupPredictions: Array.isArray(submission.groupPredictions) ? submission.groupPredictions : [],
           knockoutPredictions: Array.isArray(submission.knockoutPredictions) ? submission.knockoutPredictions : [],
         }))
@@ -38,6 +41,7 @@ export async function readSubmissionStore(): Promise<SubmissionStore> {
 
 export async function appendSubmission(submission: Submission) {
   const store = await readSubmissionStore();
+  submission.clan = submission.clan ?? defaultClan;
   if (store.submissions.some((item) => item.normalizedName === submission.normalizedName)) {
     return { ok: false as const, reason: "duplicate-name" };
   }
