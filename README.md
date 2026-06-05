@@ -51,6 +51,13 @@ PRODE_EDIT_DEADLINE=2026-06-11T23:59:00-03:00
 ```
 
 `PRODE_EDIT_DEADLINE` define hasta cuando los participantes pueden editar con nombre y PIN. Si no esta configurada, la edicion queda abierta.
+Ademas, la edicion de fase de grupos se cierra automaticamente por fecha:
+
+- Fecha 1: 2026-06-11 19:00 UTC.
+- Fecha 2: 2026-06-18 16:00 UTC.
+- Fecha 3: 2026-06-24 19:00 UTC.
+
+Los top 2 de grupos cierran junto con la Fecha 1. `PRODE_EDIT_DEADLINE` queda como cierre global opcional si se quiere cortar todo antes.
 
 ## Fixture
 

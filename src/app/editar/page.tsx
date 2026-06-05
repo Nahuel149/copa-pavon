@@ -17,7 +17,21 @@ type ChoiceDraft = { type: "choice"; choice: PredictionChoice | "" };
 type DraftPrediction = ScoreDraft | ChoiceDraft;
 type DraftState = Record<string, DraftPrediction>;
 type GroupDraftState = Record<GroupId, { first: string; second: string }>;
-type EditWindow = { open: boolean; deadline: string | null };
+type EditWindow = {
+  open: boolean;
+  deadline: string | null;
+  rounds: Record<MatchRound, { open: boolean; deadline: string }>;
+};
+
+const defaultEditWindow: EditWindow = {
+  open: true,
+  deadline: null,
+  rounds: {
+    1: { open: true, deadline: "2026-06-11T19:00:00.000Z" },
+    2: { open: true, deadline: "2026-06-18T16:00:00.000Z" },
+    3: { open: true, deadline: "2026-06-24T19:00:00.000Z" },
+  },
+};
 
 const initialDraft = matches.reduce<DraftState>((draft, match) => {
   draft[match.id] = match.exactScore ? { type: "score", homeGoals: "", awayGoals: "" } : { type: "choice", choice: "" };
@@ -73,7 +87,7 @@ export default function EditarPage() {
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [predictions, setPredictions] = useState<DraftState>(initialDraft);
   const [groupPredictions, setGroupPredictions] = useState<GroupDraftState>(initialGroupDraft);
-  const [editWindow, setEditWindow] = useState<EditWindow>({ open: true, deadline: null });
+  const [editWindow, setEditWindow] = useState<EditWindow>(defaultEditWindow);
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "done">("idle");
   const [errors, setErrors] = useState<string[]>([]);
@@ -89,9 +103,10 @@ export default function EditarPage() {
   const missingMatches = matches.length - completedMatches;
   const missingGroups = groups.length - completedGroups;
   const canSave = loaded && editWindow.open && !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
+  const groupsOpen = editWindow.rounds[1]?.open ?? true;
   const deadlineText = editWindow.deadline
     ? new Date(editWindow.deadline).toLocaleString("es-AR")
-    : "sin fecha límite configurada";
+    : "por fecha, segun el inicio de cada jornada";
 
   async function loadSubmission(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,14 +119,14 @@ export default function EditarPage() {
     });
     const body = (await response.json()) as { submission?: Submission; editWindow?: EditWindow; errors?: string[] };
     if (!response.ok || !body.submission) {
-      setErrors(body.errors ?? ["No se pudo abrir el pronóstico."]);
+      setErrors(body.errors ?? ["No se pudo abrir el pronostico."]);
       setStatus("idle");
       return;
     }
     setName(body.submission.name);
     setPredictions(draftFromSubmission(body.submission.predictions));
     setGroupPredictions(groupDraftFromSubmission(body.submission));
-    setEditWindow(body.editWindow ?? { open: true, deadline: null });
+    setEditWindow(body.editWindow ?? defaultEditWindow);
     setLoaded(true);
     setStatus("idle");
   }
@@ -128,7 +143,7 @@ export default function EditarPage() {
     });
     const body = (await response.json()) as { updatedAt?: string; editWindow?: EditWindow; errors?: string[] };
     if (!response.ok) {
-      setErrors(body.errors ?? ["No se pudo guardar la edición."]);
+      setErrors(body.errors ?? ["No se pudo guardar la edicion."]);
       if (body.editWindow) setEditWindow(body.editWindow);
       setStatus("idle");
       return;
@@ -159,15 +174,15 @@ export default function EditarPage() {
       <section className="heroBand tableHero">
         <div>
           <p className="eyebrow">Editar</p>
-          <h1>Modificar pronósticos.</h1>
-          <p className="heroCopy">Ingresá con tu nombre y PIN. La edición cierra: {deadlineText}.</p>
+          <h1>Modificar pronosticos.</h1>
+          <p className="heroCopy">Ingresa con tu nombre y PIN. La edicion cierra {deadlineText}.</p>
         </div>
         <div className="heroControl">
           <label htmlFor="editName">Nombre</label>
           <input id="editName" autoComplete="name" disabled={loaded || status === "loading"} onChange={(event) => setName(event.target.value)} placeholder="Tu nombre" value={name} />
           <label htmlFor="editPin">PIN</label>
           <input id="editPin" autoComplete="current-password" disabled={status === "loading"} inputMode="numeric" maxLength={10} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="Tu PIN" type="password" value={pin} />
-          <span>{loaded ? `${completedTotal}/${totalItems} completos` : "Abrí tu envío guardado"}</span>
+          <span>{loaded ? `${completedTotal}/${totalItems} completos` : "Abri tu envio guardado"}</span>
         </div>
       </section>
 
@@ -183,11 +198,11 @@ export default function EditarPage() {
           <div>
             <p className="eyebrow">Acceso</p>
             <h2>Nombre y PIN.</h2>
-            <p>Usá el mismo nombre con el que mandaste el prode y el PIN que elegiste al enviarlo.</p>
+            <p>Usa el mismo nombre con el que mandaste el prode y el PIN que elegiste al enviarlo.</p>
           </div>
           <button className="primaryAction" disabled={status === "loading" || missingName || missingPin} type="submit">
             {status === "loading" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <KeyRound size={18} aria-hidden="true" />}
-            Abrir edición
+            Abrir edicion
           </button>
         </section>
       ) : null}
@@ -195,8 +210,23 @@ export default function EditarPage() {
       {loaded && !editWindow.open ? (
         <section className="validationPanel">
           <p className="eyebrow">Cerrado</p>
-          <h2>La edición ya no está disponible.</h2>
-          <p>Podés ver tu pronóstico, pero no guardarlo porque pasó la fecha límite.</p>
+          <h2>Ya cerraron todas las fechas.</h2>
+          <p>Podes ver tu pronostico, pero no guardarlo porque ya empezaron las tres fechas.</p>
+        </section>
+      ) : null}
+
+      {loaded && editWindow.open ? (
+        <section className="validationPanel">
+          <p className="eyebrow">Limites</p>
+          <h2>La edicion se cierra por fecha.</h2>
+          <ul>
+            {([1, 2, 3] as MatchRound[]).map((round) => (
+              <li key={round}>
+                Fecha {round}: {editWindow.rounds[round].open ? "abierta" : "cerrada"} desde{" "}
+                {new Date(editWindow.rounds[round].deadline).toLocaleString("es-AR")}
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
@@ -204,7 +234,7 @@ export default function EditarPage() {
         <section className="receiptPanel">
           <div>
             <p className="eyebrow">Guardado</p>
-            <h2>Edición actualizada.</h2>
+            <h2>Edicion actualizada.</h2>
             <p>{new Date(updatedAt).toLocaleString("es-AR")}</p>
           </div>
           <CheckCircle2 size={34} aria-hidden="true" />
@@ -213,7 +243,7 @@ export default function EditarPage() {
 
       {loaded ? (
         <>
-          <section className="metricGrid" aria-label="Estado de edición">
+          <section className="metricGrid" aria-label="Estado de edicion">
             <article className="metric"><Target size={20} aria-hidden="true" /><span>Exactos fase grupos</span><strong>{exactScoreMatches.length}</strong></article>
             <article className="metric"><Trophy size={20} aria-hidden="true" /><span>1X2 fase grupos</span><strong>{choiceMatches.length}</strong></article>
             <article className="metric alert"><CheckCircle2 size={20} aria-hidden="true" /><span>Completos</span><strong>{completedTotal}/{totalItems}</strong></article>
@@ -223,7 +253,7 @@ export default function EditarPage() {
             {([1, 2, 3] as MatchRound[]).map((round) => (
               <button className={activeRound === round ? "roundTab active" : "roundTab"} key={round} onClick={() => setActiveRound(round)} type="button">
                 <span>{roundLabels[round]}</span>
-                <strong>{matches.filter((match) => match.round === round && match.exactScore).length} exactos</strong>
+                <strong>{editWindow.rounds[round].open ? "Abierta" : "Cerrada"}</strong>
               </button>
             ))}
           </section>
@@ -231,20 +261,21 @@ export default function EditarPage() {
           <section className="matchGrid" aria-label={roundLabels[activeRound]}>
             {roundMatches.map((match) => {
               const value = predictions[match.id];
+              const matchOpen = editWindow.rounds[match.round]?.open ?? true;
               return (
                 <article className={match.exactScore ? "matchCard exact" : "matchCard choice"} key={match.id}>
-                  <div className="matchHeader"><span>#{match.order}</span><strong>{match.exactScore ? "Marcador exacto" : "1X2"} · Grupo {match.groupId}</strong></div>
+                  <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} · Grupo {match.groupId}</strong></div>
                   <h2>{match.home}<span>vs.</span>{match.away}</h2>
                   {value.type === "score" ? (
                     <div className="scoreInputs">
-                      <label><span>{match.home}</span><input disabled={!editWindow.open || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "homeGoals", event.target.value)} value={value.homeGoals} /></label>
+                      <label><span>{match.home}</span><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "homeGoals", event.target.value)} value={value.homeGoals} /></label>
                       <b>-</b>
-                      <label><span>{match.away}</span><input disabled={!editWindow.open || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "awayGoals", event.target.value)} value={value.awayGoals} /></label>
+                      <label><span>{match.away}</span><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "awayGoals", event.target.value)} value={value.awayGoals} /></label>
                     </div>
                   ) : (
                     <div className="choiceGroup">
                       {(["home", "draw", "away"] as PredictionChoice[]).map((choice) => (
-                        <button className={value.choice === choice ? "choiceButton selected" : "choiceButton"} disabled={!editWindow.open || status === "saving"} key={choice} onClick={() => setChoice(match.id, choice)} type="button">
+                        <button className={value.choice === choice ? "choiceButton selected" : "choiceButton"} disabled={!matchOpen || status === "saving"} key={choice} onClick={() => setChoice(match.id, choice)} type="button">
                           {choiceLabel(choice, match.home, match.away)}
                         </button>
                       ))}
@@ -264,11 +295,11 @@ export default function EditarPage() {
               const value = groupPredictions[group.id];
               return (
                 <article className="groupCard" key={group.id}>
-                  <div className="matchHeader"><span>Grupo {group.id}</span><strong>Top 2</strong></div>
+                  <div className="matchHeader"><span>Grupo {group.id}</span><strong>{groupsOpen ? "Top 2" : "Cerrado"}</strong></div>
                   <div className="teamList">{group.teams.map((team) => <span key={team}>{team}</span>)}</div>
                   <div className="groupSelectors">
-                    <label><span>1º puesto</span><select disabled={!editWindow.open || status === "saving"} onChange={(event) => setGroupPick(group.id, "first", event.target.value)} value={value.first}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
-                    <label><span>2º puesto</span><select disabled={!editWindow.open || status === "saving"} onChange={(event) => setGroupPick(group.id, "second", event.target.value)} value={value.second}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
+                    <label><span>1 puesto</span><select disabled={!groupsOpen || status === "saving"} onChange={(event) => setGroupPick(group.id, "first", event.target.value)} value={value.first}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
+                    <label><span>2 puesto</span><select disabled={!groupsOpen || status === "saving"} onChange={(event) => setGroupPick(group.id, "second", event.target.value)} value={value.second}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
                   </div>
                 </article>
               );
@@ -279,7 +310,7 @@ export default function EditarPage() {
             <div><span>{name.trim() || "Sin nombre"}</span><strong>{completedTotal}/{totalItems}</strong></div>
             <button className="primaryAction" disabled={!canSave} type="submit">
               {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Save size={18} aria-hidden="true" />}
-              {canSave ? "Guardar edición" : "No disponible"}
+              {canSave ? "Guardar edicion" : "No disponible"}
             </button>
           </div>
         </>
