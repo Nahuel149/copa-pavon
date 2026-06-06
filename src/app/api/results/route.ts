@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readResultStore, writeResultStore } from "@/lib/storage";
 import { validateResultStore } from "@/lib/prode";
+import { syncGroupMatchResults } from "@/lib/auto-results";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,4 +37,22 @@ export async function PUT(request: Request) {
 
   const results = await writeResultStore(validateResultStore(payload));
   return NextResponse.json(results);
+}
+
+export async function POST(request: Request) {
+  if (!adminAllowed(request)) {
+    return NextResponse.json({ error: "PIN invÃ¡lido." }, { status: 401 });
+  }
+
+  try {
+    const current = await readResultStore();
+    const { results, report } = await syncGroupMatchResults(current);
+    const saved = await writeResultStore(results);
+    return NextResponse.json({ results: saved, report });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "No se pudieron sincronizar los resultados." },
+      { status: 502 },
+    );
+  }
 }

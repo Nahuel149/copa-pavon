@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Download, Eye, Loader2, LockKeyhole, Plus, RefreshCw, Save, Trash2, Users } from "lucide-react";
+import { Download, Eye, Loader2, LockKeyhole, Plus, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import {
   groups,
@@ -28,6 +28,18 @@ import {
 
 type SubmissionsResponse = {
   submissions?: Submission[];
+  error?: string;
+};
+
+type SyncResultsResponse = {
+  results?: ResultStore;
+  report?: {
+    sourceUrl: string;
+    imported: number;
+    unchanged: number;
+    skipped: number;
+    checkedAt: string;
+  };
   error?: string;
 };
 
@@ -198,8 +210,9 @@ export default function AdminPage() {
     home: "",
     away: "",
   });
-  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "ready">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "syncing" | "ready">("idle");
   const [error, setError] = useState("");
+  const [syncSummary, setSyncSummary] = useState("");
 
   const results = useMemo(
     () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft),
@@ -216,7 +229,7 @@ export default function AdminPage() {
   const detailSubmissions = showAllSubmissions
     ? submissions
     : submissions.filter((submission) => submission.id === expandedId);
-  const isUnlocked = status === "ready" || status === "saving";
+  const isUnlocked = status === "ready" || status === "saving" || status === "syncing";
 
   async function loadAdminData(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
@@ -273,6 +286,34 @@ export default function AdminPage() {
     setGroupDraft(drafts.groupDraft);
     setKnockoutFixtures(drafts.knockoutFixtures);
     setKnockoutDraft(drafts.knockoutDraft);
+    setStatus("ready");
+  }
+
+  async function syncResults() {
+    setStatus("syncing");
+    setError("");
+    setSyncSummary("");
+
+    const response = await fetch("/api/results", {
+      method: "POST",
+      headers: pin ? { "x-prode-admin-pin": pin } : {},
+    });
+    const body = (await response.json()) as SyncResultsResponse;
+
+    if (!response.ok || !body.results || !body.report) {
+      setError(body.error ?? "No se pudieron buscar resultados automaticamente.");
+      setStatus("ready");
+      return;
+    }
+
+    const drafts = draftFromResults(body.results);
+    setMatchDraft(drafts.matchDraft);
+    setGroupDraft(drafts.groupDraft);
+    setKnockoutFixtures(drafts.knockoutFixtures);
+    setKnockoutDraft(drafts.knockoutDraft);
+    setSyncSummary(
+      `Busqueda lista: ${body.report.imported} nuevos/actualizados, ${body.report.unchanged} sin cambios. Fuente: ${body.report.sourceUrl}`,
+    );
     setStatus("ready");
   }
 
@@ -402,6 +443,10 @@ export default function AdminPage() {
           <RefreshCw size={18} aria-hidden="true" />
           Actualizar
         </button>
+        <button className="primaryAction light" disabled={status === "syncing" || status === "saving"} onClick={syncResults} type="button">
+          {status === "syncing" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Search size={18} aria-hidden="true" />}
+          Buscar resultados
+        </button>
         <button className="primaryAction light" disabled={status === "saving"} onClick={saveResults} type="button">
           {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Save size={18} aria-hidden="true" />}
           Guardar resultados
@@ -422,6 +467,8 @@ export default function AdminPage() {
           {showAllSubmissions ? "Ocultar todos" : "Ver todos los envíos"}
         </button>
       </section>
+
+      {syncSummary ? <section className="validationPanel">{syncSummary}</section> : null}
 
       <section className="tableShell">
         <table>

@@ -48,6 +48,7 @@ PRODE_ADMIN_PIN=456149
 MONGODB_URI=mongodb+srv://...
 MONGODB_DB=copa_kahl
 PRODE_EDIT_DEADLINE=2026-06-11T23:59:00-03:00
+PRODE_RESULTS_SYNC_URL=https://worldcup26.ir/get/games
 ```
 
 `PRODE_EDIT_DEADLINE` define hasta cuando los participantes pueden editar con nombre y PIN. Si no esta configurada, la edicion queda abierta.
@@ -58,6 +59,8 @@ Ademas, la edicion de fase de grupos se cierra automaticamente por fecha:
 - Fecha 3: 2026-06-24 19:00 UTC.
 
 Los top 2 de grupos cierran junto con la Fecha 1. `PRODE_EDIT_DEADLINE` queda como cierre global opcional si se quiere cortar todo antes.
+
+`PRODE_RESULTS_SYNC_URL` es opcional. Si no se configura, el admin usa una fuente publica por defecto para buscar resultados finalizados de fase de grupos desde el boton "Buscar resultados". La carga manual sigue disponible como respaldo.
 
 ## Fixture
 
