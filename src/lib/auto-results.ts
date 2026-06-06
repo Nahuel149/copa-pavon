@@ -20,6 +20,9 @@ export type SyncResultReport = {
   checkedAt: string;
 };
 
+let lastAutoSyncAt = 0;
+let autoSyncPromise: Promise<SyncResultReport> | null = null;
+
 function parseScore(value: unknown) {
   if (typeof value === "number" && Number.isInteger(value)) return value;
   if (typeof value === "string" && /^\d+$/.test(value.trim())) return Number(value.trim());
@@ -123,4 +126,31 @@ export async function syncGroupMatchResults(current: ResultStore) {
   };
 
   return { results, report };
+}
+
+export async function autoSyncGroupMatchResults(
+  readCurrent: () => Promise<ResultStore>,
+  saveResults: (results: ResultStore) => Promise<ResultStore>,
+) {
+  const cooldownMs = Number(process.env.PRODE_RESULTS_SYNC_COOLDOWN_MS ?? 15 * 60 * 1000);
+  const now = Date.now();
+  if (lastAutoSyncAt && now - lastAutoSyncAt < cooldownMs) return null;
+
+  if (autoSyncPromise) return autoSyncPromise;
+
+  autoSyncPromise = (async () => {
+    const current = await readCurrent();
+    const { results, report } = await syncGroupMatchResults(current);
+    if (report.imported > 0) {
+      await saveResults(results);
+    }
+    lastAutoSyncAt = Date.now();
+    return report;
+  })();
+
+  try {
+    return await autoSyncPromise;
+  } finally {
+    autoSyncPromise = null;
+  }
 }

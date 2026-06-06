@@ -62,6 +62,8 @@ Los top 2 de grupos cierran junto con la Fecha 1. `PRODE_EDIT_DEADLINE` queda co
 
 `PRODE_RESULTS_SYNC_URL` es opcional. Si no se configura, el admin usa una fuente publica por defecto para buscar resultados finalizados de fase de grupos desde el boton "Buscar resultados". La carga manual sigue disponible como respaldo.
 
+La pagina `/tabla` tambien intenta sincronizar resultados automaticamente al abrirse, con un cooldown de 15 minutos por defecto (`PRODE_RESULTS_SYNC_COOLDOWN_MS`). Esto evita depender de cron jobs pagos: si alguien visita la tabla y hay resultados nuevos, se guardan y la tabla se recalcula.
+
 ## Fixture
 
 Fixture de fase de grupos validado contra el calendario FIFA 2026 publicado en junio de 2026. Son 72 partidos: 12 grupos de 4 equipos.
