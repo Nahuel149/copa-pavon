@@ -2,9 +2,9 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, KeyRound, Loader2, Save, Target, Trophy } from "lucide-react";
+import { TeamBadge } from "@/app/components/TeamBadge";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
-  choiceLabel,
   countCompleteGroupPredictions,
   countCompletePredictions,
   type Prediction,
@@ -265,18 +265,18 @@ export default function EditarPage() {
               return (
                 <article className={match.exactScore ? "matchCard exact" : "matchCard choice"} key={match.id}>
                   <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} · Grupo {match.groupId}</strong></div>
-                  <h2>{match.home}<span>vs.</span>{match.away}</h2>
+                  <h2><TeamBadge team={match.home} /><span>vs.</span><TeamBadge team={match.away} /></h2>
                   {value.type === "score" ? (
                     <div className="scoreInputs">
-                      <label><span>{match.home}</span><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "homeGoals", event.target.value)} value={value.homeGoals} /></label>
+                      <label><TeamBadge compact team={match.home} /><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "homeGoals", event.target.value)} value={value.homeGoals} /></label>
                       <b>-</b>
-                      <label><span>{match.away}</span><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "awayGoals", event.target.value)} value={value.awayGoals} /></label>
+                      <label><TeamBadge compact team={match.away} /><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "awayGoals", event.target.value)} value={value.awayGoals} /></label>
                     </div>
                   ) : (
                     <div className="choiceGroup">
                       {(["home", "draw", "away"] as PredictionChoice[]).map((choice) => (
                         <button className={value.choice === choice ? "choiceButton selected" : "choiceButton"} disabled={!matchOpen || status === "saving"} key={choice} onClick={() => setChoice(match.id, choice)} type="button">
-                          {choiceLabel(choice, match.home, match.away)}
+                          {choice === "home" ? <TeamBadge compact team={match.home} /> : choice === "away" ? <TeamBadge compact team={match.away} /> : "Empate"}
                         </button>
                       ))}
                     </div>
@@ -296,7 +296,7 @@ export default function EditarPage() {
               return (
                 <article className="groupCard" key={group.id}>
                   <div className="matchHeader"><span>Grupo {group.id}</span><strong>{groupsOpen ? "Top 2" : "Cerrado"}</strong></div>
-                  <div className="teamList">{group.teams.map((team) => <span key={team}>{team}</span>)}</div>
+                  <div className="teamList">{group.teams.map((team) => <TeamBadge compact key={team} team={team} />)}</div>
                   <div className="groupSelectors">
                     <label><span>1 puesto</span><select disabled={!groupsOpen || status === "saving"} onChange={(event) => setGroupPick(group.id, "first", event.target.value)} value={value.first}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
                     <label><span>2 puesto</span><select disabled={!groupsOpen || status === "saving"} onChange={(event) => setGroupPick(group.id, "second", event.target.value)} value={value.second}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>

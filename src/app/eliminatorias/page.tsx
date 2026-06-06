@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
+import { TeamBadge } from "@/app/components/TeamBadge";
 import { knockoutStageLabels, type KnockoutFixture } from "@/lib/matches";
 import { countCompleteKnockoutPredictions } from "@/lib/prode";
 
@@ -275,13 +276,13 @@ export default function EliminatoriasPage() {
                       <strong>Eliminatoria exacta</strong>
                     </div>
                     <h2>
-                      {fixture.home}
+                      <TeamBadge team={fixture.home} />
                       <span>vs.</span>
-                      {fixture.away}
+                      <TeamBadge team={fixture.away} />
                     </h2>
                     <div className="scoreInputs">
                       <label>
-                        <span>{fixture.home}</span>
+                        <TeamBadge compact team={fixture.home} />
                         <input
                           inputMode="numeric"
                           value={value.homeGoals}
@@ -291,7 +292,7 @@ export default function EliminatoriasPage() {
                       </label>
                       <b>-</b>
                       <label>
-                        <span>{fixture.away}</span>
+                        <TeamBadge compact team={fixture.away} />
                         <input
                           inputMode="numeric"
                           value={value.awayGoals}

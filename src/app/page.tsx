@@ -4,9 +4,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, ClipboardCheck, KeyRound, Loader2, Save, Send, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
+import { TeamBadge } from "@/app/components/TeamBadge";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
-  choiceLabel,
   countCompleteGroupPredictions,
   countCompletePredictions,
   type PredictionChoice,
@@ -357,14 +357,14 @@ export default function HomePage() {
                 <strong>{match.exactScore ? "Marcador exacto" : "1X2"} · Grupo {match.groupId}</strong>
               </div>
               <h2>
-                {match.home}
+                <TeamBadge team={match.home} />
                 <span>vs.</span>
-                {match.away}
+                <TeamBadge team={match.away} />
               </h2>
               {value.type === "score" ? (
                 <div className="scoreInputs">
                   <label>
-                    <span>{match.home}</span>
+                    <TeamBadge compact team={match.home} />
                     <input
                       inputMode="numeric"
                       min="0"
@@ -377,7 +377,7 @@ export default function HomePage() {
                   </label>
                   <b>-</b>
                   <label>
-                    <span>{match.away}</span>
+                    <TeamBadge compact team={match.away} />
                     <input
                       inputMode="numeric"
                       min="0"
@@ -399,7 +399,7 @@ export default function HomePage() {
                       disabled={status === "saving"}
                       type="button"
                     >
-                      {choiceLabel(choice, match.home, match.away)}
+                      {choice === "home" ? <TeamBadge compact team={match.home} /> : choice === "away" ? <TeamBadge compact team={match.away} /> : "Empate"}
                     </button>
                   ))}
                 </div>
@@ -427,7 +427,7 @@ export default function HomePage() {
               </div>
               <div className="teamList">
                 {group.teams.map((team) => (
-                  <span key={team}>{team}</span>
+                  <TeamBadge compact key={team} team={team} />
                 ))}
               </div>
               <div className="groupSelectors">

@@ -995,6 +995,55 @@ a {
   font-size: 0.92rem;
 }
 
+.teamBadge {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+}
+
+.teamBadge img {
+  width: 28px;
+  height: 20px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(5, 5, 5, 0.22);
+  object-fit: cover;
+}
+
+.teamBadge span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teamBadge.compact {
+  gap: 6px;
+}
+
+.teamBadge.compact img {
+  width: 22px;
+  height: 16px;
+}
+
+.matchCard h2 .teamBadge,
+.resultCard strong .teamBadge,
+.predictionCell strong .teamBadge {
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: inherit;
+  font-weight: 900;
+}
+
+.matchCard h2 .teamBadge span,
+.resultCard strong .teamBadge span,
+.predictionCell strong .teamBadge span {
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
 .choiceGroup {
   display: grid;
   gap: 8px;
@@ -1112,7 +1161,7 @@ a {
   gap: 7px;
 }
 
-.teamList span {
+.teamList > span {
   min-width: 0;
   padding: 8px;
   overflow: hidden;
@@ -1122,6 +1171,18 @@ a {
   font-size: 0.78rem;
   font-weight: 900;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamList .teamBadge {
+  min-width: 0;
+  padding: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(5, 5, 5, 0.18);
+  background: var(--cream);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
   white-space: nowrap;
 }
 
@@ -1201,6 +1262,10 @@ a {
 }
 
 .resultCard strong {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   min-height: 40px;
   line-height: 1.18;
 }
@@ -1451,6 +1516,10 @@ tbody tr.relegationRow:hover {
 }
 
 .predictionCell strong {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
   font-size: 0.86rem;
   line-height: 1.24;
 }

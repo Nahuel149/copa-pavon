@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Download, Eye, Loader2, LockKeyhole, Plus, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
+import { TeamBadge } from "@/app/components/TeamBadge";
 import {
   groups,
   knockoutStageLabels,
@@ -536,10 +537,10 @@ export default function AdminPage() {
           return (
             <article className="resultCard" key={match.id}>
               <span>#{match.order} · Grupo {match.groupId}</span>
-              <strong>{match.home} vs. {match.away}</strong>
+              <strong><TeamBadge team={match.home} /> <span>vs.</span> <TeamBadge team={match.away} /></strong>
               <div className="scoreInputs compact">
                 <label>
-                  <span>{match.home}</span>
+                  <TeamBadge compact team={match.home} />
                   <input
                     inputMode="numeric"
                     value={value.homeGoals}
@@ -549,7 +550,7 @@ export default function AdminPage() {
                 </label>
                 <b>-</b>
                 <label>
-                  <span>{match.away}</span>
+                  <TeamBadge compact team={match.away} />
                   <input
                     inputMode="numeric"
                     value={value.awayGoals}
@@ -742,7 +743,7 @@ export default function AdminPage() {
                     return (
                       <article className="predictionCell" data-tone={prediction.type === "score" ? "score" : prediction.choice} key={prediction.matchId}>
                         <span>#{match.order} · Grupo {match.groupId}</span>
-                        <strong>{match.home} vs. {match.away}</strong>
+                        <strong><TeamBadge team={match.home} /> <span>vs.</span> <TeamBadge team={match.away} /></strong>
                         <b>{serializePrediction(prediction)}</b>
                       </article>
                     );
@@ -759,7 +760,7 @@ export default function AdminPage() {
                     return (
                       <article className="predictionCell" data-tone="knockout" key={prediction.fixtureId}>
                         <span>{fixture ? knockoutStageLabels[fixture.stage] : "Eliminatoria"}</span>
-                        <strong>{fixture ? `${fixture.home} vs. ${fixture.away}` : prediction.fixtureId}</strong>
+                        <strong>{fixture ? <><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></> : prediction.fixtureId}</strong>
                         <b>{serializeKnockoutPrediction(prediction)}</b>
                       </article>
                     );
