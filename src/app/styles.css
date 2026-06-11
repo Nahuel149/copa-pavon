@@ -109,6 +109,21 @@ a {
   border-left: 1px solid rgba(5, 5, 5, 0.15);
 }
 
+.masthead .mobileNav {
+  display: none;
+}
+
+.mobileNavPrimary,
+.mobileNavMore {
+  min-width: 0;
+}
+
+.moreNavButton {
+  border: 0;
+  border-right: 1px solid rgba(5, 5, 5, 0.15);
+  background: transparent;
+}
+
 .navItem {
   display: flex;
   align-items: center;
@@ -1904,6 +1919,36 @@ tbody tr.relegationRow:hover {
     display: none;
   }
 
+  .masthead .desktopNav {
+    display: none;
+  }
+
+  .masthead .mobileNav {
+    display: block;
+    border-left: 0;
+    border-top: 1px solid rgba(5, 5, 5, 0.15);
+  }
+
+  .mobileNavPrimary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mobileNavMore {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 3px solid var(--red);
+  }
+
+  .mobileNavMore .navItem {
+    border-bottom: 1px solid rgba(5, 5, 5, 0.15);
+  }
+
+  .moreNavButton[aria-expanded="true"] {
+    background: var(--red);
+    color: #fff;
+  }
+
   .heroBand {
     display: grid;
     min-height: 370px;
@@ -1931,10 +1976,6 @@ tbody tr.relegationRow:hover {
   .deadlineGrid,
   .knockoutComposer {
     grid-template-columns: 1fr;
-  }
-
-  .masthead nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .predictionExplorer {
