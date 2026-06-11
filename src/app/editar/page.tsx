@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, KeyRound, Loader2, Save, Target, Trophy } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { readJsonResponse } from "@/lib/client-json";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
   countCompleteGroupPredictions,
@@ -151,8 +152,8 @@ export default function EditarPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, pin }),
     });
-    const body = (await response.json()) as { submission?: Submission; editWindow?: EditWindow; errors?: string[] };
-    if (!response.ok || !body.submission) {
+    const body = await readJsonResponse<{ submission?: Submission; editWindow?: EditWindow; errors?: string[] }>(response);
+    if (!response.ok || body.errors?.length || !body.submission) {
       setErrors(body.errors ?? ["No se pudo abrir el pronostico."]);
       setStatus("idle");
       return;
@@ -179,8 +180,8 @@ export default function EditarPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(toPayload(name, pin, predictions, groupPredictions)),
     });
-    const body = (await response.json()) as { updatedAt?: string; editWindow?: EditWindow; errors?: string[] };
-    if (!response.ok) {
+    const body = await readJsonResponse<{ updatedAt?: string; editWindow?: EditWindow; errors?: string[] }>(response);
+    if (!response.ok || body.errors?.length) {
       setErrors(body.errors ?? ["No se pudo guardar la edicion."]);
       if (body.editWindow) setEditWindow(body.editWindow);
       setStatus("idle");

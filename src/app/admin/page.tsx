@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Download, Eye, Loader2, LockKeyhole, Plus, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { readJsonResponse } from "@/lib/client-json";
 import {
   groups,
   knockoutStageLabels,
@@ -244,14 +245,19 @@ export default function AdminPage() {
     ]);
 
     if (!submissionResponse.ok || !resultsResponse.ok) {
-      const body = (await (submissionResponse.ok ? resultsResponse : submissionResponse).json()) as SubmissionsResponse;
+      const body = await readJsonResponse<SubmissionsResponse>(submissionResponse.ok ? resultsResponse : submissionResponse);
       setError(body.error ?? "No se pudo abrir el panel.");
       setStatus("idle");
       return;
     }
 
-    const submissionBody = (await submissionResponse.json()) as SubmissionsResponse;
-    const resultsBody = (await resultsResponse.json()) as ResultStore;
+    const submissionBody = await readJsonResponse<SubmissionsResponse>(submissionResponse);
+    const resultsBody = await readJsonResponse<ResultStore & { error?: string }>(resultsResponse);
+    if (submissionBody.error || resultsBody.error) {
+      setError(submissionBody.error ?? resultsBody.error ?? "No se pudo abrir el panel.");
+      setStatus("idle");
+      return;
+    }
     const drafts = draftFromResults(resultsBody);
 
     setSubmissions(submissionBody.submissions ?? []);
@@ -275,13 +281,18 @@ export default function AdminPage() {
     });
 
     if (!response.ok) {
-      const body = (await response.json()) as { error?: string };
+      const body = await readJsonResponse<{ error?: string }>(response);
       setError(body.error ?? "No se pudieron guardar los resultados.");
       setStatus("ready");
       return;
     }
 
-    const saved = (await response.json()) as ResultStore;
+    const saved = await readJsonResponse<ResultStore & { error?: string }>(response);
+    if (saved.error) {
+      setError(saved.error);
+      setStatus("ready");
+      return;
+    }
     const drafts = draftFromResults(saved);
     setMatchDraft(drafts.matchDraft);
     setGroupDraft(drafts.groupDraft);
@@ -299,7 +310,7 @@ export default function AdminPage() {
       method: "POST",
       headers: pin ? { "x-prode-admin-pin": pin } : {},
     });
-    const body = (await response.json()) as SyncResultsResponse;
+    const body = await readJsonResponse<SyncResultsResponse>(response);
 
     if (!response.ok || !body.results || !body.report) {
       setError(body.error ?? "No se pudieron buscar resultados automaticamente.");

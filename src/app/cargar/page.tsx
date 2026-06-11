@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckCircle2, ClipboardCheck, KeyRound, Loader2, Save, Send, Table2, Target, Trash2, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { readJsonResponse } from "@/lib/client-json";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
   countCompleteGroupPredictions,
@@ -195,8 +196,8 @@ export default function HomePage() {
       body: JSON.stringify(toPayload(name, pin, predictions, groupPredictions)),
     });
 
-    const body = (await response.json()) as { id?: string; createdAt?: string; errors?: string[] };
-    if (!response.ok) {
+    const body = await readJsonResponse<{ id?: string; createdAt?: string; errors?: string[] }>(response);
+    if (!response.ok || body.errors?.length) {
       setErrors(body.errors ?? ["No se pudo guardar el pronóstico."]);
       setStatus("idle");
       return;

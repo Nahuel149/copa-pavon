@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Brackets, RefreshCw, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
+import { readJsonResponse } from "@/lib/client-json";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
 type StandingsResponse = {
@@ -13,6 +14,7 @@ type StandingsResponse = {
   knockoutFixtures: number;
   playedKnockoutMatches: number;
   updatedAt: string;
+  error?: string;
 };
 
 export default function TablaPage() {
@@ -26,15 +28,23 @@ export default function TablaPage() {
     updatedAt: "",
   });
   const [status, setStatus] = useState<"loading" | "ready">("loading");
+  const [error, setError] = useState("");
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
 
   async function loadStandings() {
     setStatus("loading");
-    const response = await fetch("/api/standings", { cache: "no-store" });
-    const body = (await response.json()) as StandingsResponse;
-    setData(body);
-    setStatus("ready");
+    setError("");
+    try {
+      const response = await fetch("/api/standings", { cache: "no-store" });
+      const body = await readJsonResponse<StandingsResponse>(response);
+      if (!response.ok || body.error) throw new Error(body.error ?? "No se pudo actualizar la tabla.");
+      setData(body);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "No se pudo actualizar la tabla.");
+    } finally {
+      setStatus("ready");
+    }
   }
 
   useEffect(() => {
@@ -64,6 +74,8 @@ export default function TablaPage() {
           </button>
         </div>
       </section>
+
+      {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
       <KahlImageScatter page="tabla" count={4} variant="compact" />
 

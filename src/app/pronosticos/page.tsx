@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Eye, Loader2, Search, Target, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { readJsonResponse } from "@/lib/client-json";
 import { matches, roundLabels, type Match, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
@@ -57,13 +58,21 @@ export default function PronosticosPage() {
   const [selectedMatchId, setSelectedMatchId] = useState(matches[0].id);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"loading" | "ready">("loading");
+  const [error, setError] = useState("");
 
   async function loadData() {
     setStatus("loading");
-    const response = await fetch("/api/pronosticos", { cache: "no-store" });
-    const body = (await response.json()) as PronosticosResponse;
-    setData(body);
-    setStatus("ready");
+    setError("");
+    try {
+      const response = await fetch("/api/pronosticos", { cache: "no-store" });
+      const body = await readJsonResponse<PronosticosResponse & { error?: string }>(response);
+      if (!response.ok || body.error) throw new Error(body.error ?? "No se pudieron cargar los pronosticos.");
+      setData(body);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "No se pudieron cargar los pronosticos.");
+    } finally {
+      setStatus("ready");
+    }
   }
 
   useEffect(() => {
@@ -142,6 +151,8 @@ export default function PronosticosPage() {
           </button>
         </div>
       </section>
+
+      {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
       <KahlImageScatter page="tabla" count={1} variant="compact" />
 

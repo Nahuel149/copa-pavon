@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { readJsonResponse } from "@/lib/client-json";
 import { knockoutStageLabels, type KnockoutFixture } from "@/lib/matches";
 import { countCompleteKnockoutPredictions } from "@/lib/prode";
 
@@ -75,7 +76,7 @@ export default function EliminatoriasPage() {
   useEffect(() => {
     async function loadFixtures() {
       const response = await fetch("/api/knockout-fixtures", { cache: "no-store" });
-      const body = (await response.json()) as FixtureResponse;
+      const body = await readJsonResponse<FixtureResponse>(response);
       const loadedFixtures = body.fixtures ?? [];
       const savedDraft = readSavedKnockoutDraft(loadedFixtures);
       setFixtures(loadedFixtures);
@@ -144,8 +145,8 @@ export default function EliminatoriasPage() {
       }),
     });
 
-    const body = (await response.json()) as { errors?: string[] };
-    if (!response.ok) {
+    const body = await readJsonResponse<{ errors?: string[] }>(response);
+    if (!response.ok || body.errors?.length) {
       setErrors(body.errors ?? ["No se pudo guardar el pronóstico."]);
       setStatus("idle");
       return;

@@ -8,21 +8,25 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    await autoSyncGroupMatchResults(readResultStore, writeResultStore);
+    try {
+      await autoSyncGroupMatchResults(readResultStore, writeResultStore);
+    } catch {
+      // Public comparison should still work with the last saved results.
+    }
+
+    const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
+    const submissions = submissionStore.submissions
+      .toSorted((a, b) => a.name.localeCompare(b.name, "es"))
+      .map(publicSubmission);
+    const standings = buildStandings(submissionStore.submissions, results);
+
+    return NextResponse.json({
+      submissions,
+      standings,
+      results,
+      updatedAt: new Date().toISOString(),
+    });
   } catch {
-    // Public comparison should still work with the last saved results.
+    return NextResponse.json({ error: "No se pudieron cargar los pronosticos. Intenta nuevamente." }, { status: 500 });
   }
-
-  const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
-  const submissions = submissionStore.submissions
-    .toSorted((a, b) => a.name.localeCompare(b.name, "es"))
-    .map(publicSubmission);
-  const standings = buildStandings(submissionStore.submissions, results);
-
-  return NextResponse.json({
-    submissions,
-    standings,
-    results,
-    updatedAt: new Date().toISOString(),
-  });
 }
