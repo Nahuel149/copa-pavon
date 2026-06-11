@@ -15,7 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <div className="shell">
           <header className="masthead">
-            <Link className="brand" href="/">
+            <Link className="brand" href="/tabla">
               <span className="brandMark">CK</span>
               <span>
                 <strong>Copa Kahl</strong>
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </Link>
             <MainNavigation />
             <div className="mastActions" aria-label="Acciones rapidas">
-              <Link className="roundAction" href="/" aria-label="Abrir pronosticos">
+              <Link className="roundAction" href="/tabla" aria-label="Abrir tabla">
                 <Trophy size={20} aria-hidden="true" />
               </Link>
             </div>

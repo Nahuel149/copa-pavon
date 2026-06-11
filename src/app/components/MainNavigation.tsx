@@ -16,7 +16,7 @@ import {
 import { useState } from "react";
 
 const primaryItems = [
-  { href: "/", label: "Cargar", icon: ClipboardList },
+  { href: "/cargar", label: "Cargar", icon: ClipboardList },
   { href: "/tabla", label: "Tabla", icon: Table2 },
 ];
 
