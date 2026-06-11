@@ -237,7 +237,7 @@ export default function PronosticosPage() {
         </section>
       </section>
 
-      <section className="tableShell">
+      <section className="tableShell predictionDetailTable">
         <div className="tableNote">
           <strong>Detalle individual</strong>
           <label className="searchBox">
@@ -250,24 +250,22 @@ export default function PronosticosPage() {
             <tr>
               <th>#</th>
               <th>Participante</th>
-              <th>Pronostico</th>
-              <th>Resultado elegido</th>
+              <th>Eligio</th>
               <th>Puntos</th>
             </tr>
           </thead>
           <tbody>
             {predictionRows.map((row, index) => (
               <tr key={row.submission.id}>
-                <td>{index + 1}</td>
-                <td>{row.submission.name}</td>
-                <td>{row.label}</td>
-                <td>{row.outcome ? outcomeLabel(row.outcome, selectedMatch) : "-"}</td>
-                <td>{row.standing?.totalPoints ?? 0}</td>
+                <td data-label="#">{index + 1}</td>
+                <td data-label="Participante">{row.submission.name}</td>
+                <td data-label="Eligio">{row.label}</td>
+                <td data-label="Puntos">{row.standing?.totalPoints ?? 0}</td>
               </tr>
             ))}
             {predictionRows.length === 0 ? (
               <tr>
-                <td colSpan={5}>No hay pronosticos para mostrar.</td>
+                <td colSpan={4}>No hay pronosticos para mostrar.</td>
               </tr>
             ) : null}
           </tbody>
