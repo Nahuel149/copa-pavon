@@ -105,7 +105,7 @@ a {
 
 .masthead nav {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   border-left: 1px solid rgba(5, 5, 5, 0.15);
 }
 
@@ -931,6 +931,179 @@ a {
   gap: clamp(18px, 2.4vw, 28px);
 }
 
+.predictionExplorer {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.5fr);
+  gap: clamp(18px, 2.4vw, 28px);
+  align-items: start;
+}
+
+.matchPicker {
+  display: grid;
+  gap: 10px;
+  max-height: 720px;
+  overflow: auto;
+  padding: 4px 8px 8px 4px;
+}
+
+.matchPick {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 2px solid var(--ink);
+  background: rgba(255, 253, 247, 0.94);
+  box-shadow: 3px 3px 0 rgba(5, 5, 5, 0.2);
+  text-align: left;
+}
+
+.matchPick.active,
+.matchPick:hover {
+  background: #fff3ef;
+}
+
+.matchPick span,
+.matchFocus > span,
+.pollCard span,
+.pollCard small,
+.scoreCloud p {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.matchPick strong,
+.matchFocus h2 {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.predictionInsight {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.matchFocus,
+.scoreCloud {
+  min-width: 0;
+  padding: clamp(18px, 2.4vw, 28px);
+  border: 3px solid var(--ink);
+  background: var(--panel);
+  box-shadow: 6px 6px 0 rgba(5, 5, 5, 0.18);
+}
+
+.matchFocus h2 {
+  margin: 8px 0;
+  font-size: clamp(1.6rem, 3vw, 2.7rem);
+  line-height: 1.02;
+}
+
+.matchFocus h2 b {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.matchFocus p {
+  margin: 0;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.pollGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pollCard {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  background: #fff;
+  box-shadow: 5px 5px 0 rgba(5, 5, 5, 0.16);
+}
+
+.pollCard div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.pollCard strong {
+  font-size: 1.6rem;
+}
+
+.pollCard i {
+  display: block;
+  height: 10px;
+  min-width: 4px;
+  background: var(--red);
+  border: 2px solid var(--ink);
+}
+
+.scoreCloud div {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.scoreCloud ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scoreCloud li {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  background: #f8fff4;
+  font-weight: 900;
+}
+
+.scoreCloud li b {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  min-height: 26px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.searchBox {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-width: min(320px, 100%);
+  padding: 0 10px;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+
+.searchBox input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
 .matchCard {
   display: grid;
   gap: 16px;
@@ -1674,6 +1847,8 @@ tbody tr.relegationRow:hover {
 
   .matchGrid,
   .predictionGrid,
+  .predictionExplorer,
+  .pollGrid,
   .groupGrid,
   .resultGrid,
   .knockoutComposer,
