@@ -62,6 +62,35 @@ function groupDraftFromSubmission(submission: Submission) {
   return draft;
 }
 
+function formatDeadline(value: string) {
+  return new Date(value).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatDraftPrediction(value: DraftPrediction, home: string, away: string) {
+  if (value.type === "score") return value.homeGoals !== "" && value.awayGoals !== "" ? `${value.homeGoals}-${value.awayGoals}` : "Sin cargar";
+  if (value.choice === "home") return home;
+  if (value.choice === "away") return away;
+  if (value.choice === "draw") return "Empate";
+  return "Sin cargar";
+}
+
+function samePrediction(first: DraftPrediction, second: DraftPrediction) {
+  if (first.type !== second.type) return false;
+  if (first.type === "score" && second.type === "score") {
+    return first.homeGoals === second.homeGoals && first.awayGoals === second.awayGoals;
+  }
+  return first.type === "choice" && second.type === "choice" && first.choice === second.choice;
+}
+
+function sameGroupPrediction(first: { first: string; second: string }, second: { first: string; second: string }) {
+  return first.first === second.first && first.second === second.second;
+}
+
 function toPayload(name: string, pin: string, predictions: DraftState, groupPredictions: GroupDraftState) {
   return {
     name,
@@ -87,6 +116,8 @@ export default function EditarPage() {
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [predictions, setPredictions] = useState<DraftState>(initialDraft);
   const [groupPredictions, setGroupPredictions] = useState<GroupDraftState>(initialGroupDraft);
+  const [originalPredictions, setOriginalPredictions] = useState<DraftState>(initialDraft);
+  const [originalGroupPredictions, setOriginalGroupPredictions] = useState<GroupDraftState>(initialGroupDraft);
   const [editWindow, setEditWindow] = useState<EditWindow>(defaultEditWindow);
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "done">("idle");
@@ -104,6 +135,9 @@ export default function EditarPage() {
   const missingGroups = groups.length - completedGroups;
   const canSave = loaded && editWindow.open && !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
   const groupsOpen = editWindow.rounds[1]?.open ?? true;
+  const changedMatches = matches.filter((match) => !samePrediction(predictions[match.id], originalPredictions[match.id])).length;
+  const changedGroups = groups.filter((group) => !sameGroupPrediction(groupPredictions[group.id], originalGroupPredictions[group.id])).length;
+  const changedTotal = changedMatches + changedGroups;
   const deadlineText = editWindow.deadline
     ? new Date(editWindow.deadline).toLocaleString("es-AR")
     : "por fecha, segun el inicio de cada jornada";
@@ -124,8 +158,12 @@ export default function EditarPage() {
       return;
     }
     setName(body.submission.name);
-    setPredictions(draftFromSubmission(body.submission.predictions));
-    setGroupPredictions(groupDraftFromSubmission(body.submission));
+    const loadedPredictions = draftFromSubmission(body.submission.predictions);
+    const loadedGroupPredictions = groupDraftFromSubmission(body.submission);
+    setPredictions(loadedPredictions);
+    setGroupPredictions(loadedGroupPredictions);
+    setOriginalPredictions(loadedPredictions);
+    setOriginalGroupPredictions(loadedGroupPredictions);
     setEditWindow(body.editWindow ?? defaultEditWindow);
     setLoaded(true);
     setStatus("idle");
@@ -149,6 +187,8 @@ export default function EditarPage() {
       return;
     }
     setUpdatedAt(body.updatedAt ?? new Date().toISOString());
+    setOriginalPredictions(predictions);
+    setOriginalGroupPredictions(groupPredictions);
     setStatus("done");
   }
 
@@ -198,12 +238,24 @@ export default function EditarPage() {
           <div>
             <p className="eyebrow">Acceso</p>
             <h2>Nombre y PIN.</h2>
-            <p>Usa el mismo nombre con el que mandaste el prode y el PIN que elegiste al enviarlo.</p>
+            <p>Usa el mismo nombre con el que mandaste el prode y el PIN que elegiste al enviarlo. Al abrir, se cargan tus pronosticos guardados desde la base de datos.</p>
           </div>
           <button className="primaryAction" disabled={status === "loading" || missingName || missingPin} type="submit">
             {status === "loading" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <KeyRound size={18} aria-hidden="true" />}
             Abrir edicion
           </button>
+        </section>
+      ) : null}
+
+      {!loaded ? (
+        <section className="deadlineGrid" aria-label="Limites de edicion">
+          {([1, 2, 3] as MatchRound[]).map((round) => (
+            <article className={editWindow.rounds[round].open ? "deadlineCard" : "deadlineCard closed"} key={round}>
+              <span>Fecha {round}</span>
+              <strong>{formatDeadline(editWindow.rounds[round].deadline)}</strong>
+              <small>{editWindow.rounds[round].open ? "Editable hasta ese horario" : "Edicion cerrada"}</small>
+            </article>
+          ))}
         </section>
       ) : null}
 
@@ -222,8 +274,8 @@ export default function EditarPage() {
           <ul>
             {([1, 2, 3] as MatchRound[]).map((round) => (
               <li key={round}>
-                Fecha {round}: {editWindow.rounds[round].open ? "abierta" : "cerrada"} desde{" "}
-                {new Date(editWindow.rounds[round].deadline).toLocaleString("es-AR")}
+                Fecha {round}: {editWindow.rounds[round].open ? "abierta hasta" : "cerrada desde"}{" "}
+                {formatDeadline(editWindow.rounds[round].deadline)}
               </li>
             ))}
           </ul>
@@ -247,13 +299,14 @@ export default function EditarPage() {
             <article className="metric"><Target size={20} aria-hidden="true" /><span>Exactos fase grupos</span><strong>{exactScoreMatches.length}</strong></article>
             <article className="metric"><Trophy size={20} aria-hidden="true" /><span>1X2 fase grupos</span><strong>{choiceMatches.length}</strong></article>
             <article className="metric alert"><CheckCircle2 size={20} aria-hidden="true" /><span>Completos</span><strong>{completedTotal}/{totalItems}</strong></article>
+            <article className="metric"><Save size={20} aria-hidden="true" /><span>Cambios sin guardar</span><strong>{changedTotal}</strong></article>
           </section>
 
           <section className="roundStrip" aria-label="Fechas">
             {([1, 2, 3] as MatchRound[]).map((round) => (
               <button className={activeRound === round ? "roundTab active" : "roundTab"} key={round} onClick={() => setActiveRound(round)} type="button">
                 <span>{roundLabels[round]}</span>
-                <strong>{editWindow.rounds[round].open ? "Abierta" : "Cerrada"}</strong>
+                <strong>{editWindow.rounds[round].open ? `Hasta ${formatDeadline(editWindow.rounds[round].deadline)}` : "Cerrada"}</strong>
               </button>
             ))}
           </section>
@@ -261,11 +314,14 @@ export default function EditarPage() {
           <section className="matchGrid" aria-label={roundLabels[activeRound]}>
             {roundMatches.map((match) => {
               const value = predictions[match.id];
+              const originalValue = originalPredictions[match.id];
               const matchOpen = editWindow.rounds[match.round]?.open ?? true;
+              const changed = !samePrediction(value, originalValue);
               return (
-                <article className={match.exactScore ? "matchCard exact" : "matchCard choice"} key={match.id}>
+                <article className={`${match.exactScore ? "matchCard exact" : "matchCard choice"}${changed ? " changed" : ""}`} key={match.id}>
                   <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} · Grupo {match.groupId}</strong></div>
                   <h2><TeamBadge team={match.home} /><span>vs.</span><TeamBadge team={match.away} /></h2>
+                  {changed ? <small className="previousPick">Anterior: {formatDraftPrediction(originalValue, match.home, match.away)}</small> : null}
                   {value.type === "score" ? (
                     <div className="scoreInputs">
                       <label><TeamBadge compact team={match.home} /><input disabled={!matchOpen || status === "saving"} inputMode="numeric" onChange={(event) => setScore(match.id, "homeGoals", event.target.value)} value={value.homeGoals} /></label>
@@ -293,10 +349,13 @@ export default function EditarPage() {
           <section className="groupGrid">
             {groups.map((group) => {
               const value = groupPredictions[group.id];
+              const originalValue = originalGroupPredictions[group.id];
+              const changed = !sameGroupPrediction(value, originalValue);
               return (
-                <article className="groupCard" key={group.id}>
+                <article className={changed ? "groupCard changed" : "groupCard"} key={group.id}>
                   <div className="matchHeader"><span>Grupo {group.id}</span><strong>{groupsOpen ? "Top 2" : "Cerrado"}</strong></div>
                   <div className="teamList">{group.teams.map((team) => <TeamBadge compact key={team} team={team} />)}</div>
+                  {changed ? <small className="previousPick">Anterior: {originalValue.first || "-"} / {originalValue.second || "-"}</small> : null}
                   <div className="groupSelectors">
                     <label><span>1 puesto</span><select disabled={!groupsOpen || status === "saving"} onChange={(event) => setGroupPick(group.id, "first", event.target.value)} value={value.first}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
                     <label><span>2 puesto</span><select disabled={!groupsOpen || status === "saving"} onChange={(event) => setGroupPick(group.id, "second", event.target.value)} value={value.second}><option value="">Elegir</option>{group.teams.map((team) => <option key={team} value={team}>{team}</option>)}</select></label>
