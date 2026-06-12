@@ -5,6 +5,7 @@ import {
   defaultClan,
   parseClan,
   validateResultStore,
+  type AppSettings,
   type KnockoutPrediction,
   type ResultStore,
   type Submission,
@@ -14,14 +15,22 @@ import {
 const dataDir = process.env.PRODE_DATA_DIR ?? path.join(process.cwd(), "data");
 const storePath = path.join(dataDir, "submissions.json");
 const resultsPath = path.join(dataDir, "results.json");
+const settingsPath = path.join(dataDir, "settings.json");
 const mongoUri = process.env.MONGODB_URI;
 const mongoDbName = process.env.MONGODB_DB ?? "copa_kahl";
 const submissionsCollectionName = process.env.MONGODB_SUBMISSIONS_COLLECTION ?? "submissions";
 const resultsCollectionName = process.env.MONGODB_RESULTS_COLLECTION ?? "results";
+const settingsCollectionName = process.env.MONGODB_SETTINGS_COLLECTION ?? "settings";
 const resultsDocumentId = "current";
+const settingsDocumentId = "current";
+
+const defaultSettings: AppSettings = {
+  submissionsOpen: false,
+};
 
 type MongoSubmission = Submission & Document;
 type MongoResultDocument = ResultStore & { _id: string };
+type MongoSettingsDocument = AppSettings & { _id: string };
 
 let mongoClientPromise: Promise<MongoClient> | null = null;
 let indexesReady = false;
@@ -41,17 +50,26 @@ async function getMongoDb(): Promise<Db | null> {
 async function getMongoCollections(): Promise<{
   submissions: Collection<MongoSubmission>;
   results: Collection<Document>;
+  settings: Collection<Document>;
 } | null> {
   const db = await getMongoDb();
   if (!db) return null;
   const submissions = db.collection<MongoSubmission>(submissionsCollectionName);
   const results = db.collection<Document>(resultsCollectionName);
+  const settings = db.collection<Document>(settingsCollectionName);
   if (!indexesReady) {
     await submissions.createIndex({ normalizedName: 1 }, { unique: true, name: "unique_normalized_name" });
     await submissions.createIndex({ clan: 1, createdAt: -1 }, { name: "clan_created_at" });
     indexesReady = true;
   }
-  return { submissions, results };
+  return { submissions, results, settings };
+}
+
+function cleanSettings(settings: Partial<AppSettings> | null | undefined): AppSettings {
+  return {
+    submissionsOpen: settings?.submissionsOpen === true,
+    updatedAt: typeof settings?.updatedAt === "string" ? settings.updatedAt : undefined,
+  };
 }
 
 function cleanSubmission(submission: WithId<MongoSubmission> | MongoSubmission): Submission {
@@ -255,4 +273,44 @@ export async function writeResultStore(results: ResultStore) {
   await fs.writeFile(tempPath, JSON.stringify(safeResults, null, 2), "utf8");
   await fs.rename(tempPath, resultsPath);
   return safeResults;
+}
+
+async function ensureSettingsFile() {
+  await fs.mkdir(dataDir, { recursive: true });
+  try {
+    await fs.access(settingsPath);
+  } catch {
+    await fs.writeFile(settingsPath, JSON.stringify(defaultSettings, null, 2), "utf8");
+  }
+}
+
+export async function readAppSettings(): Promise<AppSettings> {
+  const collections = await getMongoCollections();
+  if (collections) {
+    const settings = await collections.settings.findOne({ _id: settingsDocumentId } as Document);
+    return cleanSettings(settings as unknown as MongoSettingsDocument | null);
+  }
+
+  await ensureSettingsFile();
+  const raw = await fs.readFile(settingsPath, "utf8");
+  return cleanSettings(JSON.parse(raw) as Partial<AppSettings>);
+}
+
+export async function writeAppSettings(settings: AppSettings) {
+  const nextSettings = cleanSettings({ ...settings, updatedAt: new Date().toISOString() });
+  const collections = await getMongoCollections();
+  if (collections) {
+    await collections.settings.replaceOne(
+      { _id: settingsDocumentId } as Document,
+      { _id: settingsDocumentId, ...nextSettings } as Document,
+      { upsert: true },
+    );
+    return nextSettings;
+  }
+
+  await ensureSettingsFile();
+  const tempPath = `${settingsPath}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify(nextSettings, null, 2), "utf8");
+  await fs.rename(tempPath, settingsPath);
+  return nextSettings;
 }

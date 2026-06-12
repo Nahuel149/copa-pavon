@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { Download, Eye, Loader2, LockKeyhole, Plus, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
+import { Download, Eye, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
@@ -21,6 +21,7 @@ import {
   buildStandings,
   serializeKnockoutPrediction,
   serializePrediction,
+  type AppSettings,
   type GroupPrediction,
   type MatchResult,
   type ResultStore,
@@ -42,6 +43,10 @@ type SyncResultsResponse = {
     skipped: number;
     checkedAt: string;
   };
+  error?: string;
+};
+
+type SettingsResponse = AppSettings & {
   error?: string;
 };
 
@@ -215,6 +220,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "syncing" | "ready">("idle");
   const [error, setError] = useState("");
   const [syncSummary, setSyncSummary] = useState("");
+  const [appSettings, setAppSettings] = useState<AppSettings>({ submissionsOpen: false });
 
   const results = useMemo(
     () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft),
@@ -239,13 +245,16 @@ export default function AdminPage() {
     setError("");
 
     const headers: HeadersInit = pin ? { "x-prode-admin-pin": pin } : {};
-    const [submissionResponse, resultsResponse] = await Promise.all([
+    const [submissionResponse, resultsResponse, settingsResponse] = await Promise.all([
       fetch("/api/submissions", { headers, cache: "no-store" }),
       fetch("/api/results", { headers, cache: "no-store" }),
+      fetch("/api/settings", { headers, cache: "no-store" }),
     ]);
 
-    if (!submissionResponse.ok || !resultsResponse.ok) {
-      const body = await readJsonResponse<SubmissionsResponse>(submissionResponse.ok ? resultsResponse : submissionResponse);
+    if (!submissionResponse.ok || !resultsResponse.ok || !settingsResponse.ok) {
+      const body = await readJsonResponse<SubmissionsResponse | SettingsResponse>(
+        !submissionResponse.ok ? submissionResponse : !resultsResponse.ok ? resultsResponse : settingsResponse,
+      );
       setError(body.error ?? "No se pudo abrir el panel.");
       setStatus("idle");
       return;
@@ -253,8 +262,9 @@ export default function AdminPage() {
 
     const submissionBody = await readJsonResponse<SubmissionsResponse>(submissionResponse);
     const resultsBody = await readJsonResponse<ResultStore & { error?: string }>(resultsResponse);
-    if (submissionBody.error || resultsBody.error) {
-      setError(submissionBody.error ?? resultsBody.error ?? "No se pudo abrir el panel.");
+    const settingsBody = await readJsonResponse<SettingsResponse>(settingsResponse);
+    if (submissionBody.error || resultsBody.error || settingsBody.error) {
+      setError(submissionBody.error ?? resultsBody.error ?? settingsBody.error ?? "No se pudo abrir el panel.");
       setStatus("idle");
       return;
     }
@@ -265,6 +275,31 @@ export default function AdminPage() {
     setGroupDraft(drafts.groupDraft);
     setKnockoutFixtures(drafts.knockoutFixtures);
     setKnockoutDraft(drafts.knockoutDraft);
+    setAppSettings({ submissionsOpen: settingsBody.submissionsOpen, updatedAt: settingsBody.updatedAt });
+    setStatus("ready");
+  }
+
+  async function saveAppSettings(nextSettings: AppSettings) {
+    setStatus("saving");
+    setError("");
+
+    const response = await fetch("/api/settings", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(pin ? { "x-prode-admin-pin": pin } : {}),
+      },
+      body: JSON.stringify({ submissionsOpen: nextSettings.submissionsOpen }),
+    });
+    const body = await readJsonResponse<SettingsResponse>(response);
+
+    if (!response.ok || body.error) {
+      setError(body.error ?? "No se pudo guardar la configuracion.");
+      setStatus("ready");
+      return;
+    }
+
+    setAppSettings({ submissionsOpen: body.submissionsOpen, updatedAt: body.updatedAt });
     setStatus("ready");
   }
 
@@ -448,6 +483,28 @@ export default function AdminPage() {
           <span>Último</span>
           <strong>{latest ? new Date(latest).toLocaleDateString("es-AR") : "-"}</strong>
         </article>
+      </section>
+
+      <section className={appSettings.submissionsOpen ? "adminSwitchPanel open" : "adminSwitchPanel closed"} aria-live="polite">
+        <div>
+          <p className="eyebrow">Carga de pronosticos</p>
+          <h2>{appSettings.submissionsOpen ? "Inscripcion abierta" : "Inscripcion cerrada"}</h2>
+          <p>
+            {appSettings.submissionsOpen
+              ? "La pagina Cargar acepta nuevos participantes."
+              : "Nadie puede anotarse ni enviar un prode nuevo hasta que vuelvas a abrir la carga."}
+          </p>
+          {appSettings.updatedAt ? <small>Ultimo cambio: {new Date(appSettings.updatedAt).toLocaleString("es-AR")}</small> : null}
+        </div>
+        <button
+          className={appSettings.submissionsOpen ? "primaryAction danger" : "primaryAction"}
+          disabled={status === "saving" || status === "syncing"}
+          onClick={() => saveAppSettings({ submissionsOpen: !appSettings.submissionsOpen })}
+          type="button"
+        >
+          {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Power size={18} aria-hidden="true" />}
+          {appSettings.submissionsOpen ? "Cerrar carga" : "Abrir carga"}
+        </button>
       </section>
 
       <section className="adminToolbar">

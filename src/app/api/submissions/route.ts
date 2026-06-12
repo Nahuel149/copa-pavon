@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createPinHash, validateParticipantPin } from "@/lib/pin";
 import { validateSubmission } from "@/lib/prode";
-import { appendSubmission, publicSubmission, readSubmissionStore } from "@/lib/storage";
+import { appendSubmission, publicSubmission, readAppSettings, readSubmissionStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +27,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const settings = await readAppSettings();
+  if (!settings.submissionsOpen) {
+    return NextResponse.json(
+      { errors: ["La carga de pronosticos esta cerrada por ahora. Admin puede volver a abrirla desde el panel."] },
+      { status: 403 },
+    );
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();

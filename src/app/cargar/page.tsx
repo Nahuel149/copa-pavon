@@ -10,6 +10,7 @@ import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type Gr
 import {
   countCompleteGroupPredictions,
   countCompletePredictions,
+  type AppSettings,
   type PredictionChoice,
 } from "@/lib/prode";
 
@@ -95,6 +96,8 @@ export default function HomePage() {
   const [receipt, setReceipt] = useState<{ id: string; createdAt: string } | null>(null);
   const [draftReady, setDraftReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
+  const [submissionsOpen, setSubmissionsOpen] = useState(false);
+  const [settingsReady, setSettingsReady] = useState(false);
 
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
   const completedMatches = countCompletePredictions(predictions);
@@ -106,8 +109,13 @@ export default function HomePage() {
   const missingPin = !/^\d{4,10}$/.test(pin.trim());
   const missingMatches = matches.length - completedMatches;
   const missingGroups = groups.length - completedGroups;
-  const canSubmit = !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
+  const canSubmit =
+    submissionsOpen && settingsReady && !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
   const validationMessages = [
+    ...(!settingsReady ? ["Verificando si la carga esta abierta."] : []),
+    ...(settingsReady && !submissionsOpen
+      ? ["La carga de pronosticos esta cerrada por ahora. Admin la puede reabrir cuando corresponda."]
+      : []),
     ...(missingName ? ["Poné tu nombre arriba para identificar tu prode."] : []),
     ...(missingPin ? ["Elegí un PIN de 4 a 10 números para poder editar hasta la fecha límite."] : []),
     ...(missingMatches > 0 ? [`Faltan ${missingMatches} pronósticos de partidos.`] : []),
@@ -126,6 +134,22 @@ export default function HomePage() {
       setDraftStatus("Se guarda provisorio en este navegador.");
     }
     setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const response = await fetch("/api/settings", { cache: "no-store" });
+        const body = await readJsonResponse<AppSettings & { error?: string }>(response);
+        setSubmissionsOpen(response.ok && !body.error && body.submissionsOpen);
+      } catch {
+        setSubmissionsOpen(false);
+      } finally {
+        setSettingsReady(true);
+      }
+    }
+
+    void loadSettings();
   }, []);
 
   useEffect(() => {
@@ -511,7 +535,7 @@ export default function HomePage() {
         </div>
         <button className="primaryAction" disabled={!canSubmit} type="submit">
           {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
-          {canSubmit ? "Enviar definitivo" : "Completar para enviar"}
+          {!settingsReady ? "Verificando carga" : !submissionsOpen ? "Carga cerrada" : canSubmit ? "Enviar definitivo" : "Completar para enviar"}
         </button>
       </div>
     </form>

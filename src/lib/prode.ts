@@ -73,6 +73,11 @@ export type SubmissionStore = {
   submissions: Submission[];
 };
 
+export type AppSettings = {
+  submissionsOpen: boolean;
+  updatedAt?: string;
+};
+
 export type MatchResult = {
   matchId: string;
   homeGoals: number;
