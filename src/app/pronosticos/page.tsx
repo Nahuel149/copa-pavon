@@ -85,8 +85,8 @@ export default function PronosticosPage() {
     () => new Map((data?.results.matchResults ?? []).map((result) => [result.matchId, result])),
     [data?.results.matchResults],
   );
-  const standingById = useMemo(
-    () => new Map((data?.standings ?? []).map((standing) => [standing.submissionId, standing])),
+  const standingPositionById = useMemo(
+    () => new Map((data?.standings ?? []).map((standing, index) => [standing.submissionId, index + 1])),
     [data?.standings],
   );
 
@@ -98,13 +98,13 @@ export default function PronosticosPage() {
         return {
           submission,
           prediction,
-          standing: standingById.get(submission.id),
+          position: standingPositionById.get(submission.id) ?? 0,
           label: prediction ? serializePrediction(prediction) : "Sin cargar",
-          outcome: predictionOutcome(prediction),
         };
       })
-      .filter((row) => !normalizedQuery || row.submission.name.toLowerCase().includes(normalizedQuery));
-  }, [data?.submissions, query, selectedMatch.id, standingById]);
+      .filter((row) => !normalizedQuery || row.submission.name.toLowerCase().includes(normalizedQuery))
+      .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
+  }, [data?.submissions, query, selectedMatch.id, standingPositionById]);
 
   const aggregates = useMemo(() => {
     const outcomes = emptyOutcomeCount();
@@ -248,39 +248,24 @@ export default function PronosticosPage() {
         </section>
       </section>
 
-      <section className="tableShell predictionDetailTable">
-        <div className="tableNote">
+      <section className="compactPredictionList">
+        <div className="tableNote compactPredictionHeader">
           <strong>Detalle individual</strong>
           <label className="searchBox">
             <Search size={17} aria-hidden="true" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar participante" />
           </label>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Participante</th>
-              <th>Eligio</th>
-              <th>Puntos</th>
-            </tr>
-          </thead>
-          <tbody>
-            {predictionRows.map((row, index) => (
-              <tr key={row.submission.id}>
-                <td data-label="#">{index + 1}</td>
-                <td data-label="Participante">{row.submission.name}</td>
-                <td data-label="Eligio">{row.label}</td>
-                <td data-label="Puntos">{row.standing?.totalPoints ?? 0}</td>
-              </tr>
-            ))}
-            {predictionRows.length === 0 ? (
-              <tr>
-                <td colSpan={4}>No hay pronosticos para mostrar.</td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+        <div className="compactPredictionRows">
+          {predictionRows.map((row) => (
+            <article className="compactPredictionRow" key={row.submission.id}>
+              <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
+              <strong>{row.submission.name}</strong>
+              <span>{row.label}</span>
+            </article>
+          ))}
+          {predictionRows.length === 0 ? <div className="emptyState">No hay pronosticos para mostrar.</div> : null}
+        </div>
       </section>
     </div>
   );
