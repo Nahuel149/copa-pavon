@@ -256,6 +256,14 @@ function scorerNameMatches(prediction: string | undefined, officialScorers: stri
   });
 }
 
+function knockoutScorerBonusMatches(prediction: KnockoutPrediction, result: KnockoutResult) {
+  if (!normalizeScorerName(prediction.goalScorer ?? "")) {
+    return result.homeGoals === 0 && result.awayGoals === 0 && !result.scorerNames?.length;
+  }
+
+  return scorerNameMatches(prediction.goalScorer, result.scorerNames);
+}
+
 export function getOutcome(homeGoals: number, awayGoals: number): PredictionChoice {
   if (homeGoals > awayGoals) return "home";
   if (awayGoals > homeGoals) return "away";
@@ -649,7 +657,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
       knockoutPoints += scoring.winner;
     }
 
-    if (scorerNameMatches(prediction.goalScorer, result.scorerNames)) {
+    if (knockoutScorerBonusMatches(prediction, result)) {
       knockoutPoints += 1;
       knockoutScorerHits += 1;
     }

@@ -241,6 +241,24 @@ describe("prode scoring", () => {
     expect(row.knockoutScorerHits).toBe(1);
   });
 
+  it("adds one knockout scorer point when blank means no scorer in a 0-0", () => {
+    const fixture: KnockoutFixture = { id: "k-scoreless", order: 1, stage: "R32", home: "Argentina", away: "Italia" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-scoreless", homeGoals: 0, awayGoals: 0 }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-scoreless", homeGoals: 0, awayGoals: 0 }],
+    });
+
+    expect(row.knockoutPoints).toBe(5);
+    expect(row.knockoutExactHits).toBe(1);
+    expect(row.knockoutScorerHits).toBe(1);
+  });
+
   it("sorts tied standings by reverse alphabetical name", () => {
     const first = submissionFromPayload("Nahuel");
     const second = submissionFromPayload("Ana");

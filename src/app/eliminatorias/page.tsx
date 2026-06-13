@@ -203,7 +203,8 @@ export default function EliminatoriasPage() {
           <h1>Marcador exacto.</h1>
           <p className="heroCopy">
             Los 16avos empiezan el 28 de junio. En eliminatorias se carga marcador exacto: si acertás exacto sumás el
-            premio grande, si acertás ganador/clasificado sumás parcial y podés sumar +1 con un goleador.
+            premio grande, si acertás ganador/clasificado sumás parcial y podés sumar +1 con un goleador. Si lo dejás
+            vacío, apostás a 0-0 sin goleadores.
           </p>
         </div>
         <div className="heroControl">
@@ -279,7 +280,7 @@ export default function EliminatoriasPage() {
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
-                Goleador acertado: +1.
+                Goleador acertado: +1. Vacio suma si sale 0-0.
               </p>
             </article>
           );

@@ -128,7 +128,8 @@ export default function ReglasPage() {
           <p>
             Cuando admin cargue los cruces, cada participante completa marcadores exactos. Si no pega exacto pero acierta
             el ganador/clasificado, tambien suma puntos. Desde 16avos tambien puede elegir un goleador del partido:
-            si ese jugador convierte, suma 1 punto extra.
+            si ese jugador convierte, suma 1 punto extra. Si deja el goleador vacio, se toma como apuesta a 0-0
+            sin goleadores; si el partido termina asi, tambien suma ese punto.
           </p>
         </article>
         <article>
@@ -146,7 +147,8 @@ export default function ReglasPage() {
         <h2>Puntos por etapa.</h2>
         <p>
           Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto. El goleador
-          acertado suma 1 punto extra en cualquier cruce.
+          acertado suma 1 punto extra en cualquier cruce. Dejarlo vacio equivale a elegir sin goleador, y suma si el
+          partido termina 0-0.
         </p>
       </section>
 
