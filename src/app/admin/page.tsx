@@ -78,6 +78,7 @@ function buildResultsPayload(
   groupDraft: GroupResultDraft,
   knockoutFixtures: KnockoutFixture[],
   knockoutDraft: ResultDraft,
+  manualAdjustments: ResultStore["manualAdjustments"],
 ): ResultStore {
   const matchResults = matches
     .map((match) => scoreFromDraft(match.id, matchDraft))
@@ -115,6 +116,7 @@ function buildResultsPayload(
     groupResults,
     knockoutFixtures,
     knockoutResults,
+    manualAdjustments,
   };
 }
 
@@ -217,6 +219,7 @@ export default function AdminPage() {
   const [groupDraft, setGroupDraft] = useState<GroupResultDraft>(emptyGroupResults);
   const [knockoutFixtures, setKnockoutFixtures] = useState<KnockoutFixture[]>([]);
   const [knockoutDraft, setKnockoutDraft] = useState<ResultDraft>({});
+  const [manualAdjustments, setManualAdjustments] = useState<ResultStore["manualAdjustments"]>([]);
   const [newFixture, setNewFixture] = useState<{ stage: KnockoutStage; home: string; away: string }>({
     stage: "R32",
     home: "",
@@ -228,8 +231,8 @@ export default function AdminPage() {
   const [appSettings, setAppSettings] = useState<AppSettings>({ submissionsOpen: false });
 
   const results = useMemo(
-    () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft),
-    [matchDraft, groupDraft, knockoutFixtures, knockoutDraft],
+    () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft, manualAdjustments),
+    [matchDraft, groupDraft, knockoutFixtures, knockoutDraft, manualAdjustments],
   );
   const standings = useMemo(() => buildStandings(submissions, results), [submissions, results]);
   const totalPredictions = submissions.reduce(
@@ -280,6 +283,7 @@ export default function AdminPage() {
     setGroupDraft(drafts.groupDraft);
     setKnockoutFixtures(drafts.knockoutFixtures);
     setKnockoutDraft(drafts.knockoutDraft);
+    setManualAdjustments(resultsBody.manualAdjustments ?? []);
     setAppSettings({ submissionsOpen: settingsBody.submissionsOpen, updatedAt: settingsBody.updatedAt });
     setStatus("ready");
   }
@@ -338,6 +342,7 @@ export default function AdminPage() {
     setGroupDraft(drafts.groupDraft);
     setKnockoutFixtures(drafts.knockoutFixtures);
     setKnockoutDraft(drafts.knockoutDraft);
+    setManualAdjustments(saved.manualAdjustments ?? []);
     setStatus("ready");
   }
 
@@ -363,6 +368,7 @@ export default function AdminPage() {
     setGroupDraft(drafts.groupDraft);
     setKnockoutFixtures(drafts.knockoutFixtures);
     setKnockoutDraft(drafts.knockoutDraft);
+    setManualAdjustments(body.results.manualAdjustments ?? []);
     setSyncSummary(
       `Busqueda lista: ${body.report.imported} nuevos/actualizados, ${body.report.unchanged} sin cambios. Fuente: ${body.report.sourceUrl}`,
     );

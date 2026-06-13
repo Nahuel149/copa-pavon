@@ -100,11 +100,19 @@ export type KnockoutResult = {
   scorerNames?: string[];
 };
 
+export type ManualPointAdjustment = {
+  normalizedName: string;
+  name?: string;
+  points: number;
+  reason?: string;
+};
+
 export type ResultStore = {
   matchResults: MatchResult[];
   groupResults: GroupResult[];
   knockoutFixtures: KnockoutFixture[];
   knockoutResults: KnockoutResult[];
+  manualAdjustments?: ManualPointAdjustment[];
 };
 
 export type StandingRow = {
@@ -120,6 +128,7 @@ export type StandingRow = {
   groupHits: number;
   knockoutExactHits: number;
   knockoutScorerHits: number;
+  manualAdjustmentPoints: number;
   playedMatches: number;
   decidedGroups: number;
   playedKnockoutMatches: number;
@@ -483,6 +492,7 @@ export function validateResultStore(payload: unknown): ResultStore {
   const groupResults: GroupResult[] = [];
   const knockoutFixtures: KnockoutFixture[] = [];
   const knockoutResults: KnockoutResult[] = [];
+  const manualAdjustments: ManualPointAdjustment[] = [];
 
   for (const raw of Array.isArray(source.matchResults) ? source.matchResults : []) {
     if (!raw || typeof raw !== "object") continue;
@@ -554,7 +564,22 @@ export function validateResultStore(payload: unknown): ResultStore {
     });
   }
 
-  return { matchResults, groupResults, knockoutFixtures, knockoutResults };
+  for (const raw of Array.isArray(source.manualAdjustments) ? source.manualAdjustments : []) {
+    if (!raw || typeof raw !== "object") continue;
+    const item = raw as Partial<ManualPointAdjustment>;
+    const normalizedName =
+      typeof item.normalizedName === "string" ? normalizeName(item.normalizedName) : typeof item.name === "string" ? normalizeName(item.name) : "";
+    const points = typeof item.points === "number" && Number.isFinite(item.points) ? Math.trunc(item.points) : null;
+    if (!normalizedName || points === null || points === 0) continue;
+    manualAdjustments.push({
+      normalizedName,
+      points,
+      ...(typeof item.name === "string" && item.name.trim() ? { name: item.name.trim().replace(/\s+/g, " ") } : {}),
+      ...(typeof item.reason === "string" && item.reason.trim() ? { reason: item.reason.trim().replace(/\s+/g, " ") } : {}),
+    });
+  }
+
+  return { matchResults, groupResults, knockoutFixtures, knockoutResults, manualAdjustments };
 }
 
 export function countCompletePredictions(predictions: Record<string, unknown>) {
@@ -613,6 +638,9 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   let groupHits = 0;
   let knockoutExactHits = 0;
   let knockoutScorerHits = 0;
+  const manualAdjustmentPoints = (results.manualAdjustments ?? [])
+    .filter((adjustment) => adjustment.normalizedName === submission.normalizedName)
+    .reduce((total, adjustment) => total + adjustment.points, 0);
 
   for (const prediction of submission.predictions) {
     const result = resultByMatch.get(prediction.matchId);
@@ -667,7 +695,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     submissionId: submission.id,
     name: submission.name,
     clan: parseClan(submission.clan),
-    totalPoints: matchPoints + groupPoints + knockoutPoints,
+    totalPoints: matchPoints + groupPoints + knockoutPoints + manualAdjustmentPoints,
     matchPoints,
     groupPoints,
     knockoutPoints,
@@ -676,6 +704,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     groupHits,
     knockoutExactHits,
     knockoutScorerHits,
+    manualAdjustmentPoints,
     playedMatches: results.matchResults.length,
     decidedGroups: results.groupResults.length,
     playedKnockoutMatches: results.knockoutResults.length,

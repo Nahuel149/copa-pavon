@@ -202,6 +202,16 @@ describe("prode scoring", () => {
     expect(updatedRow.groupPoints).toBe(5);
   });
 
+  it("adds manual point adjustments to standings totals", () => {
+    const row = scoreSubmission(submissionFromPayload("Lautaro flaco"), {
+      ...emptyResults,
+      manualAdjustments: [{ normalizedName: "lautaro flaco", name: "Lautaro flaco", points: 1, reason: "Ajuste manual" }],
+    });
+
+    expect(row.totalPoints).toBe(1);
+    expect(row.manualAdjustmentPoints).toBe(1);
+  });
+
   it("does not count missing knockout draft entries as complete", () => {
     const fixtures: KnockoutFixture[] = [{ id: "k-1", order: 1, stage: "R16", home: "Argentina", away: "Francia" }];
     expect(countCompleteKnockoutPredictions({}, fixtures)).toBe(0);
