@@ -64,12 +64,16 @@ function groupDraftFromSubmission(submission: Submission) {
 }
 
 function formatDeadline(value: string) {
-  return new Date(value).toLocaleString("es-AR", {
+  const parts = new Intl.DateTimeFormat("es-AR", {
+    timeZone: "Asia/Tokyo",
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  });
+    hour12: false,
+  }).formatToParts(new Date(value));
+  const byType = new Map(parts.map((part) => [part.type, part.value]));
+  return `${byType.get("day")}/${byType.get("month")}, ${byType.get("hour")}:${byType.get("minute")}`;
 }
 
 function formatDraftPrediction(value: DraftPrediction, home: string, away: string) {
@@ -140,7 +144,7 @@ export default function EditarPage() {
   const changedGroups = groups.filter((group) => !sameGroupPrediction(groupPredictions[group.id], originalGroupPredictions[group.id])).length;
   const changedTotal = changedMatches + changedGroups;
   const deadlineText = editWindow.deadline
-    ? new Date(editWindow.deadline).toLocaleString("es-AR")
+    ? formatDeadline(editWindow.deadline)
     : "por fecha, segun el inicio de cada jornada";
 
   async function loadSubmission(event: FormEvent<HTMLFormElement>) {
