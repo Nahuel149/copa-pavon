@@ -40,16 +40,22 @@ export default function TablaPage() {
   });
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
+  const [historyLimit, setHistoryLimit] = useState(0);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
   const graphRows = rows.slice(0, 14);
-  const graphHistory = useMemo(
+  const fullGraphHistory = useMemo(
     () =>
       (data.history ?? []).map((entry) => ({
         ...entry,
         positions: entry.positions.filter((position) => position.clan === "river-plate"),
       })),
     [data.history],
+  );
+  const graphHistoryLimit = fullGraphHistory.length === 0 ? 0 : Math.min(Math.max(historyLimit || fullGraphHistory.length, 1), fullGraphHistory.length);
+  const graphHistory = useMemo(
+    () => fullGraphHistory.slice(0, graphHistoryLimit),
+    [fullGraphHistory, graphHistoryLimit],
   );
   const graphWidth = 680;
   const graphHeight = 260;
@@ -102,6 +108,14 @@ export default function TablaPage() {
     }, 30000);
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (fullGraphHistory.length === 0) return;
+    setHistoryLimit((current) => {
+      if (current > 0 && current <= fullGraphHistory.length) return current;
+      return fullGraphHistory.length;
+    });
+  }, [fullGraphHistory.length]);
 
   return (
     <div className="pageStack">
@@ -186,8 +200,24 @@ export default function TablaPage() {
 
       <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">
         <div className="tableNote">
-          <strong>Carrera por la punta</strong>
-          <span>Posicion fecha por fecha, estilo tablero: cuanto mas arriba esta la linea, mejor ubicacion.</span>
+          <div>
+            <strong>Carrera por la punta</strong>
+            <span>Elegí hasta qué fecha cortar el gráfico. Cuanto más arriba está la línea, mejor ubicación.</span>
+          </div>
+          {fullGraphHistory.length > 0 ? (
+            <div className="raceCutSelector" role="group" aria-label="Elegir corte del grafico">
+              {fullGraphHistory.map((entry, index) => (
+                <button
+                  className={graphHistoryLimit === index + 1 ? "active" : ""}
+                  key={entry.label}
+                  onClick={() => setHistoryLimit(index + 1)}
+                  type="button"
+                >
+                  {entry.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         {graphRows.length > 0 ? (
           <div className="raceGraphBody">

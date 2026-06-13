@@ -1825,6 +1825,39 @@ tbody tr.relegationRow:hover {
   box-shadow: var(--shadow);
 }
 
+.raceGraph .tableNote > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.raceCutSelector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.raceCutSelector button {
+  min-height: 34px;
+  padding: 0 11px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 rgba(5, 5, 5, 0.2);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.raceCutSelector button.active,
+.raceCutSelector button:hover {
+  background: var(--red);
+  color: #fff;
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
 .raceGraphBody {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.32fr);
@@ -2310,6 +2343,15 @@ tbody tr.relegationRow:hover {
 
   .raceGraph svg {
     min-height: 210px;
+  }
+
+  .raceCutSelector {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .raceCutSelector button {
+    flex: 1 1 auto;
   }
 
   .raceLegend {
