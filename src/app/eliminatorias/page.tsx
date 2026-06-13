@@ -5,7 +5,7 @@ import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "luc
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
-import { knockoutStageLabels, type KnockoutFixture } from "@/lib/matches";
+import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
 import { countCompleteKnockoutPredictions } from "@/lib/prode";
 
 type FixtureResponse = {
@@ -192,7 +192,10 @@ export default function EliminatoriasPage() {
         <div>
           <p className="eyebrow">Eliminatorias</p>
           <h1>Marcador exacto.</h1>
-          <p className="heroCopy">En esta fase no hay 1X2: sólo suma quien acierta el resultado exacto del cruce.</p>
+          <p className="heroCopy">
+            Los 16avos empiezan el 28 de junio. En eliminatorias se carga marcador exacto: si acertás exacto sumás el
+            premio grande, y si acertás ganador/clasificado sumás parcial.
+          </p>
         </div>
         <div className="heroControl">
           <label htmlFor="knockoutName">Nombre</label>
@@ -253,9 +256,24 @@ export default function EliminatoriasPage() {
         </article>
         <article className="metric alert">
           <CheckCircle2 size={20} aria-hidden="true" />
-          <span>Puntaje por acierto</span>
-          <strong>2</strong>
+          <span>Inicio 16avos</span>
+          <strong>28 Jun</strong>
         </article>
+      </section>
+
+      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
+        {knockoutStages.map((stage) => {
+          const scoring = knockoutStageScoring[stage];
+          return (
+            <article key={stage}>
+              <span>{knockoutStageLabels[stage]}</span>
+              <strong>{scoring.exact} / {scoring.winner}</strong>
+              <p>
+                Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
+              </p>
+            </article>
+          );
+        })}
       </section>
 
       {fixtures.length === 0 ? (

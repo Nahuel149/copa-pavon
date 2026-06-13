@@ -753,6 +753,18 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.knockoutScoreGrid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.knockoutScoreGrid article {
+  padding: 18px;
+}
+
+.knockoutScoreGrid strong {
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+}
+
 .scoreRuleGrid article:nth-child(1) {
   background: #fff3ef;
 }
@@ -2309,6 +2321,7 @@ tbody tr.relegationRow:hover {
   .resultGrid,
   .knockoutComposer,
   .rulesDetailGrid,
+  .knockoutScoreGrid,
   .championGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2617,6 +2630,13 @@ tbody tr.relegationRow:hover {
   .submitDock {
     justify-content: space-between;
     justify-self: stretch;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .submitDock .primaryAction {
+    min-width: 0;
+    padding-inline: 12px;
   }
 
   .submitDock span {

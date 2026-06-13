@@ -136,8 +136,8 @@ describe("prode scoring", () => {
     expect(result.groupHits).toBe(1);
   });
 
-  it("scores knockout only by exact result", () => {
-    const fixture: KnockoutFixture = { id: "k-1", order: 1, stage: "R16", home: "Argentina", away: "Francia" };
+  it("scores knockout winner without exact result by stage", () => {
+    const fixture: KnockoutFixture = { id: "k-1", order: 1, stage: "QF", home: "Argentina", away: "Francia" };
     const submission = {
       ...submissionFromPayload(),
       knockoutPredictions: [{ fixtureId: "k-1", homeGoals: 2, awayGoals: 1 }],
@@ -149,8 +149,25 @@ describe("prode scoring", () => {
       knockoutResults: [{ fixtureId: "k-1", homeGoals: 3, awayGoals: 1 }],
     });
 
-    expect(row.knockoutPoints).toBe(0);
+    expect(row.knockoutPoints).toBe(3);
     expect(row.knockoutExactHits).toBe(0);
+  });
+
+  it("scores final exact result with final exact points", () => {
+    const fixture: KnockoutFixture = { id: "k-final", order: 1, stage: "FINAL", home: "Argentina", away: "Francia" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-final", homeGoals: 2, awayGoals: 1 }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-final", homeGoals: 2, awayGoals: 1 }],
+    });
+
+    expect(row.knockoutPoints).toBe(8);
+    expect(row.knockoutExactHits).toBe(1);
   });
 
   it("accumulates standings automatically from official results", () => {

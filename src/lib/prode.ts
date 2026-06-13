@@ -3,6 +3,7 @@ import {
   groups,
   matches,
   matchMap,
+  knockoutStageScoring,
   knockoutStages,
   type GroupId,
   type KnockoutFixture,
@@ -502,6 +503,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   const resultByMatch = new Map(results.matchResults.map((result) => [result.matchId, result]));
   const resultByGroup = new Map(results.groupResults.map((result) => [result.groupId, result]));
   const knockoutResultByFixture = new Map(results.knockoutResults.map((result) => [result.fixtureId, result]));
+  const knockoutFixtureById = new Map(results.knockoutFixtures.map((fixture) => [fixture.id, fixture]));
   let matchPoints = 0;
   let groupPoints = 0;
   let knockoutPoints = 0;
@@ -543,10 +545,17 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
 
   for (const prediction of submission.knockoutPredictions ?? []) {
     const result = knockoutResultByFixture.get(prediction.fixtureId);
+    const fixture = knockoutFixtureById.get(prediction.fixtureId);
     if (!result) continue;
+    const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
     if (prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals) {
-      knockoutPoints += 2;
+      knockoutPoints += scoring.exact;
       knockoutExactHits += 1;
+      continue;
+    }
+
+    if (getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals)) {
+      knockoutPoints += scoring.winner;
     }
   }
 

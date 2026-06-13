@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Brackets, ClipboardList, Medal, RefreshCw, ShieldCheck, Target } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
-import { choiceMatches, exactScoreMatches, groups, matches } from "@/lib/matches";
+import { choiceMatches, exactScoreMatches, groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, matches } from "@/lib/matches";
 
 const ruleSteps = [
   {
@@ -25,7 +25,7 @@ const scoringRules = [
   {
     label: "Resultado exacto",
     points: "2 pts",
-    copy: `${exactScoreMatches.length} partidos de fase de grupos y todos los cruces de eliminatorias piden marcador exacto.`,
+    copy: `${exactScoreMatches.length} partidos de fase de grupos piden marcador exacto. En eliminatorias el valor sube segun la etapa.`,
   },
   {
     label: "Ganador / empate",
@@ -124,10 +124,10 @@ export default function ReglasPage() {
         </article>
         <article>
           <p className="eyebrow">Eliminatorias</p>
-          <h2>Siempre exacto</h2>
+          <h2>16avos desde el 28 de junio</h2>
           <p>
-            Cuando admin cargue los cruces, cada participante completa marcadores exactos. Cada acierto exacto vale 2
-            puntos.
+            Cuando admin cargue los cruces, cada participante completa marcadores exactos. Si no pega exacto pero acierta
+            el ganador/clasificado, tambien suma puntos.
           </p>
         </article>
         <article>
@@ -138,6 +138,27 @@ export default function ReglasPage() {
             Cada nuevo resultado recalcula totales, desempates y columnas de puntos.
           </p>
         </article>
+      </section>
+
+      <section className="sectionHeader">
+        <p className="eyebrow">Eliminatorias</p>
+        <h2>Puntos por etapa.</h2>
+        <p>Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto.</p>
+      </section>
+
+      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
+        {knockoutStages.map((stage) => {
+          const scoring = knockoutStageScoring[stage];
+          return (
+            <article key={stage}>
+              <span>{knockoutStageLabels[stage]}</span>
+              <strong>{scoring.exact} / {scoring.winner}</strong>
+              <p>
+                Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
+              </p>
+            </article>
+          );
+        })}
       </section>
 
       <section className="rulesCallout">

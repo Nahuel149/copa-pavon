@@ -171,6 +171,24 @@ export const knockoutStageLabels: Record<KnockoutStage, string> = {
 
 export const knockoutStages = Object.keys(knockoutStageLabels) as KnockoutStage[];
 
+export const knockoutStageSchedule: Record<KnockoutStage, string> = {
+  R32: "28 Jun - 3 Jul",
+  R16: "4 - 7 Jul",
+  QF: "9 - 11 Jul",
+  SF: "14 - 15 Jul",
+  THIRD: "18 Jul",
+  FINAL: "19 Jul",
+};
+
+export const knockoutStageScoring: Record<KnockoutStage, { exact: number; winner: number; winnerLabel: string }> = {
+  R32: { exact: 4, winner: 2, winnerLabel: "ganador clasificado" },
+  R16: { exact: 4, winner: 2, winnerLabel: "ganador clasificado" },
+  QF: { exact: 5, winner: 3, winnerLabel: "ganador clasificado" },
+  SF: { exact: 6, winner: 4, winnerLabel: "ganador clasificado" },
+  THIRD: { exact: 4, winner: 2, winnerLabel: "ganador" },
+  FINAL: { exact: 8, winner: 5, winnerLabel: "campeon correcto" },
+};
+
 export const exactScoreMatches = matches.filter((match) => match.exactScore);
 export const choiceMatches = matches.filter((match) => !match.exactScore);
 
