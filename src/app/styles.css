@@ -1868,14 +1868,17 @@ tbody tr.relegationRow:hover {
 .raceGraphCanvas {
   min-width: 0;
   padding: 14px;
-  background: linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(255, 228, 220, 0.82));
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.05) 1px, transparent 1px) 0 0 / 64px 100%,
+    linear-gradient(180deg, rgba(5, 5, 5, 0.05) 1px, transparent 1px) 0 0 / 100% 48px,
+    linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(255, 228, 220, 0.82));
   border-right: 3px solid var(--ink);
 }
 
 .raceGraph svg {
   display: block;
   width: 100%;
-  min-height: 240px;
+  min-height: 280px;
   overflow: visible;
   font-family: "Trebuchet MS", Verdana, sans-serif;
 }
@@ -1885,7 +1888,7 @@ tbody tr.relegationRow:hover {
 }
 
 .raceGridLine line {
-  stroke: rgba(5, 5, 5, 0.16);
+  stroke: rgba(5, 5, 5, 0.28);
   stroke-width: 2;
 }
 
@@ -1896,8 +1899,9 @@ tbody tr.relegationRow:hover {
 }
 
 .raceTurnLine line {
-  stroke: rgba(5, 5, 5, 0.34);
-  stroke-width: 2;
+  stroke: rgba(5, 5, 5, 0.44);
+  stroke-dasharray: 7 7;
+  stroke-width: 2.5;
 }
 
 .raceTurnLine text {
@@ -1911,8 +1915,8 @@ tbody tr.relegationRow:hover {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 4.5;
-  filter: drop-shadow(2px 2px 0 rgba(5, 5, 5, 0.22));
+  stroke-width: 5.5;
+  filter: drop-shadow(2px 2px 0 rgba(5, 5, 5, 0.3));
 }
 
 .raceLineGroup circle {
@@ -1939,6 +1943,20 @@ tbody tr.relegationRow:hover {
   padding: 8px 10px;
   border-bottom: 2px solid rgba(5, 5, 5, 0.16);
   font-family: "Trebuchet MS", Verdana, sans-serif;
+}
+
+.raceLegend li:nth-child(1) {
+  background: #f8fff4;
+}
+
+.raceLegend li span {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  background: var(--red);
+  border: 2px solid var(--ink);
+  color: #fff;
 }
 
 .raceLegend i {

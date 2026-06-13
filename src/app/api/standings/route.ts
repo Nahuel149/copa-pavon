@@ -7,9 +7,10 @@ import { readResultStore, readSubmissionStore, writeResultStore } from "@/lib/st
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function buildHistorySnapshot(label: string, submissions: Submission[], results: ResultStore) {
+function buildHistorySnapshot(label: string, title: string, submissions: Submission[], results: ResultStore) {
   return {
     label,
+    title,
     positions: buildStandings(submissions, results).map((standing, index) => ({
       submissionId: standing.submissionId,
       name: standing.name,
@@ -21,10 +22,15 @@ function buildHistorySnapshot(label: string, submissions: Submission[], results:
 }
 
 function buildStandingsHistory(submissions: Submission[], results: ResultStore) {
-  const snapshots = [1, 2, 3].map((round) => {
-    const roundMatchIds = new Set(matches.filter((match) => match.round <= round).map((match) => match.id));
-    return buildHistorySnapshot(`F${round}`, submissions, {
-      matchResults: results.matchResults.filter((result) => roundMatchIds.has(result.matchId)),
+  const matchOrder = new Map(matches.map((match) => [match.id, match.order]));
+  const playedMatchResults = [...results.matchResults].sort(
+    (a, b) => (matchOrder.get(a.matchId) ?? 999) - (matchOrder.get(b.matchId) ?? 999),
+  );
+
+  const snapshots = playedMatchResults.map((result, index) => {
+    const match = matches.find((item) => item.id === result.matchId);
+    return buildHistorySnapshot(`P${index + 1}`, match ? `${match.home} vs ${match.away}` : `Partido ${index + 1}`, submissions, {
+      matchResults: playedMatchResults.slice(0, index + 1),
       groupResults: [],
       knockoutFixtures: [],
       knockoutResults: [],
@@ -33,7 +39,7 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
 
   if (results.groupResults.length > 0) {
     snapshots.push(
-      buildHistorySnapshot("Grupos", submissions, {
+      buildHistorySnapshot("Grupos", "Top 2 de grupos", submissions, {
         matchResults: results.matchResults,
         groupResults: results.groupResults,
         knockoutFixtures: [],
@@ -43,7 +49,7 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
   }
 
   if (results.knockoutResults.length > 0) {
-    snapshots.push(buildHistorySnapshot("Elim.", submissions, results));
+    snapshots.push(buildHistorySnapshot("Elim.", "Eliminatorias", submissions, results));
   }
 
   return snapshots;

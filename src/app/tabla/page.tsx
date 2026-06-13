@@ -11,6 +11,7 @@ type StandingsResponse = {
   standingsByClan: Record<ClanId, StandingRow[]>;
   history: Array<{
     label: string;
+    title: string;
     positions: Array<{
       submissionId: string;
       name: string;
@@ -43,7 +44,6 @@ export default function TablaPage() {
   const [historyLimit, setHistoryLimit] = useState(0);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
-  const graphRows = rows.slice(0, 14);
   const fullGraphHistory = useMemo(
     () =>
       (data.history ?? []).map((entry) => ({
@@ -57,8 +57,10 @@ export default function TablaPage() {
     () => fullGraphHistory.slice(0, graphHistoryLimit),
     [fullGraphHistory, graphHistoryLimit],
   );
+  const selectedGraphSnapshot = graphHistory.at(-1);
+  const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, 14);
   const graphWidth = 680;
-  const graphHeight = 260;
+  const graphHeight = 300;
   const graphPadX = 46;
   const graphPadTop = 24;
   const graphPadBottom = 46;
@@ -67,6 +69,14 @@ export default function TablaPage() {
   const maxPosition = Math.max(rows.length, 1);
   const positionMarkers = Array.from(new Set([1, Math.ceil(maxPosition / 2), maxPosition]));
   const graphColors = ["#f04424", "#2c6f45", "#276b8f", "#d79b30", "#111111", "#8f3d2b", "#6d6a62", "#f36f45"];
+  const graphColorById = useMemo(
+    () => new Map(rows.map((row, index) => [row.submissionId, graphColors[index % graphColors.length]])),
+    [rows],
+  );
+
+  function colorForSubmission(submissionId: string, fallbackIndex: number) {
+    return graphColorById.get(submissionId) ?? graphColors[fallbackIndex % graphColors.length];
+  }
 
   function graphPoint(index: number, position: number) {
     const x = graphPadX + (graphHistory.length <= 1 ? 0 : (index / (graphHistory.length - 1)) * graphInnerWidth);
@@ -202,7 +212,12 @@ export default function TablaPage() {
         <div className="tableNote">
           <div>
             <strong>Carrera por la punta</strong>
-            <span>Elegí hasta qué fecha cortar el gráfico. Cuanto más arriba está la línea, mejor ubicación.</span>
+            <span>
+              {selectedGraphSnapshot
+                ? `Hasta ${selectedGraphSnapshot.label}: ${selectedGraphSnapshot.title}.`
+                : "Cada corte suma un partido oficial cargado."}{" "}
+              Cuanto mas arriba esta la linea, mejor ubicacion.
+            </span>
           </div>
           {fullGraphHistory.length > 0 ? (
             <div className="raceCutSelector" role="group" aria-label="Elegir corte del grafico">
@@ -230,7 +245,7 @@ export default function TablaPage() {
                     <g className="raceGridLine" key={position}>
                       <line x1={graphPadX} x2={graphWidth - graphPadX} y1={point.y} y2={point.y} />
                       <text x="16" y={point.y + 5}>
-                        {position}
+                        #{position}
                       </text>
                     </g>
                   );
@@ -247,7 +262,7 @@ export default function TablaPage() {
                   );
                 })}
                 {graphRows.map((row, index) => {
-                  const color = graphColors[index % graphColors.length];
+                  const color = colorForSubmission(row.submissionId, index);
                   const points = linePoints(row.submissionId);
                   if (!points) return null;
                   return (
@@ -264,13 +279,13 @@ export default function TablaPage() {
                 })}
               </svg>
             </div>
-            <ol className="raceLegend">
+            <ol className="raceLegend" aria-label={`Posiciones hasta ${selectedGraphSnapshot?.label ?? "el corte elegido"}`}>
               {graphRows.map((row, index) => (
                 <li key={row.submissionId}>
-                  <i style={{ background: graphColors[index % graphColors.length] }} />
-                  <span>{index + 1}</span>
+                  <i style={{ background: colorForSubmission(row.submissionId, index) }} />
+                  <span>{row.position}</span>
                   <strong>{row.name}</strong>
-                  <b>{row.totalPoints} pts</b>
+                  <b>{row.points} pts</b>
                 </li>
               ))}
             </ol>
