@@ -1,12 +1,24 @@
 import { matches } from "./matches";
-import { getOutcome, validateResultStore, type MatchResult, type ResultStore } from "./prode";
+import {
+  getOutcome,
+  normalizeName,
+  parseScorerNames,
+  validateResultStore,
+  type KnockoutResult,
+  type MatchResult,
+  type ResultStore,
+} from "./prode";
 
 const defaultSourceUrl = "https://worldcup26.ir/get/games";
 
 type WorldCup26Game = {
   id?: unknown;
+  home_team_name_en?: unknown;
+  away_team_name_en?: unknown;
   home_score?: unknown;
   away_score?: unknown;
+  home_scorers?: unknown;
+  away_scorers?: unknown;
   finished?: unknown;
   time_elapsed?: unknown;
   type?: unknown;
@@ -72,6 +84,52 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
   };
 }
 
+function normalizeTeamName(value: unknown) {
+  return normalizeName(String(value ?? ""))
+    .replace(/&/g, "and")
+    .replace(/\busa\b/g, "united states")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sameTeams(a: unknown, b: unknown) {
+  const left = normalizeTeamName(a);
+  const right = normalizeTeamName(b);
+  return Boolean(left && right && (left === right || left.includes(right) || right.includes(left)));
+}
+
+function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResult[]) {
+  const byFixture = new Map(current.map((result) => [result.fixtureId, result]));
+  let changed = 0;
+  let unchanged = 0;
+
+  for (const result of imported) {
+    const previous = byFixture.get(result.fixtureId);
+    const previousScorers = (previous?.scorerNames ?? []).join("|");
+    const nextScorers = (result.scorerNames ?? []).join("|");
+    if (
+      previous &&
+      previous.homeGoals === result.homeGoals &&
+      previous.awayGoals === result.awayGoals &&
+      previousScorers === nextScorers
+    ) {
+      unchanged += 1;
+      continue;
+    }
+    byFixture.set(result.fixtureId, result);
+    changed += 1;
+  }
+
+  return {
+    changed,
+    unchanged,
+    results: current
+      .map((result) => byFixture.get(result.fixtureId))
+      .filter((result): result is KnockoutResult => Boolean(result))
+      .concat(imported.filter((result) => !current.some((existing) => existing.fixtureId === result.fixtureId))),
+  };
+}
+
 export async function syncGroupMatchResults(current: ResultStore) {
   const sourceUrl = process.env.PRODE_RESULTS_SYNC_URL ?? defaultSourceUrl;
   const response = await fetch(sourceUrl, {
@@ -86,12 +144,14 @@ export async function syncGroupMatchResults(current: ResultStore) {
   const payload = await response.json();
   const games = extractGames(payload);
   const imported: MatchResult[] = [];
+  const importedKnockout: KnockoutResult[] = [];
   let skipped = 0;
 
   for (const game of games) {
     const sourceId = Number(game.id);
     const match = matches[sourceId - 1];
-    if (!match || String(game.type ?? "group").toLowerCase() !== "group" || !isFinishedGame(game)) {
+    const gameType = String(game.type ?? "group").toLowerCase();
+    if (!isFinishedGame(game)) {
       skipped += 1;
       continue;
     }
@@ -103,24 +163,45 @@ export async function syncGroupMatchResults(current: ResultStore) {
       continue;
     }
 
-    imported.push({
-      matchId: match.id,
+    if (gameType === "group" && match) {
+      imported.push({
+        matchId: match.id,
+        homeGoals,
+        awayGoals,
+        outcome: getOutcome(homeGoals, awayGoals),
+      });
+      continue;
+    }
+
+    const fixture = current.knockoutFixtures.find(
+      (item) =>
+        sameTeams(item.home, game.home_team_name_en) &&
+        sameTeams(item.away, game.away_team_name_en),
+    );
+    if (!fixture) {
+      skipped += 1;
+      continue;
+    }
+    importedKnockout.push({
+      fixtureId: fixture.id,
       homeGoals,
       awayGoals,
-      outcome: getOutcome(homeGoals, awayGoals),
+      scorerNames: [...parseScorerNames(game.home_scorers), ...parseScorerNames(game.away_scorers)],
     });
   }
 
   const merged = mergeMatchResults(current.matchResults, imported);
+  const mergedKnockout = mergeKnockoutResults(current.knockoutResults, importedKnockout);
   const results = validateResultStore({
     ...current,
     matchResults: merged.results,
+    knockoutResults: mergedKnockout.results,
   });
 
   const report: SyncResultReport = {
     sourceUrl,
-    imported: merged.changed,
-    unchanged: merged.unchanged,
+    imported: merged.changed + mergedKnockout.changed,
+    unchanged: merged.unchanged + mergedKnockout.unchanged,
     skipped,
     checkedAt: new Date().toISOString(),
   };

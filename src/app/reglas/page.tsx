@@ -127,7 +127,8 @@ export default function ReglasPage() {
           <h2>16avos desde el 28 de junio</h2>
           <p>
             Cuando admin cargue los cruces, cada participante completa marcadores exactos. Si no pega exacto pero acierta
-            el ganador/clasificado, tambien suma puntos.
+            el ganador/clasificado, tambien suma puntos. Desde 16avos tambien puede elegir un goleador del partido:
+            si ese jugador convierte, suma 1 punto extra.
           </p>
         </article>
         <article>
@@ -143,7 +144,10 @@ export default function ReglasPage() {
       <section className="sectionHeader">
         <p className="eyebrow">Eliminatorias</p>
         <h2>Puntos por etapa.</h2>
-        <p>Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto.</p>
+        <p>
+          Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto. El goleador
+          acertado suma 1 punto extra en cualquier cruce.
+        </p>
       </section>
 
       <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">

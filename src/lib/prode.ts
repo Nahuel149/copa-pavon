@@ -38,6 +38,7 @@ export type KnockoutPrediction = {
   fixtureId: string;
   homeGoals: number;
   awayGoals: number;
+  goalScorer?: string;
 };
 
 export type ClanId = "river-plate" | "la-batata";
@@ -96,6 +97,7 @@ export type KnockoutResult = {
   fixtureId: string;
   homeGoals: number;
   awayGoals: number;
+  scorerNames?: string[];
 };
 
 export type ResultStore = {
@@ -117,6 +119,7 @@ export type StandingRow = {
   winnerHits: number;
   groupHits: number;
   knockoutExactHits: number;
+  knockoutScorerHits: number;
   playedMatches: number;
   decidedGroups: number;
   playedKnockoutMatches: number;
@@ -140,6 +143,7 @@ type RawKnockoutPrediction = {
   fixtureId?: unknown;
   homeGoals?: unknown;
   awayGoals?: unknown;
+  goalScorer?: unknown;
 };
 
 export type RawSubmission = {
@@ -176,6 +180,80 @@ export function normalizeName(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+export function normalizeScorerName(value: string) {
+  return normalizeName(value)
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\b\d{1,3}(?:\s*\+\s*\d{1,2})?\b/g, " ")
+    .replace(/\bog\b|\bpen\b|\bp\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function parseScorerNames(value: unknown) {
+  if (typeof value !== "string") return [];
+  const raw = value.trim();
+  if (!raw || raw.toLowerCase() === "null") return [];
+
+  return raw
+    .replace(/[{}"“”]/g, "")
+    .split(",")
+    .map((item) =>
+      item
+        .replace(/\d{1,3}'(?:\+\d{1,2}')?/g, "")
+        .replace(/\((?:OG|P|Pen)\)/gi, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter(Boolean);
+}
+
+function levenshteinDistance(a: string, b: string) {
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + substitutionCost);
+    }
+    for (let j = 0; j <= b.length; j += 1) previous[j] = current[j];
+  }
+
+  return previous[b.length];
+}
+
+function scorerNameMatches(prediction: string | undefined, officialScorers: string[] | undefined) {
+  const predicted = normalizeScorerName(prediction ?? "");
+  if (predicted.length < 3 || !officialScorers?.length) return false;
+
+  const predictedTokens = predicted.split(" ").filter(Boolean);
+  const predictedLast = predictedTokens.at(-1) ?? predicted;
+  const predictedFirst = predictedTokens[0] ?? "";
+
+  return officialScorers.some((official) => {
+    const normalizedOfficial = normalizeScorerName(official);
+    if (!normalizedOfficial) return false;
+    if (normalizedOfficial.includes(predicted) || predicted.includes(normalizedOfficial)) return true;
+
+    const officialTokens = normalizedOfficial.split(" ").filter(Boolean);
+    const officialLast = officialTokens.at(-1) ?? normalizedOfficial;
+    const officialFirst = officialTokens[0] ?? "";
+
+    const lastNameDistance = levenshteinDistance(predictedLast, officialLast);
+    const firstNameCompatible =
+      predictedTokens.length === 1 ||
+      !predictedFirst ||
+      !officialFirst ||
+      predictedFirst[0] === officialFirst[0] ||
+      levenshteinDistance(predictedFirst, officialFirst) <= 2;
+    if (lastNameDistance <= 2 && firstNameCompatible) return true;
+
+    const fullDistance = levenshteinDistance(predicted, normalizedOfficial);
+    return fullDistance <= Math.max(2, Math.floor(Math.max(predicted.length, normalizedOfficial.length) * 0.25));
+  });
 }
 
 export function getOutcome(homeGoals: number, awayGoals: number): PredictionChoice {
@@ -383,7 +461,8 @@ export function validateKnockoutSubmission(
       errors.push(`El resultado de ${fixture.home} vs. ${fixture.away} tiene que estar entre 0 y 30.`);
       continue;
     }
-    predictions.push({ fixtureId: fixture.id, homeGoals, awayGoals });
+    const goalScorer = typeof raw.goalScorer === "string" ? raw.goalScorer.trim().replace(/\s+/g, " ") : "";
+    predictions.push({ fixtureId: fixture.id, homeGoals, awayGoals, ...(goalScorer ? { goalScorer } : {}) });
   }
 
   if (errors.length > 0) return { ok: false, errors };
@@ -456,7 +535,15 @@ export function validateResultStore(payload: unknown): ResultStore {
     if (homeGoals === null || awayGoals === null || homeGoals < 0 || awayGoals < 0 || homeGoals > 30 || awayGoals > 30) {
       continue;
     }
-    knockoutResults.push({ fixtureId: item.fixtureId, homeGoals, awayGoals });
+    const scorerNames = Array.isArray(item.scorerNames)
+      ? item.scorerNames.filter((scorer): scorer is string => typeof scorer === "string" && scorer.trim().length > 0)
+      : parseScorerNames((item as Partial<KnockoutResult> & { scorers?: unknown }).scorers);
+    knockoutResults.push({
+      fixtureId: item.fixtureId,
+      homeGoals,
+      awayGoals,
+      ...(scorerNames.length > 0 ? { scorerNames } : {}),
+    });
   }
 
   return { matchResults, groupResults, knockoutFixtures, knockoutResults };
@@ -502,7 +589,7 @@ export function serializePrediction(prediction: Prediction) {
 }
 
 export function serializeKnockoutPrediction(prediction: KnockoutPrediction) {
-  return `${prediction.homeGoals}-${prediction.awayGoals}`;
+  return `${prediction.homeGoals}-${prediction.awayGoals}${prediction.goalScorer ? ` · ${prediction.goalScorer}` : ""}`;
 }
 
 export function scoreSubmission(submission: Submission, results: ResultStore): StandingRow {
@@ -517,6 +604,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   let winnerHits = 0;
   let groupHits = 0;
   let knockoutExactHits = 0;
+  let knockoutScorerHits = 0;
 
   for (const prediction of submission.predictions) {
     const result = resultByMatch.get(prediction.matchId);
@@ -557,11 +645,13 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     if (prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals) {
       knockoutPoints += scoring.exact;
       knockoutExactHits += 1;
-      continue;
+    } else if (getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals)) {
+      knockoutPoints += scoring.winner;
     }
 
-    if (getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals)) {
-      knockoutPoints += scoring.winner;
+    if (scorerNameMatches(prediction.goalScorer, result.scorerNames)) {
+      knockoutPoints += 1;
+      knockoutScorerHits += 1;
     }
   }
 
@@ -577,6 +667,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     winnerHits,
     groupHits,
     knockoutExactHits,
+    knockoutScorerHits,
     playedMatches: results.matchResults.length,
     decidedGroups: results.groupResults.length,
     playedKnockoutMatches: results.knockoutResults.length,

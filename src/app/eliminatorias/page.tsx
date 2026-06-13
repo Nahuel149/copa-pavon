@@ -12,7 +12,7 @@ type FixtureResponse = {
   fixtures: KnockoutFixture[];
 };
 
-type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string }>;
+type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string; goalScorer: string }>;
 type SavedKnockoutDraft = {
   name: string;
   predictions: KnockoutDraft;
@@ -23,7 +23,7 @@ const knockoutDraftStorageKey = "copa-kahl-knockout-draft-v1";
 
 function draftFromFixtures(fixtures: KnockoutFixture[]) {
   return fixtures.reduce<KnockoutDraft>((draft, fixture) => {
-    draft[fixture.id] = { homeGoals: "", awayGoals: "" };
+    draft[fixture.id] = { homeGoals: "", awayGoals: "", goalScorer: "" };
     return draft;
   }, {});
 }
@@ -38,7 +38,8 @@ function readSavedKnockoutDraft(fixtures: KnockoutFixture[]): SavedKnockoutDraft
     return {
       name: typeof parsed.name === "string" ? parsed.name : "",
       predictions: fixtures.reduce<KnockoutDraft>((draft, fixture) => {
-        draft[fixture.id] = parsed.predictions?.[fixture.id] ?? baseDraft[fixture.id];
+        const saved = parsed.predictions?.[fixture.id];
+        draft[fixture.id] = saved ? { ...baseDraft[fixture.id], ...saved } : baseDraft[fixture.id];
         return draft;
       }, {}),
       savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : new Date().toISOString(),
@@ -123,6 +124,13 @@ export default function EliminatoriasPage() {
     }));
   }
 
+  function setGoalScorer(fixtureId: string, value: string) {
+    setPredictions((current) => ({
+      ...current,
+      [fixtureId]: { ...current[fixtureId], goalScorer: value.slice(0, 80) },
+    }));
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) {
@@ -141,6 +149,7 @@ export default function EliminatoriasPage() {
           fixtureId: fixture.id,
           homeGoals: predictions[fixture.id]?.homeGoals ?? "",
           awayGoals: predictions[fixture.id]?.awayGoals ?? "",
+          goalScorer: predictions[fixture.id]?.goalScorer ?? "",
         })),
       }),
     });
@@ -194,7 +203,7 @@ export default function EliminatoriasPage() {
           <h1>Marcador exacto.</h1>
           <p className="heroCopy">
             Los 16avos empiezan el 28 de junio. En eliminatorias se carga marcador exacto: si acertás exacto sumás el
-            premio grande, y si acertás ganador/clasificado sumás parcial.
+            premio grande, si acertás ganador/clasificado sumás parcial y podés sumar +1 con un goleador.
           </p>
         </div>
         <div className="heroControl">
@@ -270,6 +279,7 @@ export default function EliminatoriasPage() {
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
+                Goleador acertado: +1.
               </p>
             </article>
           );
@@ -287,7 +297,7 @@ export default function EliminatoriasPage() {
             </div>
             <div className="matchGrid">
               {stageFixtures.map((fixture) => {
-                const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "" };
+                const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "", goalScorer: "" };
                 return (
                   <article className="matchCard exact" key={fixture.id}>
                     <div className="matchHeader">
@@ -320,6 +330,15 @@ export default function EliminatoriasPage() {
                         />
                       </label>
                     </div>
+                    <label className="scorerInput">
+                      <span>Goleador del partido (+1)</span>
+                      <input
+                        value={value.goalScorer ?? ""}
+                        onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
+                        disabled={status === "saving"}
+                        placeholder="Ej: Balogun"
+                      />
+                    </label>
                   </article>
                 );
               })}

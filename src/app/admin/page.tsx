@@ -50,7 +50,7 @@ type SettingsResponse = AppSettings & {
   error?: string;
 };
 
-type ResultDraft = Record<string, { homeGoals: string; awayGoals: string }>;
+type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; scorerNames?: string }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
 
 const emptyMatchResults = matches.reduce<ResultDraft>((draft, match) => {
@@ -99,9 +99,13 @@ function buildResultsPayload(
         fixtureId: fixture.id,
         homeGoals: Number(value.homeGoals),
         awayGoals: Number(value.awayGoals),
+        scorerNames: (value.scorerNames ?? "")
+          .split(",")
+          .map((scorer) => scorer.trim())
+          .filter(Boolean),
       };
     })
-    .filter((result): result is { fixtureId: string; homeGoals: number; awayGoals: number } => Boolean(result));
+    .filter((result): result is { fixtureId: string; homeGoals: number; awayGoals: number; scorerNames: string[] } => Boolean(result));
 
   return {
     matchResults: matchResults.map((result) => ({
@@ -136,6 +140,7 @@ function draftFromResults(results: ResultStore) {
     draft[fixture.id] = {
       homeGoals: result ? String(result.homeGoals) : "",
       awayGoals: result ? String(result.awayGoals) : "",
+      scorerNames: result?.scorerNames?.join(", ") ?? "",
     };
     return draft;
   }, {});
@@ -394,6 +399,13 @@ export default function AdminPage() {
     setKnockoutDraft((current) => ({
       ...current,
       [fixtureId]: { ...current[fixtureId], [side]: cleanValue },
+    }));
+  }
+
+  function setKnockoutScorers(fixtureId: string, value: string) {
+    setKnockoutDraft((current) => ({
+      ...current,
+      [fixtureId]: { ...current[fixtureId], scorerNames: value },
     }));
   }
 
@@ -716,6 +728,14 @@ export default function AdminPage() {
                   <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
                 </label>
               </div>
+              <label className="adminTextInput">
+                <span>Goleadores oficiales</span>
+                <input
+                  value={value.scorerNames ?? ""}
+                  onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
+                  placeholder="Balogun, Messi"
+                />
+              </label>
               <button className="tableButton dangerButton" onClick={() => removeKnockoutFixture(fixture.id)} type="button">
                 <Trash2 size={14} aria-hidden="true" />
                 Quitar

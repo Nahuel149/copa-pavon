@@ -6,6 +6,7 @@ import {
   defaultClan,
   getOutcome,
   normalizeName,
+  parseScorerNames,
   scoreSubmission,
   validateKnockoutSubmission,
   validateSubmission,
@@ -217,6 +218,27 @@ describe("prode scoring", () => {
     );
 
     expect(result.ok).toBe(true);
+  });
+
+  it("parses scorer names from the automatic result source", () => {
+    expect(parseScorerNames("{\"F. Balogun 31'\",\"L. Messi 90'+2'\"}")).toEqual(["F. Balogun", "L. Messi"]);
+  });
+
+  it("adds one knockout point for a fuzzy scorer hit", () => {
+    const fixture: KnockoutFixture = { id: "k-scorer", order: 1, stage: "R32", home: "Estados Unidos", away: "Francia" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-scorer", homeGoals: 1, awayGoals: 2, goalScorer: "Foarin Baolgun" }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-scorer", homeGoals: 0, awayGoals: 1, scorerNames: ["Folarin Balogun"] }],
+    });
+
+    expect(row.knockoutPoints).toBe(3);
+    expect(row.knockoutScorerHits).toBe(1);
   });
 
   it("sorts tied standings by reverse alphabetical name", () => {

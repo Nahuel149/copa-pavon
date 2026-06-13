@@ -1484,6 +1484,30 @@ a {
   font-size: 1.5rem;
 }
 
+.scorerInput,
+.adminTextInput {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.scorerInput span,
+.adminTextInput span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.scorerInput input,
+.adminTextInput input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  font-size: 1rem;
+}
+
 .sectionHeader {
   animation: pageEnter 420ms ease both;
 }
