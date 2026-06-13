@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAppSettings, writeAppSettings } from "@/lib/storage";
+import { readAppSettings, readResultStore, writeAppSettings } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +13,11 @@ function adminAllowed(request: Request) {
 }
 
 export async function GET() {
-  const settings = await readAppSettings();
-  return NextResponse.json(settings);
+  const [settings, results] = await Promise.all([readAppSettings(), readResultStore()]);
+  return NextResponse.json({
+    ...settings,
+    lockedMatchIds: results.matchResults.map((result) => result.matchId),
+  });
 }
 
 export async function PUT(request: Request) {

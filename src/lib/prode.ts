@@ -218,11 +218,15 @@ function parseTeam(groupId: GroupId, value: unknown) {
   return group?.teams.includes(value) ? value : "";
 }
 
-export function validateSubmission(payload: RawSubmission): ValidationResult {
+export function validateSubmission(
+  payload: RawSubmission,
+  options: { excludedMatchIds?: Iterable<string> } = {},
+): ValidationResult {
   const errors: string[] = [];
   const name = typeof payload.name === "string" ? payload.name.trim().replace(/\s+/g, " ") : "";
   const normalizedName = normalizeName(name);
   const clan = parseClan(payload.clan);
+  const excludedMatchIds = new Set(options.excludedMatchIds ?? []);
 
   if (name.length < 2) errors.push("Ingresá un nombre de al menos 2 caracteres.");
   if (name.length > 80) errors.push("El nombre no puede superar 80 caracteres.");
@@ -250,6 +254,8 @@ export function validateSubmission(payload: RawSubmission): ValidationResult {
 
   const predictions: Prediction[] = [];
   for (const match of matches) {
+    if (excludedMatchIds.has(match.id)) continue;
+
     const raw = rawByMatch.get(match.id);
     if (!raw) {
       errors.push(`Falta ${match.home} vs. ${match.away}.`);

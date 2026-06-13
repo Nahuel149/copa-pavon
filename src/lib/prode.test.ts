@@ -76,6 +76,19 @@ describe("prode validation", () => {
     }
   });
 
+  it("allows late entries to skip matches that already have official results", () => {
+    const payload = validPayload();
+    payload.predictions = payload.predictions.filter((prediction) => prediction.matchId !== "m-01");
+
+    const result = validateSubmission(payload, { excludedMatchIds: ["m-01"] });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.predictions).toHaveLength(71);
+      expect(result.predictions.some((prediction) => prediction.matchId === "m-01")).toBe(false);
+    }
+  });
+
   it("requires exact scores only for important marked matches", () => {
     const payload = validPayload();
     payload.predictions[3] = { matchId: "m-04", type: "score", homeGoals: "", awayGoals: "1" };

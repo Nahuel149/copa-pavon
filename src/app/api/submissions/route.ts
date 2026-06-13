@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createPinHash, validateParticipantPin } from "@/lib/pin";
 import { validateSubmission } from "@/lib/prode";
-import { appendSubmission, publicSubmission, readAppSettings, readSubmissionStore } from "@/lib/storage";
+import { appendSubmission, publicSubmission, readAppSettings, readResultStore, readSubmissionStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +42,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ errors: ["No se pudo leer el envío."] }, { status: 400 });
   }
 
-  const result = validateSubmission(payload as Parameters<typeof validateSubmission>[0]);
+  const results = await readResultStore();
+  const closedMatchIds = results.matchResults.map((result) => result.matchId);
+  const result = validateSubmission(payload as Parameters<typeof validateSubmission>[0], { excludedMatchIds: closedMatchIds });
   const pinError = validateParticipantPin((payload as { pin?: unknown }).pin);
   if (!result.ok) {
     return NextResponse.json({ errors: [...result.errors, ...(pinError ? [pinError] : [])].slice(0, 12) }, { status: 400 });

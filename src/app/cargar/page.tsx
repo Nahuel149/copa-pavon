@@ -6,10 +6,9 @@ import { CheckCircle2, ClipboardCheck, KeyRound, Loader2, Save, Send, Table2, Ta
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
-import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
+import { groups, matches, roundLabels, type GroupId, type Match, type MatchRound } from "@/lib/matches";
 import {
   countCompleteGroupPredictions,
-  countCompletePredictions,
   type AppSettings,
   type PredictionChoice,
 } from "@/lib/prode";
@@ -19,6 +18,7 @@ type ChoiceDraft = { type: "choice"; choice: PredictionChoice | "" };
 type DraftPrediction = ScoreDraft | ChoiceDraft;
 type DraftState = Record<string, DraftPrediction>;
 type GroupDraftState = Record<GroupId, { first: string; second: string }>;
+type SubmissionSettings = AppSettings & { lockedMatchIds?: string[] };
 type SavedGroupDraft = {
   name: string;
   activeRound: MatchRound;
@@ -39,11 +39,23 @@ const initialGroupDraft = groups.reduce<GroupDraftState>((draft, group) => {
   return draft;
 }, {} as GroupDraftState);
 
-function toPayload(name: string, pin: string, predictions: DraftState, groupPredictions: GroupDraftState) {
+function isPredictionComplete(match: Match, value: DraftPrediction | undefined) {
+  if (!value) return false;
+  if (match.exactScore) {
+    return value.type === "score" && value.homeGoals !== "" && value.awayGoals !== "";
+  }
+  return value.type === "choice" && (value.choice === "home" || value.choice === "draw" || value.choice === "away");
+}
+
+function countCompleteForMatches(matchList: Match[], predictions: DraftState) {
+  return matchList.reduce((total, match) => total + (isPredictionComplete(match, predictions[match.id]) ? 1 : 0), 0);
+}
+
+function toPayload(name: string, pin: string, predictions: DraftState, groupPredictions: GroupDraftState, matchList: Match[]) {
   return {
     name,
     pin,
-    predictions: matches.map((match) => {
+    predictions: matchList.map((match) => {
       const value = predictions[match.id];
       if (value.type === "score") {
         return {
@@ -98,16 +110,24 @@ export default function HomePage() {
   const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
   const [submissionsOpen, setSubmissionsOpen] = useState(false);
   const [settingsReady, setSettingsReady] = useState(false);
+  const [lockedMatchIds, setLockedMatchIds] = useState<string[]>([]);
 
-  const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
-  const completedMatches = countCompletePredictions(predictions);
+  const lockedMatchSet = useMemo(() => new Set(lockedMatchIds), [lockedMatchIds]);
+  const availableMatches = useMemo(() => matches.filter((match) => !lockedMatchSet.has(match.id)), [lockedMatchSet]);
+  const availableExactMatches = useMemo(() => availableMatches.filter((match) => match.exactScore), [availableMatches]);
+  const availableChoiceMatches = useMemo(() => availableMatches.filter((match) => !match.exactScore), [availableMatches]);
+  const roundMatches = useMemo(
+    () => availableMatches.filter((match) => match.round === activeRound),
+    [activeRound, availableMatches],
+  );
+  const completedMatches = countCompleteForMatches(availableMatches, predictions);
   const completedGroups = countCompleteGroupPredictions(groupPredictions);
   const completedTotal = completedMatches + completedGroups;
-  const totalItems = matches.length + groups.length;
+  const totalItems = availableMatches.length + groups.length;
   const progress = Math.round((completedTotal / totalItems) * 100);
   const missingName = name.trim().length < 2;
   const missingPin = !/^\d{4,10}$/.test(pin.trim());
-  const missingMatches = matches.length - completedMatches;
+  const missingMatches = availableMatches.length - completedMatches;
   const missingGroups = groups.length - completedGroups;
   const canSubmit =
     submissionsOpen && settingsReady && !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
@@ -140,10 +160,12 @@ export default function HomePage() {
     async function loadSettings() {
       try {
         const response = await fetch("/api/settings", { cache: "no-store" });
-        const body = await readJsonResponse<AppSettings & { error?: string }>(response);
+        const body = await readJsonResponse<SubmissionSettings & { error?: string }>(response);
         setSubmissionsOpen(response.ok && !body.error && body.submissionsOpen);
+        setLockedMatchIds(response.ok && !body.error && Array.isArray(body.lockedMatchIds) ? body.lockedMatchIds : []);
       } catch {
         setSubmissionsOpen(false);
+        setLockedMatchIds([]);
       } finally {
         setSettingsReady(true);
       }
@@ -151,6 +173,12 @@ export default function HomePage() {
 
     void loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (!settingsReady || roundMatches.length > 0) return;
+    const nextRound = availableMatches[0]?.round;
+    if (nextRound) setActiveRound(nextRound);
+  }, [availableMatches, roundMatches.length, settingsReady]);
 
   useEffect(() => {
     if (!draftReady || status === "done") return;
@@ -217,7 +245,7 @@ export default function HomePage() {
     const response = await fetch("/api/submissions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toPayload(name, pin, predictions, groupPredictions)),
+      body: JSON.stringify(toPayload(name, pin, predictions, groupPredictions, availableMatches)),
     });
 
     const body = await readJsonResponse<{ id?: string; createdAt?: string; errors?: string[] }>(response);
@@ -269,7 +297,8 @@ export default function HomePage() {
           <p className="eyebrow">Prode 2026</p>
           <h1>Fase de grupos híbrida.</h1>
           <p className="heroCopy">
-            Por fecha: 10 partidos importantes con marcador exacto y 14 con ganador/empate/perdedor.
+            Por fecha: 10 partidos importantes con marcador exacto y 14 con ganador/empate/perdedor. Si entrás tarde,
+            cargás solo los partidos que todavía no tienen resultado oficial.
           </p>
         </div>
         <div className="heroControl nameCard">
@@ -288,6 +317,17 @@ export default function HomePage() {
       </section>
 
       <KahlImageScatter page="home" count={5} />
+
+      {settingsReady && lockedMatchIds.length > 0 ? (
+        <section className="validationPanel" aria-live="polite">
+          <p className="eyebrow">Ingreso tardío</p>
+          <h2>Partidos ya cerrados.</h2>
+          <p>
+            Hay {lockedMatchIds.length} partidos con resultado oficial. No aparecen para cargar, no se guardan en este
+            envío y no suman puntos para nuevos participantes.
+          </p>
+        </section>
+      ) : null}
 
       <section className="draftPanel" aria-live="polite">
         <div>
@@ -337,13 +377,13 @@ export default function HomePage() {
       <section className="metricGrid" aria-label="Estado del prode">
         <article className="metric">
           <Target size={20} aria-hidden="true" />
-          <span>Exactos fase grupos</span>
-          <strong>{exactScoreMatches.length}</strong>
+          <span>Exactos disponibles</span>
+          <strong>{availableExactMatches.length}</strong>
         </article>
         <article className="metric">
           <Trophy size={20} aria-hidden="true" />
-          <span>1X2 fase grupos</span>
-          <strong>{choiceMatches.length}</strong>
+          <span>1X2 disponibles</span>
+          <strong>{availableChoiceMatches.length}</strong>
         </article>
         <article className="metric alert">
           <ClipboardCheck size={20} aria-hidden="true" />
@@ -354,10 +394,9 @@ export default function HomePage() {
 
       <section className="roundStrip" aria-label="Fechas">
         {([1, 2, 3] as MatchRound[]).map((round) => {
-          const roundDone = countCompletePredictions(
-            Object.fromEntries(matches.filter((match) => match.round === round).map((match) => [match.id, predictions[match.id]])),
-          );
-          const roundExact = matches.filter((match) => match.round === round && match.exactScore).length;
+          const roundAvailableMatches = availableMatches.filter((match) => match.round === round);
+          const roundDone = countCompleteForMatches(roundAvailableMatches, predictions);
+          const roundExact = roundAvailableMatches.filter((match) => match.exactScore).length;
           return (
             <button
               className={activeRound === round ? "roundTab active" : "roundTab"}
@@ -366,13 +405,22 @@ export default function HomePage() {
               type="button"
             >
               <span>{roundLabels[round]}</span>
-              <strong>{roundDone}/24 · {roundExact} exactos</strong>
+              <strong>{roundDone}/{roundAvailableMatches.length} · {roundExact} exactos</strong>
             </button>
           );
         })}
       </section>
 
       <section className="matchGrid" aria-label={roundLabels[activeRound]}>
+        {roundMatches.length === 0 ? (
+          <article className="matchCard choice">
+            <div className="matchHeader">
+              <span>{roundLabels[activeRound]}</span>
+              <strong>Cerrada</strong>
+            </div>
+            <p>Esta fecha no tiene partidos disponibles para nuevos envios.</p>
+          </article>
+        ) : null}
         {roundMatches.map((match) => {
           const value = predictions[match.id];
           return (
