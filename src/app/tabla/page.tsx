@@ -240,7 +240,6 @@ export default function TablaPage() {
               <th>Participante</th>
               <th>Puntos</th>
               <th>Exactos</th>
-              <th>Mov.</th>
             </tr>
           </thead>
           <tbody>
@@ -249,17 +248,21 @@ export default function TablaPage() {
               const isRelegation = rows.length > 1 && index >= rows.length - relegationCount;
               return (
                 <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""} key={row.submissionId}>
-                  <td>{index + 1}</td>
+                  <td>
+                    <span className="positionCell">
+                      <b>{index + 1}</b>
+                      <span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span>
+                    </span>
+                  </td>
                   <td>{row.name}</td>
                   <td>{row.totalPoints}</td>
                   <td>{row.exactHits + row.knockoutExactHits}</td>
-                  <td><span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span></td>
                 </tr>
               );
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5}>La tabla aparece cuando haya envios guardados.</td>
+                <td colSpan={4}>La tabla aparece cuando haya envios guardados.</td>
               </tr>
             ) : null}
           </tbody>
