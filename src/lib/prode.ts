@@ -591,6 +591,6 @@ export function buildStandings(submissions: Submission[], results: ResultStore) 
       if (b.exactHits !== a.exactHits) return b.exactHits - a.exactHits;
       if (b.knockoutExactHits !== a.knockoutExactHits) return b.knockoutExactHits - a.knockoutExactHits;
       if (b.groupPoints !== a.groupPoints) return b.groupPoints - a.groupPoints;
-      return a.name.localeCompare(b.name, "es");
+      return b.name.localeCompare(a.name, "es");
     });
 }

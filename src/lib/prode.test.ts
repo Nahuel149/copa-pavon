@@ -219,7 +219,7 @@ describe("prode scoring", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("sorts standings by total points and then exact hits", () => {
+  it("sorts tied standings by reverse alphabetical name", () => {
     const first = submissionFromPayload("Nahuel");
     const second = submissionFromPayload("Ana");
     const rows = buildStandings(
@@ -230,6 +230,6 @@ describe("prode scoring", () => {
       },
     );
 
-    expect(rows[0].name).toBe("Ana");
+    expect(rows[0].name).toBe("Nahuel");
   });
 });
