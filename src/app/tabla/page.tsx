@@ -42,6 +42,7 @@ export default function TablaPage() {
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
   const [historyLimit, setHistoryLimit] = useState(0);
+  const [hiddenGraphIds, setHiddenGraphIds] = useState<string[]>([]);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
@@ -59,6 +60,7 @@ export default function TablaPage() {
   );
   const selectedGraphSnapshot = graphHistory.at(-1);
   const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, 14);
+  const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
   const graphWidth = 680;
   const graphHeight = 300;
   const graphPadX = 46;
@@ -68,7 +70,22 @@ export default function TablaPage() {
   const graphInnerHeight = graphHeight - graphPadTop - graphPadBottom;
   const maxPosition = Math.max(rows.length, 1);
   const positionMarkers = Array.from(new Set([1, Math.ceil(maxPosition / 2), maxPosition]));
-  const graphColors = ["#f04424", "#2c6f45", "#276b8f", "#d79b30", "#111111", "#8f3d2b", "#6d6a62", "#f36f45"];
+  const graphColors = [
+    "#f04424",
+    "#2c6f45",
+    "#276b8f",
+    "#d79b30",
+    "#111111",
+    "#8f3d2b",
+    "#6d6a62",
+    "#005f73",
+    "#9b2226",
+    "#6a4c93",
+    "#0a9396",
+    "#ca6702",
+    "#3a86ff",
+    "#7f5539",
+  ];
   const graphColorById = useMemo(
     () => new Map(rows.map((row, index) => [row.submissionId, graphColors[index % graphColors.length]])),
     [rows],
@@ -94,6 +111,12 @@ export default function TablaPage() {
       })
       .filter(Boolean)
       .join(" ");
+  }
+
+  function toggleGraphParticipant(submissionId: string) {
+    setHiddenGraphIds((current) =>
+      current.includes(submissionId) ? current.filter((id) => id !== submissionId) : [...current, submissionId],
+    );
   }
 
   async function loadStandings() {
@@ -126,6 +149,11 @@ export default function TablaPage() {
       return fullGraphHistory.length;
     });
   }, [fullGraphHistory.length]);
+
+  useEffect(() => {
+    const validIds = new Set(rows.map((row) => row.submissionId));
+    setHiddenGraphIds((current) => current.filter((id) => validIds.has(id)));
+  }, [rows]);
 
   return (
     <div className="pageStack">
@@ -261,7 +289,7 @@ export default function TablaPage() {
                     </g>
                   );
                 })}
-                {graphRows.map((row, index) => {
+                {visibleGraphRows.map((row, index) => {
                   const color = colorForSubmission(row.submissionId, index);
                   const points = linePoints(row.submissionId);
                   if (!points) return null;
@@ -281,11 +309,17 @@ export default function TablaPage() {
             </div>
             <ol className="raceLegend" aria-label={`Posiciones hasta ${selectedGraphSnapshot?.label ?? "el corte elegido"}`}>
               {graphRows.map((row, index) => (
-                <li key={row.submissionId}>
-                  <i style={{ background: colorForSubmission(row.submissionId, index) }} />
+                <li className={hiddenGraphIds.includes(row.submissionId) ? "muted" : ""} key={row.submissionId}>
+                  <button
+                    aria-pressed={!hiddenGraphIds.includes(row.submissionId)}
+                    onClick={() => toggleGraphParticipant(row.submissionId)}
+                    type="button"
+                  >
+                    <i style={{ background: colorForSubmission(row.submissionId, index) }} />
                   <span>{row.position}</span>
                   <strong>{row.name}</strong>
                   <b>{row.points} pts</b>
+                  </button>
                 </li>
               ))}
             </ol>

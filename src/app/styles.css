@@ -1935,18 +1935,37 @@ tbody tr.relegationRow:hover {
 }
 
 .raceLegend li {
+  border-bottom: 2px solid rgba(5, 5, 5, 0.16);
+}
+
+.raceLegend li button {
   display: grid;
   grid-template-columns: 12px 30px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
+  width: 100%;
   min-height: 42px;
   padding: 8px 10px;
-  border-bottom: 2px solid rgba(5, 5, 5, 0.16);
+  border: 0;
+  background: transparent;
   font-family: "Trebuchet MS", Verdana, sans-serif;
+  text-align: left;
+}
+
+.raceLegend li button:hover {
+  background: rgba(240, 68, 36, 0.08);
 }
 
 .raceLegend li:nth-child(1) {
   background: #f8fff4;
+}
+
+.raceLegend li.muted {
+  opacity: 0.42;
+}
+
+.raceLegend li.muted button {
+  text-decoration: line-through;
 }
 
 .raceLegend li span {
@@ -2376,7 +2395,7 @@ tbody tr.relegationRow:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .raceLegend li {
+  .raceLegend li button {
     grid-template-columns: 10px 24px minmax(0, 1fr);
   }
 
