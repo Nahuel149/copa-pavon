@@ -1170,6 +1170,40 @@ a {
   border-bottom: 3px solid var(--ink);
 }
 
+.selectedMatchBar {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: min(420px, 100%);
+}
+
+.selectedMatchBar > span {
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  min-height: 34px;
+  padding: 0 8px;
+  background: var(--red);
+  border: 2px solid var(--ink);
+  color: #fff;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-weight: 900;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.selectedMatchBar strong {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px 10px;
+  background: #fff3ef;
+  border: 2px solid var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.1;
+}
+
 .compactPredictionRows {
   display: grid;
 }
@@ -1199,7 +1233,7 @@ a {
 
 .compactPredictionPosition {
   justify-content: center;
-  background: var(--ink);
+  background: var(--red);
   color: #fff;
   font-family: "Trebuchet MS", Verdana, sans-serif;
   font-weight: 900;
@@ -1207,7 +1241,7 @@ a {
 
 .compactPredictionRow strong {
   border-right: 2px solid var(--ink);
-  background: #4dbdc5;
+  background: #fff3ef;
   font-family: "Trebuchet MS", Verdana, sans-serif;
   font-size: 1rem;
   font-weight: 900;
@@ -1215,7 +1249,7 @@ a {
 
 .compactPredictionRow > span:last-child {
   justify-content: center;
-  background: #e8f2f5;
+  background: #fffdf7;
   font-family: "Trebuchet MS", Verdana, sans-serif;
   font-size: 0.98rem;
   font-weight: 900;
@@ -1224,11 +1258,11 @@ a {
 }
 
 .compactPredictionRow:nth-child(even) strong {
-  background: #42b3bc;
+  background: #ffe4dc;
 }
 
 .compactPredictionRow:nth-child(even) > span:last-child {
-  background: #dce9ed;
+  background: #fff8ef;
 }
 
 .matchCard {
@@ -1784,6 +1818,115 @@ tbody tr.relegationRow:hover {
   background: #ffcfc3;
 }
 
+.raceGraph {
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  background: rgba(255, 253, 247, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.raceGraphBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.32fr);
+  gap: 0;
+  border-top: 3px solid var(--ink);
+}
+
+.raceGraphCanvas {
+  min-width: 0;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(255, 228, 220, 0.82));
+  border-right: 3px solid var(--ink);
+}
+
+.raceGraph svg {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  overflow: visible;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+}
+
+.raceGraph svg rect {
+  fill: rgba(255, 253, 247, 0.9);
+}
+
+.raceGridLine line {
+  stroke: rgba(5, 5, 5, 0.16);
+  stroke-width: 2;
+}
+
+.raceGridLine text {
+  fill: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.raceTurnLine line {
+  stroke: rgba(5, 5, 5, 0.34);
+  stroke-width: 2;
+}
+
+.raceTurnLine text {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+  text-anchor: middle;
+}
+
+.raceLineGroup polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4.5;
+  filter: drop-shadow(2px 2px 0 rgba(5, 5, 5, 0.22));
+}
+
+.raceLineGroup circle {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.raceLegend {
+  display: grid;
+  align-content: start;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #fffdf7;
+}
+
+.raceLegend li {
+  display: grid;
+  grid-template-columns: 12px 30px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 42px;
+  padding: 8px 10px;
+  border-bottom: 2px solid rgba(5, 5, 5, 0.16);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+}
+
+.raceLegend i {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink);
+}
+
+.raceLegend span,
+.raceLegend b {
+  font-weight: 900;
+}
+
+.raceLegend strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tableButton {
   min-height: 32px;
   padding: 0 10px;
@@ -2130,6 +2273,17 @@ tbody tr.relegationRow:hover {
     align-items: stretch;
   }
 
+  .selectedMatchBar {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .selectedMatchBar strong {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.82rem;
+  }
+
   .compactPredictionRow {
     grid-template-columns: 42px minmax(0, 0.85fr) minmax(0, 1.15fr);
     min-height: 38px;
@@ -2142,6 +2296,32 @@ tbody tr.relegationRow:hover {
 
   .compactPredictionRow strong {
     font-size: 0.9rem;
+  }
+
+  .raceGraphBody {
+    grid-template-columns: 1fr;
+  }
+
+  .raceGraphCanvas {
+    padding: 8px;
+    border-right: 0;
+    border-bottom: 3px solid var(--ink);
+  }
+
+  .raceGraph svg {
+    min-height: 210px;
+  }
+
+  .raceLegend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .raceLegend li {
+    grid-template-columns: 10px 24px minmax(0, 1fr);
+  }
+
+  .raceLegend b {
+    display: none;
   }
 
   .imageScatter.compact {

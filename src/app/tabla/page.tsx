@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Brackets, RefreshCw, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { readJsonResponse } from "@/lib/client-json";
@@ -9,6 +9,16 @@ import { type ClanId, type StandingRow } from "@/lib/prode";
 type StandingsResponse = {
   standings: StandingRow[];
   standingsByClan: Record<ClanId, StandingRow[]>;
+  history: Array<{
+    label: string;
+    positions: Array<{
+      submissionId: string;
+      name: string;
+      clan: ClanId;
+      position: number;
+      points: number;
+    }>;
+  }>;
   playedMatches: number;
   decidedGroups: number;
   knockoutFixtures: number;
@@ -21,6 +31,7 @@ export default function TablaPage() {
   const [data, setData] = useState<StandingsResponse>({
     standings: [],
     standingsByClan: { "river-plate": [], "la-batata": [] },
+    history: [],
     playedMatches: 0,
     decidedGroups: 0,
     knockoutFixtures: 0,
@@ -31,6 +42,43 @@ export default function TablaPage() {
   const [error, setError] = useState("");
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
+  const graphRows = rows.slice(0, 14);
+  const graphHistory = useMemo(
+    () =>
+      (data.history ?? []).map((entry) => ({
+        ...entry,
+        positions: entry.positions.filter((position) => position.clan === "river-plate"),
+      })),
+    [data.history],
+  );
+  const graphWidth = 680;
+  const graphHeight = 260;
+  const graphPadX = 46;
+  const graphPadTop = 24;
+  const graphPadBottom = 46;
+  const graphInnerWidth = graphWidth - graphPadX * 2;
+  const graphInnerHeight = graphHeight - graphPadTop - graphPadBottom;
+  const maxPosition = Math.max(rows.length, 1);
+  const positionMarkers = Array.from(new Set([1, Math.ceil(maxPosition / 2), maxPosition]));
+  const graphColors = ["#f04424", "#2c6f45", "#276b8f", "#d79b30", "#111111", "#8f3d2b", "#6d6a62", "#f36f45"];
+
+  function graphPoint(index: number, position: number) {
+    const x = graphPadX + (graphHistory.length <= 1 ? 0 : (index / (graphHistory.length - 1)) * graphInnerWidth);
+    const y = graphPadTop + (maxPosition <= 1 ? 0 : ((position - 1) / (maxPosition - 1)) * graphInnerHeight);
+    return { x, y };
+  }
+
+  function linePoints(submissionId: string) {
+    return graphHistory
+      .map((entry, index) => {
+        const position = entry.positions.find((item) => item.submissionId === submissionId)?.position;
+        if (!position) return null;
+        const point = graphPoint(index, position);
+        return `${point.x},${point.y}`;
+      })
+      .filter(Boolean)
+      .join(" ");
+  }
 
   async function loadStandings() {
     setStatus("loading");
@@ -134,6 +182,72 @@ export default function TablaPage() {
           <span>Eliminatorias con resultado</span>
           <strong>{data.playedKnockoutMatches}/{data.knockoutFixtures}</strong>
         </article>
+      </section>
+
+      <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">
+        <div className="tableNote">
+          <strong>Carrera por la punta</strong>
+          <span>Posicion fecha por fecha, estilo tablero: cuanto mas arriba esta la linea, mejor ubicacion.</span>
+        </div>
+        {graphRows.length > 0 ? (
+          <div className="raceGraphBody">
+            <div className="raceGraphCanvas">
+              <svg viewBox={`0 0 ${graphWidth} ${graphHeight}`} role="img" aria-label="Grafico de posiciones por fecha">
+                <rect x="0" y="0" width={graphWidth} height={graphHeight} rx="0" />
+                {positionMarkers.map((position) => {
+                  const point = graphPoint(0, position);
+                  return (
+                    <g className="raceGridLine" key={position}>
+                      <line x1={graphPadX} x2={graphWidth - graphPadX} y1={point.y} y2={point.y} />
+                      <text x="16" y={point.y + 5}>
+                        {position}
+                      </text>
+                    </g>
+                  );
+                })}
+                {graphHistory.map((entry, index) => {
+                  const point = graphPoint(index, maxPosition);
+                  return (
+                    <g className="raceTurnLine" key={entry.label}>
+                      <line x1={point.x} x2={point.x} y1={graphPadTop} y2={graphPadTop + graphInnerHeight} />
+                      <text x={point.x} y={graphHeight - 18}>
+                        {entry.label}
+                      </text>
+                    </g>
+                  );
+                })}
+                {graphRows.map((row, index) => {
+                  const color = graphColors[index % graphColors.length];
+                  const points = linePoints(row.submissionId);
+                  if (!points) return null;
+                  return (
+                    <g className="raceLineGroup" key={row.submissionId}>
+                      <polyline points={points} style={{ stroke: color }} />
+                      {graphHistory.map((entry, entryIndex) => {
+                        const position = entry.positions.find((item) => item.submissionId === row.submissionId)?.position;
+                        if (!position) return null;
+                        const point = graphPoint(entryIndex, position);
+                        return <circle cx={point.x} cy={point.y} fill={color} key={`${row.submissionId}-${entry.label}`} r="4.5" />;
+                      })}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+            <ol className="raceLegend">
+              {graphRows.map((row, index) => (
+                <li key={row.submissionId}>
+                  <i style={{ background: graphColors[index % graphColors.length] }} />
+                  <span>{index + 1}</span>
+                  <strong>{row.name}</strong>
+                  <b>{row.totalPoints} pts</b>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : (
+          <div className="emptyState">El grafico aparece cuando haya participantes guardados.</div>
+        )}
       </section>
     </div>
   );

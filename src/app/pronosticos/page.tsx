@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Eye, Loader2, Search, Target, Trophy, Users } from "lucide-react";
+import { BarChart3, Eye, Loader2, Target, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
@@ -56,7 +56,6 @@ export default function PronosticosPage() {
   const [data, setData] = useState<PronosticosResponse | null>(null);
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [selectedMatchId, setSelectedMatchId] = useState(matches[0].id);
-  const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
 
@@ -91,7 +90,6 @@ export default function PronosticosPage() {
   );
 
   const predictionRows = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
     return (data?.submissions ?? [])
       .map((submission) => {
         const prediction = submission.predictions.find((item) => item.matchId === selectedMatch.id);
@@ -102,9 +100,8 @@ export default function PronosticosPage() {
           label: prediction ? serializePrediction(prediction) : "Sin cargar",
         };
       })
-      .filter((row) => !normalizedQuery || row.submission.name.toLowerCase().includes(normalizedQuery))
       .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
-  }, [data?.submissions, query, selectedMatch.id, standingPositionById]);
+  }, [data?.submissions, selectedMatch.id, standingPositionById]);
 
   const aggregates = useMemo(() => {
     const outcomes = emptyOutcomeCount();
@@ -251,10 +248,10 @@ export default function PronosticosPage() {
       <section className="compactPredictionList">
         <div className="tableNote compactPredictionHeader">
           <strong>Detalle individual</strong>
-          <label className="searchBox">
-            <Search size={17} aria-hidden="true" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar participante" />
-          </label>
+          <div className="selectedMatchBar" aria-label="Partido seleccionado">
+            <span>#{selectedMatch.order}</span>
+            <strong><TeamBadge compact team={selectedMatch.home} /> vs <TeamBadge compact team={selectedMatch.away} /></strong>
+          </div>
         </div>
         <div className="compactPredictionRows">
           {predictionRows.map((row) => (
