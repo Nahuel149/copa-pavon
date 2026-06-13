@@ -125,6 +125,28 @@ export default function PronosticosPage() {
     return { outcomes, topScores };
   }, [data?.submissions, selectedMatch.id]);
 
+  const selectedHighlights = useMemo(() => {
+    const submissions = data?.submissions ?? [];
+    if (submissions.length === 0) return [];
+    const rowsByOutcome = choiceOrder.map((choice) => {
+      const names = submissions
+        .filter((submission) => predictionOutcome(submission.predictions.find((item) => item.matchId === selectedMatch.id)) === choice)
+        .map((submission) => submission.name);
+      return { choice, names };
+    });
+    const majority = rowsByOutcome.toSorted((a, b) => b.names.length - a.names.length)[0];
+    const unique = rowsByOutcome.find((item) => item.names.length === 1);
+    const result = resultByMatch.get(selectedMatch.id);
+    const nobodyHit =
+      result &&
+      submissions.every((submission) => predictionOutcome(submission.predictions.find((item) => item.matchId === selectedMatch.id)) !== result.outcome);
+    return [
+      majority?.names.length ? `Mayoria eligio ${outcomeLabel(majority.choice, selectedMatch)} (${majority.names.length}).` : "",
+      unique ? `El unico con ${outcomeLabel(unique.choice, selectedMatch)} fue ${unique.names[0]}.` : "",
+      nobodyHit ? "Nadie acerto el ganador de este partido." : "",
+    ].filter(Boolean);
+  }, [data?.submissions, resultByMatch, selectedMatch]);
+
   const roundStats = useMemo(() => {
     const submissions = data?.submissions ?? [];
     const results = resultByMatch;
@@ -314,6 +336,13 @@ export default function PronosticosPage() {
               <p>Este partido se juega por 1X2, sin marcador exacto.</p>
             )}
           </section>
+
+          {selectedHighlights.length > 0 ? (
+            <section className="highlightPanel" aria-label="Predicciones destacadas">
+              <strong>Predicciones destacadas</strong>
+              {selectedHighlights.map((highlight) => <p key={highlight}>{highlight}</p>)}
+            </section>
+          ) : null}
         </section>
       </section>
 

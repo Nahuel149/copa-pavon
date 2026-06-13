@@ -322,6 +322,9 @@ export default function EditarPage() {
                 <article className={`${match.exactScore ? "matchCard exact" : "matchCard choice"}${changed ? " changed" : ""}`} key={match.id}>
                   <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} · Grupo {match.groupId}</strong></div>
                   <h2><TeamBadge team={match.home} /><span>vs.</span><TeamBadge team={match.away} /></h2>
+                  <small className={matchOpen ? "editState open" : "editState closed"}>
+                    {matchOpen ? "Este partido todavia se puede editar." : "Este partido ya cerro."}
+                  </small>
                   {changed ? <small className="previousPick">Anterior: {formatDraftPrediction(originalValue, match.home, match.away)}</small> : null}
                   {value.type === "score" ? (
                     <div className="scoreInputs">

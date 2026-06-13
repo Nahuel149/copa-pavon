@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readResultStore, writeResultStore } from "@/lib/storage";
+import { appendAuditEvent, readResultStore, writeResultStore } from "@/lib/storage";
 import { validateResultStore } from "@/lib/prode";
 import { syncGroupMatchResults } from "@/lib/auto-results";
 
@@ -36,6 +36,17 @@ export async function PUT(request: Request) {
   }
 
   const results = await writeResultStore(validateResultStore(payload));
+  await appendAuditEvent({
+    actor: "admin",
+    type: "results",
+    message: "Guardo resultados oficiales.",
+    meta: {
+      matchResults: results.matchResults.length,
+      groupResults: results.groupResults.length,
+      knockoutResults: results.knockoutResults.length,
+      manualAdjustments: results.manualAdjustments?.length ?? 0,
+    },
+  });
   return NextResponse.json(results);
 }
 
@@ -48,6 +59,12 @@ export async function POST(request: Request) {
     const current = await readResultStore();
     const { results, report } = await syncGroupMatchResults(current);
     const saved = await writeResultStore(results);
+    await appendAuditEvent({
+      actor: "admin",
+      type: "sync",
+      message: "Ejecuto sincronizacion automatica de resultados.",
+      meta: report,
+    });
     return NextResponse.json({ results: saved, report });
   } catch (error) {
     return NextResponse.json(

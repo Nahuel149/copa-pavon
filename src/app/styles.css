@@ -927,6 +927,30 @@ a {
   align-items: center;
 }
 
+.adminFold {
+  border: 3px solid var(--ink);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 6px 6px 0 rgba(5, 5, 5, 0.16);
+}
+
+.adminFold summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  border-bottom: 3px solid var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-weight: 950;
+}
+
+.adminFold:not([open]) summary {
+  border-bottom: 0;
+}
+
+.adminFold > section {
+  margin: 0;
+  border: 0;
+  box-shadow: none;
+}
+
 .adminSwitchPanel {
   display: flex;
   justify-content: space-between;
@@ -1812,6 +1836,91 @@ a {
   overflow-x: auto;
 }
 
+.inlineButton {
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.detailRow td {
+  background: rgba(248, 248, 240, 0.96);
+}
+
+.pointBreakdown {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pointBreakdown.compact {
+  padding: 10px 0;
+}
+
+.pointBreakdown article {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+
+.pointBreakdown span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pointBreakdown strong {
+  font-size: 1.45rem;
+}
+
+.editState {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 8px;
+  border: 2px solid var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.editState.open {
+  background: #e8f7df;
+}
+
+.editState.closed {
+  background: #ffe2d9;
+}
+
+.highlightPanel,
+.auditPanel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  background: #fffdf5;
+}
+
+.highlightPanel p,
+.auditPanel article {
+  margin: 0;
+  padding: 10px;
+  border-left: 5px solid var(--red);
+  background: rgba(240, 68, 36, 0.08);
+}
+
+.auditPanel article {
+  display: grid;
+  gap: 4px;
+}
+
+.auditPanel span,
+.auditPanel small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -2365,6 +2474,10 @@ tbody tr.relegationRow:hover {
   .predictionExplorer,
   .pollGrid {
     grid-template-columns: 1fr;
+  }
+
+  .pointBreakdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .matchPicker {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Brackets, RefreshCw, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { readJsonResponse } from "@/lib/client-json";
@@ -44,6 +44,7 @@ export default function TablaPage() {
   const [historyLimit, setHistoryLimit] = useState(0);
   const [hiddenGraphIds, setHiddenGraphIds] = useState<string[]>([]);
   const [graphDisplayLimit, setGraphDisplayLimit] = useState(14);
+  const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
@@ -247,17 +248,36 @@ export default function TablaPage() {
               const isLeader = index === 0;
               const isRelegation = rows.length > 1 && index >= rows.length - relegationCount;
               return (
-                <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""} key={row.submissionId}>
-                  <td>
-                    <span className="positionCell">
-                      <b>{index + 1}</b>
-                      <span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span>
-                    </span>
-                  </td>
-                  <td>{row.name}</td>
-                  <td>{row.totalPoints}</td>
-                  <td>{row.exactHits + row.knockoutExactHits}</td>
-                </tr>
+                <Fragment key={row.submissionId}>
+                  <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""}>
+                    <td>
+                      <span className="positionCell">
+                        <b>{index + 1}</b>
+                        <span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span>
+                      </span>
+                    </td>
+                    <td>
+                      <button className="tableButton inlineButton" onClick={() => setExpandedPlayerId(expandedPlayerId === row.submissionId ? null : row.submissionId)} type="button">
+                        {row.name}
+                      </button>
+                    </td>
+                    <td>{row.totalPoints}</td>
+                    <td>{row.exactHits + row.knockoutExactHits}</td>
+                  </tr>
+                  {expandedPlayerId === row.submissionId ? (
+                    <tr className="detailRow">
+                      <td colSpan={4}>
+                        <div className="pointBreakdown compact">
+                          <article><span>Partidos</span><strong>{row.matchPoints}</strong></article>
+                          <article><span>Grupos</span><strong>{row.groupPoints}</strong></article>
+                          <article><span>Eliminatorias</span><strong>{row.knockoutPoints}</strong></article>
+                          <article><span>Goleadores</span><strong>{row.knockoutScorerHits}</strong></article>
+                          <article><span>Ajustes</span><strong>{row.manualAdjustmentPoints}</strong></article>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
+                </Fragment>
               );
             })}
             {rows.length === 0 ? (
@@ -378,7 +398,12 @@ export default function TablaPage() {
                         const position = entry.positions.find((item) => item.submissionId === row.submissionId)?.position;
                         if (!position) return null;
                         const point = graphPoint(entryIndex, position);
-                        return <circle cx={point.x} cy={point.y} fill={color} key={`${row.submissionId}-${entry.label}`} r="4.5" />;
+                        const snapshotRow = entry.positions.find((item) => item.submissionId === row.submissionId);
+                        return (
+                          <circle cx={point.x} cy={point.y} fill={color} key={`${row.submissionId}-${entry.label}`} r="4.5">
+                            <title>{`${row.name} · ${entry.label}: #${position}, ${snapshotRow?.points ?? 0} pts`}</title>
+                          </circle>
+                        );
                       })}
                     </g>
                   );

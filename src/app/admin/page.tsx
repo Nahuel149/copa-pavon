@@ -28,6 +28,7 @@ import {
   type StandingRow,
   type Submission,
 } from "@/lib/prode";
+import type { AuditEvent } from "@/lib/storage";
 
 type SubmissionsResponse = {
   submissions?: Submission[];
@@ -47,6 +48,11 @@ type SyncResultsResponse = {
 };
 
 type SettingsResponse = AppSettings & {
+  error?: string;
+};
+
+type AuditResponse = {
+  events?: AuditEvent[];
   error?: string;
 };
 
@@ -229,6 +235,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [syncSummary, setSyncSummary] = useState("");
   const [appSettings, setAppSettings] = useState<AppSettings>({ submissionsOpen: false });
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
 
   const results = useMemo(
     () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft, manualAdjustments),
@@ -253,15 +260,16 @@ export default function AdminPage() {
     setError("");
 
     const headers: HeadersInit = pin ? { "x-prode-admin-pin": pin } : {};
-    const [submissionResponse, resultsResponse, settingsResponse] = await Promise.all([
+    const [submissionResponse, resultsResponse, settingsResponse, auditResponse] = await Promise.all([
       fetch("/api/submissions", { headers, cache: "no-store" }),
       fetch("/api/results", { headers, cache: "no-store" }),
       fetch("/api/settings", { headers, cache: "no-store" }),
+      fetch("/api/admin-audit", { headers, cache: "no-store" }),
     ]);
 
-    if (!submissionResponse.ok || !resultsResponse.ok || !settingsResponse.ok) {
+    if (!submissionResponse.ok || !resultsResponse.ok || !settingsResponse.ok || !auditResponse.ok) {
       const body = await readJsonResponse<SubmissionsResponse | SettingsResponse>(
-        !submissionResponse.ok ? submissionResponse : !resultsResponse.ok ? resultsResponse : settingsResponse,
+        !submissionResponse.ok ? submissionResponse : !resultsResponse.ok ? resultsResponse : !settingsResponse.ok ? settingsResponse : auditResponse,
       );
       setError(body.error ?? "No se pudo abrir el panel.");
       setStatus("idle");
@@ -271,6 +279,7 @@ export default function AdminPage() {
     const submissionBody = await readJsonResponse<SubmissionsResponse>(submissionResponse);
     const resultsBody = await readJsonResponse<ResultStore & { error?: string }>(resultsResponse);
     const settingsBody = await readJsonResponse<SettingsResponse>(settingsResponse);
+    const auditBody = await readJsonResponse<AuditResponse>(auditResponse);
     if (submissionBody.error || resultsBody.error || settingsBody.error) {
       setError(submissionBody.error ?? resultsBody.error ?? settingsBody.error ?? "No se pudo abrir el panel.");
       setStatus("idle");
@@ -285,6 +294,7 @@ export default function AdminPage() {
     setKnockoutDraft(drafts.knockoutDraft);
     setManualAdjustments(resultsBody.manualAdjustments ?? []);
     setAppSettings({ submissionsOpen: settingsBody.submissionsOpen, updatedAt: settingsBody.updatedAt });
+    setAuditEvents(auditBody.events ?? []);
     setStatus("ready");
   }
 
@@ -383,6 +393,26 @@ export default function AdminPage() {
     link.download = `prode-mundial-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function exportJsonBackup() {
+    const response = await fetch("/api/admin-backup", {
+      headers: pin ? { "x-prode-admin-pin": pin } : {},
+      cache: "no-store",
+    });
+    const body = await readJsonResponse<Record<string, unknown> & { error?: string }>(response);
+    if (!response.ok || body.error) {
+      setError(body.error ?? "No se pudo descargar el backup.");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(body, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `copa-kahl-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    void loadAdminData();
   }
 
   function setResultScore(matchId: string, side: "homeGoals" | "awayGoals", value: string) {
@@ -542,6 +572,10 @@ export default function AdminPage() {
           <Download size={18} aria-hidden="true" />
           CSV
         </button>
+        <button className="primaryAction light" onClick={exportJsonBackup} type="button">
+          <Download size={18} aria-hidden="true" />
+          Backup JSON
+        </button>
         <button
           className="primaryAction light"
           disabled={submissions.length === 0}
@@ -557,6 +591,8 @@ export default function AdminPage() {
 
       {syncSummary ? <section className="validationPanel">{syncSummary}</section> : null}
 
+      <details className="adminFold" open>
+        <summary>Tabla y puntos</summary>
       <section className="tableShell">
         <table>
           <thead>
@@ -592,7 +628,10 @@ export default function AdminPage() {
           </tbody>
         </table>
       </section>
+      </details>
 
+      <details className="adminFold" open>
+        <summary>Resultados de grupos</summary>
       <section className="sectionHeader">
         <p className="eyebrow">Resultados</p>
         <h2>Fase de grupos.</h2>
@@ -649,7 +688,10 @@ export default function AdminPage() {
           );
         })}
       </section>
+      </details>
 
+      <details className="adminFold">
+        <summary>Clasificados por grupo</summary>
       <section className="sectionHeader">
         <p className="eyebrow">Clasificados</p>
         <h2>Top 2 real por grupo.</h2>
@@ -694,7 +736,10 @@ export default function AdminPage() {
           );
         })}
       </section>
+      </details>
 
+      <details className="adminFold">
+        <summary>Eliminatorias</summary>
       <section className="sectionHeader">
         <p className="eyebrow">Eliminatorias</p>
         <h2>Cruces y resultados exactos.</h2>
@@ -751,7 +796,10 @@ export default function AdminPage() {
         })}
         {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
       </section>
+      </details>
 
+      <details className="adminFold">
+        <summary>Envios y detalle</summary>
       <section className="split">
         <div className="tableShell">
           <table>
@@ -821,6 +869,21 @@ export default function AdminPage() {
           </div>
         </aside>
       </section>
+      </details>
+
+      <details className="adminFold">
+        <summary>Auditoria admin</summary>
+        <section className="auditPanel">
+          {auditEvents.map((event) => (
+            <article key={event.id}>
+              <span>{new Date(event.createdAt).toLocaleString("es-AR")} · {event.type}</span>
+              <strong>{event.message}</strong>
+              <small>{event.actor}</small>
+            </article>
+          ))}
+          {auditEvents.length === 0 ? <div className="emptyState">Todavia no hay eventos de auditoria.</div> : null}
+        </section>
+      </details>
 
       {detailSubmissions.length > 0 ? (
         <section className="predictionBoard">

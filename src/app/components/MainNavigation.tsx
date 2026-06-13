@@ -10,6 +10,7 @@ import {
   ClipboardList,
   LockKeyhole,
   PencilLine,
+  UserRound,
   Table2,
   X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const primaryItems = [
 
 const moreItems = [
   { href: "/pronosticos", label: "Pronosticos", icon: BarChart3 },
+  { href: "/mi-prode", label: "Mi prode", icon: UserRound },
   { href: "/editar", label: "Editar", icon: PencilLine },
   { href: "/eliminatorias", label: "Eliminatorias", icon: Brackets },
   { href: "/reglas", label: "Reglas", icon: BookOpenCheck },

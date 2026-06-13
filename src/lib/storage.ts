@@ -16,11 +16,13 @@ const dataDir = process.env.PRODE_DATA_DIR ?? path.join(process.cwd(), "data");
 const storePath = path.join(dataDir, "submissions.json");
 const resultsPath = path.join(dataDir, "results.json");
 const settingsPath = path.join(dataDir, "settings.json");
+const auditPath = path.join(dataDir, "audit-log.json");
 const mongoUri = process.env.MONGODB_URI;
 const mongoDbName = process.env.MONGODB_DB ?? "copa_kahl";
 const submissionsCollectionName = process.env.MONGODB_SUBMISSIONS_COLLECTION ?? "submissions";
 const resultsCollectionName = process.env.MONGODB_RESULTS_COLLECTION ?? "results";
 const settingsCollectionName = process.env.MONGODB_SETTINGS_COLLECTION ?? "settings";
+const auditCollectionName = process.env.MONGODB_AUDIT_COLLECTION ?? "auditLog";
 const resultsDocumentId = "current";
 const settingsDocumentId = "current";
 
@@ -31,6 +33,15 @@ const defaultSettings: AppSettings = {
 type MongoSubmission = Submission & Document;
 type MongoResultDocument = ResultStore & { _id: string };
 type MongoSettingsDocument = AppSettings & { _id: string };
+
+export type AuditEvent = {
+  id: string;
+  type: string;
+  actor: string;
+  message: string;
+  createdAt: string;
+  meta?: Record<string, unknown>;
+};
 
 let mongoClientPromise: Promise<MongoClient> | null = null;
 let indexesReady = false;
@@ -51,18 +62,20 @@ async function getMongoCollections(): Promise<{
   submissions: Collection<MongoSubmission>;
   results: Collection<Document>;
   settings: Collection<Document>;
+  audit: Collection<Document>;
 } | null> {
   const db = await getMongoDb();
   if (!db) return null;
   const submissions = db.collection<MongoSubmission>(submissionsCollectionName);
   const results = db.collection<Document>(resultsCollectionName);
   const settings = db.collection<Document>(settingsCollectionName);
+  const audit = db.collection<Document>(auditCollectionName);
   if (!indexesReady) {
     await submissions.createIndex({ normalizedName: 1 }, { unique: true, name: "unique_normalized_name" });
     await submissions.createIndex({ clan: 1, createdAt: -1 }, { name: "clan_created_at" });
     indexesReady = true;
   }
-  return { submissions, results, settings };
+  return { submissions, results, settings, audit };
 }
 
 function cleanSettings(settings: Partial<AppSettings> | null | undefined): AppSettings {
@@ -313,4 +326,54 @@ export async function writeAppSettings(settings: AppSettings) {
   await fs.writeFile(tempPath, JSON.stringify(nextSettings, null, 2), "utf8");
   await fs.rename(tempPath, settingsPath);
   return nextSettings;
+}
+
+async function ensureAuditFile() {
+  await fs.mkdir(dataDir, { recursive: true });
+  try {
+    await fs.access(auditPath);
+  } catch {
+    await fs.writeFile(auditPath, JSON.stringify({ events: [] }, null, 2), "utf8");
+  }
+}
+
+export async function appendAuditEvent(event: Omit<AuditEvent, "id" | "createdAt">) {
+  const entry: AuditEvent = {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    createdAt: new Date().toISOString(),
+    ...event,
+  };
+  const collections = await getMongoCollections();
+  if (collections) {
+    await collections.audit.insertOne(entry as Document);
+    return entry;
+  }
+
+  await ensureAuditFile();
+  const raw = await fs.readFile(auditPath, "utf8");
+  const store = JSON.parse(raw) as { events?: AuditEvent[] };
+  const events = Array.isArray(store.events) ? store.events : [];
+  events.unshift(entry);
+  await fs.writeFile(auditPath, JSON.stringify({ events: events.slice(0, 300) }, null, 2), "utf8");
+  return entry;
+}
+
+export async function readAuditEvents(limit = 80) {
+  const collections = await getMongoCollections();
+  if (collections) {
+    const events = await collections.audit.find({}).sort({ createdAt: -1 }).limit(limit).toArray();
+    return events.map((event) => ({
+      id: String(event.id ?? event._id),
+      type: String(event.type ?? "event"),
+      actor: String(event.actor ?? "admin"),
+      message: String(event.message ?? ""),
+      createdAt: String(event.createdAt ?? new Date().toISOString()),
+      meta: event.meta && typeof event.meta === "object" ? (event.meta as Record<string, unknown>) : undefined,
+    }));
+  }
+
+  await ensureAuditFile();
+  const raw = await fs.readFile(auditPath, "utf8");
+  const store = JSON.parse(raw) as { events?: AuditEvent[] };
+  return (Array.isArray(store.events) ? store.events : []).slice(0, limit);
 }

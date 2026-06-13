@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readAppSettings, readResultStore, writeAppSettings } from "@/lib/storage";
+import { appendAuditEvent, readAppSettings, readResultStore, writeAppSettings } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,5 +38,11 @@ export async function PUT(request: Request) {
   }
 
   const settings = await writeAppSettings({ submissionsOpen });
+  await appendAuditEvent({
+    actor: "admin",
+    type: "settings",
+    message: submissionsOpen ? "Abrio la carga de pronosticos." : "Cerro la carga de pronosticos.",
+    meta: { submissionsOpen },
+  });
   return NextResponse.json(settings);
 }
