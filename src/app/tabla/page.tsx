@@ -43,6 +43,7 @@ export default function TablaPage() {
   const [error, setError] = useState("");
   const [historyLimit, setHistoryLimit] = useState(0);
   const [hiddenGraphIds, setHiddenGraphIds] = useState<string[]>([]);
+  const [graphDisplayLimit, setGraphDisplayLimit] = useState(14);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
@@ -59,8 +60,19 @@ export default function TablaPage() {
     [fullGraphHistory, graphHistoryLimit],
   );
   const selectedGraphSnapshot = graphHistory.at(-1);
-  const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, 14);
+  const latestGraphSnapshot = fullGraphHistory.at(-1);
+  const previousLatestGraphSnapshot = fullGraphHistory.at(-2);
+  const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, graphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
+  const movementById = useMemo(() => {
+    const previousPositions = new Map((previousLatestGraphSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
+    return new Map(
+      (latestGraphSnapshot?.positions ?? []).map((row) => {
+        const previous = previousPositions.get(row.submissionId);
+        return [row.submissionId, typeof previous === "number" ? previous - row.position : 0];
+      }),
+    );
+  }, [latestGraphSnapshot?.positions, previousLatestGraphSnapshot?.positions]);
   const graphWidth = 680;
   const graphHeight = 300;
   const graphPadX = 46;
@@ -118,6 +130,40 @@ export default function TablaPage() {
       current.includes(submissionId) ? current.filter((id) => id !== submissionId) : [...current, submissionId],
     );
   }
+
+  function movementLabel(submissionId: string) {
+    const movement = movementById.get(submissionId) ?? 0;
+    if (movement > 0) return `↑ +${movement}`;
+    if (movement < 0) return `↓ ${movement}`;
+    return "=";
+  }
+
+  function movementClass(submissionId: string) {
+    const movement = movementById.get(submissionId) ?? 0;
+    if (movement > 0) return "movement up";
+    if (movement < 0) return "movement down";
+    return "movement same";
+  }
+
+  const awards = useMemo(() => {
+    if (rows.length === 0) return [];
+    const exactLeader = [...rows].sort(
+      (a, b) => b.exactHits + b.knockoutExactHits - (a.exactHits + a.knockoutExactHits) || a.name.localeCompare(b.name, "es"),
+    )[0];
+    const exactLeaderHits = exactLeader.exactHits + exactLeader.knockoutExactHits;
+    const biggestRise = [...rows]
+      .map((row) => ({ row, movement: movementById.get(row.submissionId) ?? 0 }))
+      .sort((a, b) => b.movement - a.movement || a.row.name.localeCompare(b.row.name, "es"))[0];
+    const last = rows.at(-1);
+    const batacazo = biggestRise?.movement > 0 ? biggestRise : null;
+    return [
+      { label: "Puntero", value: rows[0].name, detail: `${rows[0].totalPoints} pts` },
+      { label: "Mas exactos", value: exactLeaderHits > 0 ? exactLeader.name : "Pendiente", detail: `${exactLeaderHits} exactos` },
+      { label: "Racha positiva", value: biggestRise?.movement > 0 ? biggestRise.row.name : "Sin cambios", detail: biggestRise?.movement > 0 ? `Subio ${biggestRise.movement}` : "=" },
+      { label: "Ultimo de la B", value: last?.name ?? "-", detail: `${last?.totalPoints ?? 0} pts` },
+      { label: "Pego el batacazo", value: batacazo?.row.name ?? "Pendiente", detail: batacazo ? `+${batacazo.movement} puestos` : "Sin salto fuerte" },
+    ];
+  }, [movementById, rows]);
 
   async function loadStandings() {
     setStatus("loading");
@@ -194,6 +240,7 @@ export default function TablaPage() {
               <th>Participante</th>
               <th>Puntos</th>
               <th>Exactos</th>
+              <th>Mov.</th>
             </tr>
           </thead>
           <tbody>
@@ -206,12 +253,13 @@ export default function TablaPage() {
                   <td>{row.name}</td>
                   <td>{row.totalPoints}</td>
                   <td>{row.exactHits + row.knockoutExactHits}</td>
+                  <td><span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span></td>
                 </tr>
               );
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={4}>La tabla aparece cuando haya envios guardados.</td>
+                <td colSpan={5}>La tabla aparece cuando haya envios guardados.</td>
               </tr>
             ) : null}
           </tbody>
@@ -259,6 +307,33 @@ export default function TablaPage() {
                   {entry.label}
                 </button>
               ))}
+            </div>
+          ) : null}
+          {fullGraphHistory.length > 0 ? (
+            <div className="raceQuickFilters" aria-label="Filtros del grafico">
+              <button
+                className={graphDisplayLimit === 5 ? "active" : ""}
+                onClick={() => {
+                  setGraphDisplayLimit(5);
+                  setHiddenGraphIds([]);
+                }}
+                type="button"
+              >
+                Top 5
+              </button>
+              <button
+                className={graphDisplayLimit === 14 ? "active" : ""}
+                onClick={() => {
+                  setGraphDisplayLimit(14);
+                  setHiddenGraphIds([]);
+                }}
+                type="button"
+              >
+                Ver todos
+              </button>
+              <button className="light" onClick={() => setHiddenGraphIds([])} type="button">
+                Limpiar seleccion
+              </button>
             </div>
           ) : null}
         </div>
@@ -328,6 +403,24 @@ export default function TablaPage() {
           <div className="emptyState">El grafico aparece cuando haya participantes guardados.</div>
         )}
       </section>
+
+      {awards.length > 0 ? (
+        <section className="awardsPanel" aria-label="Premios de la fecha">
+          <div className="tableNote">
+            <strong>Premios de la fecha</strong>
+            <span>Badges automaticos, sutiles y recalculados con la tabla actual.</span>
+          </div>
+          <div className="awardGrid">
+            {awards.map((award) => (
+              <article className="awardPill" key={award.label}>
+                <span>{award.label}</span>
+                <strong>{award.value}</strong>
+                <small>{award.detail}</small>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -324,6 +324,8 @@ a {
 .relegationPanel,
 .adminLockedPanel,
 .adminSwitchPanel,
+.awardsPanel,
+.statsPanel,
 .draftPanel {
   background: var(--panel);
   border: 3px solid var(--line);
@@ -1818,6 +1820,33 @@ tbody tr.relegationRow:hover {
   background: #ffcfc3;
 }
 
+.movement {
+  display: inline-grid;
+  place-items: center;
+  min-width: 48px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 2px solid var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.movement.up {
+  background: #dff5dc;
+  color: #143f25;
+}
+
+.movement.down {
+  background: #ffe0d8;
+  color: #7c1f10;
+}
+
+.movement.same {
+  background: #fff8ef;
+  color: var(--muted);
+}
+
 .raceGraph {
   overflow: hidden;
   border: 3px solid var(--ink);
@@ -1856,6 +1885,34 @@ tbody tr.relegationRow:hover {
   color: #fff;
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--ink);
+}
+
+.raceQuickFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.raceQuickFilters button {
+  min-height: 34px;
+  padding: 0 11px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 rgba(5, 5, 5, 0.2);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.raceQuickFilters button.active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.raceQuickFilters button.light {
+  background: #fff8ef;
 }
 
 .raceGraphBody {
@@ -1995,6 +2052,62 @@ tbody tr.relegationRow:hover {
   font-size: 0.9rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.awardsPanel,
+.statsPanel {
+  overflow: hidden;
+}
+
+.awardGrid,
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-top: 3px solid var(--ink);
+}
+
+.statsGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.awardPill,
+.statsGrid article {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px;
+  border-right: 2px solid rgba(5, 5, 5, 0.18);
+  background: rgba(255, 253, 247, 0.92);
+}
+
+.awardPill:last-child,
+.statsGrid article:last-child {
+  border-right: 0;
+}
+
+.awardPill span,
+.statsGrid article span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.awardPill strong,
+.statsGrid article strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.awardPill small,
+.statsGrid article small {
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.35;
 }
 
 .tableButton {
@@ -2387,7 +2500,16 @@ tbody tr.relegationRow:hover {
     width: 100%;
   }
 
+  .raceQuickFilters {
+    justify-content: stretch;
+    width: 100%;
+  }
+
   .raceCutSelector button {
+    flex: 1 1 auto;
+  }
+
+  .raceQuickFilters button {
     flex: 1 1 auto;
   }
 
@@ -2401,6 +2523,22 @@ tbody tr.relegationRow:hover {
 
   .raceLegend b {
     display: none;
+  }
+
+  .awardGrid,
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .awardPill,
+  .statsGrid article {
+    border-right: 0;
+    border-bottom: 2px solid rgba(5, 5, 5, 0.18);
+  }
+
+  .awardPill:last-child,
+  .statsGrid article:last-child {
+    border-bottom: 0;
   }
 
   .imageScatter.compact {

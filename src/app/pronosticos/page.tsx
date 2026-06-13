@@ -125,6 +125,78 @@ export default function PronosticosPage() {
     return { outcomes, topScores };
   }, [data?.submissions, selectedMatch.id]);
 
+  const roundStats = useMemo(() => {
+    const submissions = data?.submissions ?? [];
+    const results = resultByMatch;
+    let mostPicked: { label: string; count: number; total: number } | null = null;
+    let hardest: { label: string; missed: number; total: number } | null = null;
+    let exactHits = 0;
+    let exactTotal = 0;
+    const popularByMatch = new Map<string, PredictionChoice>();
+
+    for (const match of roundMatches) {
+      const outcomes = emptyOutcomeCount();
+      let total = 0;
+      for (const submission of submissions) {
+        const prediction = submission.predictions.find((item) => item.matchId === match.id);
+        const outcome = predictionOutcome(prediction);
+        if (!outcome) continue;
+        outcomes[outcome] += 1;
+        total += 1;
+        if (match.exactScore && prediction?.type === "score") {
+          const result = results.get(match.id);
+          if (result) {
+            exactTotal += 1;
+            if (prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals) exactHits += 1;
+          }
+        }
+      }
+
+      const topChoice = choiceOrder
+        .map((choice) => ({ choice, count: outcomes[choice] }))
+        .sort((a, b) => b.count - a.count)[0];
+      if (topChoice && topChoice.count > 0) {
+        popularByMatch.set(match.id, topChoice.choice);
+        if (!mostPicked || topChoice.count > mostPicked.count) {
+          mostPicked = { label: `${outcomeLabel(topChoice.choice, match)} en #${match.order}`, count: topChoice.count, total };
+        }
+      }
+
+      const result = results.get(match.id);
+      if (result && total > 0) {
+        const missed = submissions.reduce((sum, submission) => {
+          const prediction = submission.predictions.find((item) => item.matchId === match.id);
+          const outcome = predictionOutcome(prediction);
+          return outcome && outcome !== result.outcome ? sum + 1 : sum;
+        }, 0);
+        if (!hardest || missed > hardest.missed) {
+          hardest = { label: `#${match.order} ${match.home} vs ${match.away}`, missed, total };
+        }
+      }
+    }
+
+    const risky = submissions
+      .map((submission) => {
+        const different = roundMatches.reduce((sum, match) => {
+          const popular = popularByMatch.get(match.id);
+          const prediction = submission.predictions.find((item) => item.matchId === match.id);
+          const outcome = predictionOutcome(prediction);
+          return popular && outcome && outcome !== popular ? sum + 1 : sum;
+        }, 0);
+        return { name: submission.name, different };
+      })
+      .sort((a, b) => b.different - a.different || a.name.localeCompare(b.name, "es"))[0];
+
+    return {
+      mostPicked,
+      risky,
+      exactRate: exactTotal > 0 ? Math.round((exactHits / exactTotal) * 100) : null,
+      exactHits,
+      exactTotal,
+      hardest,
+    };
+  }, [data?.submissions, resultByMatch, roundMatches]);
+
   const totalParticipants = data?.submissions.length ?? 0;
   const selectedResult = resultByMatch.get(selectedMatch.id);
   const leader = data?.standings[0];
@@ -262,6 +334,35 @@ export default function PronosticosPage() {
             </article>
           ))}
           {predictionRows.length === 0 ? <div className="emptyState">No hay pronosticos para mostrar.</div> : null}
+        </div>
+      </section>
+
+      <section className="statsPanel" aria-label="Estadisticas de la fecha">
+        <div className="tableNote">
+          <strong>Estadisticas de {roundLabels[activeRound]}</strong>
+          <span>Resumen automatico de tendencias y aciertos de la fecha seleccionada.</span>
+        </div>
+        <div className="statsGrid">
+          <article>
+            <span>Resultado mas elegido</span>
+            <strong>{roundStats.mostPicked?.label ?? "Sin datos"}</strong>
+            <small>{roundStats.mostPicked ? `${roundStats.mostPicked.count}/${roundStats.mostPicked.total} participantes` : "-"}</small>
+          </article>
+          <article>
+            <span>Mas arriesgado</span>
+            <strong>{roundStats.risky?.different ? roundStats.risky.name : "Sin diferencias"}</strong>
+            <small>{roundStats.risky?.different ? `${roundStats.risky.different} picks contra la mayoria` : "Todos fueron parecidos"}</small>
+          </article>
+          <article>
+            <span>Exactos acertados</span>
+            <strong>{roundStats.exactRate === null ? "Pendiente" : `${roundStats.exactRate}%`}</strong>
+            <small>{roundStats.exactTotal > 0 ? `${roundStats.exactHits}/${roundStats.exactTotal} marcadores` : "Faltan resultados oficiales"}</small>
+          </article>
+          <article>
+            <span>Partido mas errado</span>
+            <strong>{roundStats.hardest?.label ?? "Pendiente"}</strong>
+            <small>{roundStats.hardest ? `${roundStats.hardest.missed}/${roundStats.hardest.total} erraron ganador` : "Faltan resultados oficiales"}</small>
+          </article>
         </div>
       </section>
     </div>
