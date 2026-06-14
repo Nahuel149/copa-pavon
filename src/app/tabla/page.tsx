@@ -42,6 +42,7 @@ export default function TablaPage() {
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
   const [historyLimit, setHistoryLimit] = useState(0);
+  const [movementLimit, setMovementLimit] = useState(0);
   const [hiddenGraphIds, setHiddenGraphIds] = useState<string[]>([]);
   const [graphDisplayLimit, setGraphDisplayLimit] = useState(0);
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
@@ -61,21 +62,25 @@ export default function TablaPage() {
     [fullGraphHistory, graphHistoryLimit],
   );
   const selectedGraphSnapshot = graphHistory.at(-1);
-  const movementBaseSnapshot = fullGraphHistory.length > 1 ? fullGraphHistory.at(-2) : undefined;
-  const movementBaseLabel = movementBaseSnapshot ? `Cambios vs partido anterior (${movementBaseSnapshot.label})` : "Cambios desde el partido anterior";
+  const movementHistoryLimit = fullGraphHistory.length === 0 ? 0 : Math.min(Math.max(movementLimit || fullGraphHistory.length, 1), fullGraphHistory.length);
+  const movementTargetSnapshot = movementHistoryLimit > 1 ? fullGraphHistory[movementHistoryLimit - 1] : undefined;
+  const movementBaseSnapshot = movementHistoryLimit > 1 ? fullGraphHistory[movementHistoryLimit - 2] : undefined;
+  const movementBaseLabel = movementBaseSnapshot && movementTargetSnapshot ? `Cambios ${movementBaseSnapshot.label} -> ${movementTargetSnapshot.label}` : "Cambios desde el partido anterior";
   const effectiveGraphDisplayLimit = graphDisplayLimit > 0 ? graphDisplayLimit : rows.length;
   const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, effectiveGraphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
   const movementById = useMemo(() => {
     const previousPositions = new Map((movementBaseSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
+    const targetPositions = new Map((movementTargetSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
     return new Map(
-      rows.map((row, index) => {
+      rows.map((row) => {
         const previous = previousPositions.get(row.submissionId);
-        const current = index + 1;
+        const current = targetPositions.get(row.submissionId);
+        if (typeof current !== "number") return [row.submissionId, 0];
         return [row.submissionId, typeof previous === "number" ? previous - current : 0];
       }),
     );
-  }, [movementBaseSnapshot?.positions, rows]);
+  }, [movementBaseSnapshot?.positions, movementTargetSnapshot?.positions, rows]);
   const graphWidth = 680;
   const graphHeight = 300;
   const graphPadX = 46;
@@ -229,6 +234,10 @@ export default function TablaPage() {
       if (current > 0 && current <= fullGraphHistory.length) return current;
       return fullGraphHistory.length;
     });
+    setMovementLimit((current) => {
+      if (current > 1 && current <= fullGraphHistory.length) return current;
+      return fullGraphHistory.length;
+    });
   }, [fullGraphHistory.length]);
 
   useEffect(() => {
@@ -263,10 +272,29 @@ export default function TablaPage() {
       <section className="tableShell">
         <div className="tableNote">
           <strong>Tabla</strong>
-          <span>
-            Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
-            de eliminatorias. {movementBaseLabel}.
-          </span>
+          <div>
+            <span>
+              Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
+              de eliminatorias. {movementBaseLabel}.
+            </span>
+            {fullGraphHistory.length > 1 ? (
+              <div className="movementCutSelector" role="group" aria-label="Elegir tramo de cambios de posiciones">
+                {fullGraphHistory.slice(1).map((entry, index) => {
+                  const limit = index + 2;
+                  return (
+                    <button
+                      className={movementHistoryLimit === limit ? "active" : ""}
+                      key={entry.label}
+                      onClick={() => setMovementLimit(limit)}
+                      type="button"
+                    >
+                      {fullGraphHistory[index].label} {"->"} {entry.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
         </div>
         <table>
           <thead>

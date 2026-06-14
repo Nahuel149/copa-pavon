@@ -2093,14 +2093,21 @@ tbody tr.relegationRow:hover {
   gap: 6px;
 }
 
-.raceCutSelector {
+.raceCutSelector,
+.movementCutSelector {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
 }
 
-.raceCutSelector button {
+.movementCutSelector {
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.raceCutSelector button,
+.movementCutSelector button {
   min-height: 34px;
   padding: 0 11px;
   background: #fff;
@@ -2114,7 +2121,9 @@ tbody tr.relegationRow:hover {
 }
 
 .raceCutSelector button.active,
-.raceCutSelector button:hover {
+.raceCutSelector button:hover,
+.movementCutSelector button.active,
+.movementCutSelector button:hover {
   background: var(--red);
   color: #fff;
   transform: translate(2px, 2px);
@@ -2776,7 +2785,8 @@ tbody tr.relegationRow:hover {
     min-height: 210px;
   }
 
-  .raceCutSelector {
+  .raceCutSelector,
+  .movementCutSelector {
     justify-content: stretch;
     width: 100%;
   }
@@ -2786,7 +2796,8 @@ tbody tr.relegationRow:hover {
     width: 100%;
   }
 
-  .raceCutSelector button {
+  .raceCutSelector button,
+  .movementCutSelector button {
     flex: 1 1 auto;
   }
 
