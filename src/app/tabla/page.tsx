@@ -43,7 +43,7 @@ export default function TablaPage() {
   const [error, setError] = useState("");
   const [historyLimit, setHistoryLimit] = useState(0);
   const [hiddenGraphIds, setHiddenGraphIds] = useState<string[]>([]);
-  const [graphDisplayLimit, setGraphDisplayLimit] = useState(14);
+  const [graphDisplayLimit, setGraphDisplayLimit] = useState(0);
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
@@ -63,7 +63,8 @@ export default function TablaPage() {
   const selectedGraphSnapshot = graphHistory.at(-1);
   const latestGraphSnapshot = fullGraphHistory.at(-1);
   const previousLatestGraphSnapshot = fullGraphHistory.at(-2);
-  const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, graphDisplayLimit);
+  const effectiveGraphDisplayLimit = graphDisplayLimit > 0 ? graphDisplayLimit : rows.length;
+  const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, effectiveGraphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
   const movementById = useMemo(() => {
     const previousPositions = new Map((previousLatestGraphSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
@@ -98,6 +99,8 @@ export default function TablaPage() {
     "#ca6702",
     "#3a86ff",
     "#7f5539",
+    "#ff4d6d",
+    "#00b4d8",
   ];
   const graphColorById = useMemo(
     () => new Map(rows.map((row, index) => [row.submissionId, graphColors[index % graphColors.length]])),
@@ -345,9 +348,9 @@ export default function TablaPage() {
                 Top 5
               </button>
               <button
-                className={graphDisplayLimit === 14 ? "active" : ""}
+                className={graphDisplayLimit === 0 ? "active" : ""}
                 onClick={() => {
-                  setGraphDisplayLimit(14);
+                  setGraphDisplayLimit(0);
                   setHiddenGraphIds([]);
                 }}
                 type="button"
