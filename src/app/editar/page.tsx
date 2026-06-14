@@ -1,15 +1,17 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { CheckCircle2, KeyRound, Loader2, Save, Target, Trophy } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2, Save, Search, Target, Trophy } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
   countCompleteGroupPredictions,
   countCompletePredictions,
+  type ResultStore,
   type Prediction,
   type PredictionChoice,
+  type StandingRow,
   type Submission,
 } from "@/lib/prode";
 
@@ -18,6 +20,15 @@ type ChoiceDraft = { type: "choice"; choice: PredictionChoice | "" };
 type DraftPrediction = ScoreDraft | ChoiceDraft;
 type DraftState = Record<string, DraftPrediction>;
 type GroupDraftState = Record<GroupId, { first: string; second: string }>;
+type PublicSubmission = Omit<Submission, "pinHash">;
+type MyProdeResponse = {
+  submission?: PublicSubmission;
+  standing?: StandingRow | null;
+  position?: number | null;
+  results?: ResultStore;
+  updatedAt?: string;
+  errors?: string[];
+};
 type EditWindow = {
   open: boolean;
   deadline: string | null;
@@ -128,6 +139,7 @@ export default function EditarPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "done">("idle");
   const [errors, setErrors] = useState<string[]>([]);
   const [updatedAt, setUpdatedAt] = useState("");
+  const [myProde, setMyProde] = useState<MyProdeResponse | null>(null);
 
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
   const completedMatches = countCompletePredictions(predictions);
@@ -143,9 +155,30 @@ export default function EditarPage() {
   const changedMatches = matches.filter((match) => !samePrediction(predictions[match.id], originalPredictions[match.id])).length;
   const changedGroups = groups.filter((group) => !sameGroupPrediction(groupPredictions[group.id], originalGroupPredictions[group.id])).length;
   const changedTotal = changedMatches + changedGroups;
+  const pending = useMemo(() => {
+    if (!myProde?.submission || !myProde.results) return { matches: 0, groups: 0, knockout: 0 };
+    const played = new Set(myProde.results.matchResults.map((result) => result.matchId));
+    const decidedGroups = new Set(myProde.results.groupResults.map((result) => result.groupId));
+    const playedKnockout = new Set(myProde.results.knockoutResults.map((result) => result.fixtureId));
+    return {
+      matches: myProde.submission.predictions.filter((prediction) => !played.has(prediction.matchId)).length,
+      groups: groups.filter((group) => !decidedGroups.has(group.id)).length,
+      knockout: (myProde.submission.knockoutPredictions ?? []).filter((prediction) => !playedKnockout.has(prediction.fixtureId)).length,
+    };
+  }, [myProde]);
   const deadlineText = editWindow.deadline
     ? formatDeadline(editWindow.deadline)
     : "por fecha, segun el inicio de cada jornada";
+
+  async function loadMyProde(nextName = name, nextPin = pin) {
+    const response = await fetch("/api/my-prode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: nextName, pin: nextPin }),
+    });
+    const body = await readJsonResponse<MyProdeResponse>(response);
+    if (response.ok && !body.errors?.length) setMyProde(body);
+  }
 
   async function loadSubmission(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -171,6 +204,7 @@ export default function EditarPage() {
     setOriginalGroupPredictions(loadedGroupPredictions);
     setEditWindow(body.editWindow ?? defaultEditWindow);
     setLoaded(true);
+    await loadMyProde(body.submission.name, pin);
     setStatus("idle");
   }
 
@@ -194,6 +228,7 @@ export default function EditarPage() {
     setUpdatedAt(body.updatedAt ?? new Date().toISOString());
     setOriginalPredictions(predictions);
     setOriginalGroupPredictions(groupPredictions);
+    await loadMyProde(name, pin);
     setStatus("done");
   }
 
@@ -218,9 +253,9 @@ export default function EditarPage() {
     <form className="pageStack" onSubmit={loaded ? saveEdition : loadSubmission}>
       <section className="heroBand tableHero">
         <div>
-          <p className="eyebrow">Editar</p>
-          <h1>Modificar pronosticos.</h1>
-          <p className="heroCopy">Ingresa con tu nombre y PIN. La edicion cierra {deadlineText}.</p>
+          <p className="eyebrow">Editar mi prode</p>
+          <h1>Tu prode completo.</h1>
+          <p className="heroCopy">Ingresa con tu nombre y PIN para ver tus puntos, revisar lo cargado y editar lo que siga abierto. La edicion cierra {deadlineText}.</p>
         </div>
         <div className="heroControl">
           <label htmlFor="editName">Nombre</label>
@@ -300,6 +335,38 @@ export default function EditarPage() {
 
       {loaded ? (
         <>
+          {myProde?.standing ? (
+            <>
+              <section className="sectionHeader">
+                <p className="eyebrow">Mi prode</p>
+                <h2>Resumen de {myProde.submission?.name ?? name}.</h2>
+              </section>
+              <section className="metricGrid" aria-label="Resumen personal">
+                <article className="metric">
+                  <Trophy size={20} aria-hidden="true" />
+                  <span>Posicion</span>
+                  <strong>#{myProde.position ?? "-"}</strong>
+                </article>
+                <article className="metric">
+                  <Search size={20} aria-hidden="true" />
+                  <span>Puntos</span>
+                  <strong>{myProde.standing.totalPoints}</strong>
+                </article>
+                <article className="metric alert">
+                  <span>Sin resultado</span>
+                  <strong>{pending.matches + pending.groups + pending.knockout}</strong>
+                </article>
+              </section>
+              <section className="pointBreakdown">
+                <article><span>Partidos</span><strong>{myProde.standing.matchPoints}</strong><small>{myProde.standing.exactHits} exactos / {myProde.standing.winnerHits} ganador/empate</small></article>
+                <article><span>Grupos</span><strong>{myProde.standing.groupPoints}</strong><small>{myProde.standing.groupHits} grupos acertados</small></article>
+                <article><span>Eliminatorias</span><strong>{myProde.standing.knockoutPoints}</strong><small>{myProde.standing.knockoutExactHits} exactos</small></article>
+                <article><span>Goleadores</span><strong>{myProde.standing.knockoutScorerHits}</strong><small>Bonus de goleador</small></article>
+                <article><span>Ajustes</span><strong>{myProde.standing.manualAdjustmentPoints}</strong><small>Correcciones admin</small></article>
+              </section>
+            </>
+          ) : null}
+
           <section className="metricGrid" aria-label="Estado de edicion">
             <article className="metric"><Target size={20} aria-hidden="true" /><span>Exactos fase grupos</span><strong>{exactScoreMatches.length}</strong></article>
             <article className="metric"><Trophy size={20} aria-hidden="true" /><span>1X2 fase grupos</span><strong>{choiceMatches.length}</strong></article>
@@ -324,7 +391,7 @@ export default function EditarPage() {
               const changed = !samePrediction(value, originalValue);
               return (
                 <article className={`${match.exactScore ? "matchCard exact" : "matchCard choice"}${changed ? " changed" : ""}`} key={match.id}>
-                  <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} · Grupo {match.groupId}</strong></div>
+                  <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} - Grupo {match.groupId}</strong></div>
                   <h2><TeamBadge team={match.home} /><span>vs.</span><TeamBadge team={match.away} /></h2>
                   <small className={matchOpen ? "editState open" : "editState closed"}>
                     {matchOpen ? "Este partido todavia se puede editar." : "Este partido ya cerro."}
