@@ -61,10 +61,8 @@ export default function TablaPage() {
     [fullGraphHistory, graphHistoryLimit],
   );
   const selectedGraphSnapshot = graphHistory.at(-1);
-  const firstMovementSnapshot = fullGraphHistory.at(0);
-  const movementBaseSnapshot =
-    graphHistoryLimit > 0 && graphHistoryLimit < fullGraphHistory.length ? selectedGraphSnapshot : firstMovementSnapshot;
-  const movementBaseLabel = movementBaseSnapshot ? `Cambios vs ${movementBaseSnapshot.label}` : "Cambios desde el primer corte";
+  const movementBaseSnapshot = fullGraphHistory.length > 1 ? fullGraphHistory.at(-2) : undefined;
+  const movementBaseLabel = movementBaseSnapshot ? `Cambios vs partido anterior (${movementBaseSnapshot.label})` : "Cambios desde el partido anterior";
   const effectiveGraphDisplayLimit = graphDisplayLimit > 0 ? graphDisplayLimit : rows.length;
   const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, effectiveGraphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
