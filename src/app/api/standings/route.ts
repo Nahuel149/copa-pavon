@@ -23,14 +23,28 @@ function buildHistorySnapshot(label: string, title: string, submissions: Submiss
 
 function buildStandingsHistory(submissions: Submission[], results: ResultStore) {
   const matchOrder = new Map(matches.map((match) => [match.id, match.order]));
+  const matchById = new Map(matches.map((match) => [match.id, match]));
   const playedMatchResults = [...results.matchResults].sort(
     (a, b) => (matchOrder.get(a.matchId) ?? 999) - (matchOrder.get(b.matchId) ?? 999),
   );
 
-  const snapshots = playedMatchResults.map((result, index) => {
-    const match = matches.find((item) => item.id === result.matchId);
-    return buildHistorySnapshot(`P${index + 1}`, match ? `${match.home} vs ${match.away}` : `Partido ${index + 1}`, submissions, {
-      matchResults: playedMatchResults.slice(0, index + 1),
+  const playedDays = Array.from(
+    new Set(playedMatchResults.map((result) => matchById.get(result.matchId)?.dateLabel).filter((day): day is string => Boolean(day))),
+  ).sort((a, b) => {
+    const firstOrder = matches.find((match) => match.dateLabel === a)?.order ?? 999;
+    const secondOrder = matches.find((match) => match.dateLabel === b)?.order ?? 999;
+    return firstOrder - secondOrder;
+  });
+
+  const snapshots = playedDays.map((day) => {
+    const cumulativeResults = playedMatchResults.filter((result) => {
+      const match = matchById.get(result.matchId);
+      const dayOrder = matches.find((item) => item.dateLabel === day)?.order ?? 999;
+      return match && match.order <= dayOrder + matches.filter((item) => item.dateLabel === day).length - 1;
+    });
+    const dayResults = playedMatchResults.filter((result) => matchById.get(result.matchId)?.dateLabel === day);
+    return buildHistorySnapshot(day, `${dayResults.length} partidos con resultado`, submissions, {
+      matchResults: cumulativeResults,
       groupResults: [],
       knockoutFixtures: [],
       knockoutResults: [],

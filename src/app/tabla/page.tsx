@@ -65,7 +65,9 @@ export default function TablaPage() {
   const movementHistoryLimit = fullGraphHistory.length === 0 ? 0 : Math.min(Math.max(movementLimit || fullGraphHistory.length, 1), fullGraphHistory.length);
   const movementTargetSnapshot = movementHistoryLimit > 1 ? fullGraphHistory[movementHistoryLimit - 1] : undefined;
   const movementBaseSnapshot = movementHistoryLimit > 1 ? fullGraphHistory[movementHistoryLimit - 2] : undefined;
-  const movementBaseLabel = movementBaseSnapshot && movementTargetSnapshot ? `Cambios ${movementBaseSnapshot.label} -> ${movementTargetSnapshot.label}` : "Cambios desde el partido anterior";
+  const movementBaseLabel = movementBaseSnapshot && movementTargetSnapshot
+    ? `Cambios ${movementBaseSnapshot.label} -> ${movementTargetSnapshot.label}`
+    : "Cambios por fecha: falta una fecha anterior";
   const effectiveGraphDisplayLimit = graphDisplayLimit > 0 ? graphDisplayLimit : rows.length;
   const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, effectiveGraphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
@@ -142,6 +144,7 @@ export default function TablaPage() {
   }
 
   function movementLabel(submissionId: string) {
+    if (!movementBaseSnapshot) return movementTargetSnapshot?.label.replace("Fecha ", "F") ?? "F1";
     const movement = movementById.get(submissionId) ?? 0;
     if (movement > 0) return `+${movement}`;
     if (movement < 0) return `${movement}`;
@@ -149,6 +152,7 @@ export default function TablaPage() {
   }
 
   function movementClass(submissionId: string) {
+    if (!movementBaseSnapshot) return "movement same";
     const movement = movementById.get(submissionId) ?? 0;
     if (movement > 0) return "movement up";
     if (movement < 0) return "movement down";
@@ -393,7 +397,7 @@ export default function TablaPage() {
             <span>
               {selectedGraphSnapshot
                 ? `Hasta ${selectedGraphSnapshot.label}: ${selectedGraphSnapshot.title}.`
-                : "Cada corte suma un partido oficial cargado."}{" "}
+                : "Cada corte suma una fecha con resultados oficiales cargados."}{" "}
               Cuanto mas arriba esta la linea, mejor ubicacion.
             </span>
           </div>
