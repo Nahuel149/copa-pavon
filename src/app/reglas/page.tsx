@@ -57,8 +57,6 @@ export default function ReglasPage() {
         </Link>
       </section>
 
-      <KahlImageScatter page="reglas" count={5} />
-
       <section className="metricGrid" aria-label="Resumen del prode">
         <article className="metric">
           <Target size={20} aria-hidden="true" />
@@ -181,6 +179,8 @@ export default function ReglasPage() {
           <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </section>
+
+      <KahlImageScatter page="reglas" count={5} />
     </div>
   );
 }

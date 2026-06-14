@@ -221,8 +221,6 @@ export default function EliminatoriasPage() {
         </div>
       </section>
 
-      <KahlImageScatter page="eliminatorias" count={4} variant="compact" />
-
       <section className="draftPanel" aria-live="polite">
         <div>
           <p className="eyebrow">Provisorio</p>
@@ -369,6 +367,8 @@ export default function EliminatoriasPage() {
           {canSubmit ? "Enviar eliminatorias" : "Completar para enviar"}
         </button>
       </div>
+
+      <KahlImageScatter page="eliminatorias" count={4} variant="compact" />
     </form>
   );
 }

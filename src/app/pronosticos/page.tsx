@@ -245,8 +245,6 @@ export default function PronosticosPage() {
 
       {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
-      <KahlImageScatter page="tabla" count={1} variant="compact" />
-
       <section className="metricGrid" aria-label="Resumen de pronosticos">
         <article className="metric">
           <Users size={20} aria-hidden="true" />
@@ -394,6 +392,8 @@ export default function PronosticosPage() {
           </article>
         </div>
       </section>
+
+      <KahlImageScatter page="tabla" count={1} variant="compact" />
     </div>
   );
 }

@@ -513,8 +513,6 @@ export default function AdminPage() {
         </section>
       ) : (
         <>
-      <KahlImageScatter page="admin" count={4} variant="compact" />
-
       <section className="metricGrid" aria-label="Métricas admin">
         <article className="metric">
           <Users size={20} aria-hidden="true" />
@@ -927,6 +925,8 @@ export default function AdminPage() {
             ))}
         </section>
       ) : null}
+
+      <KahlImageScatter page="admin" count={4} variant="compact" />
         </>
       )}
     </div>

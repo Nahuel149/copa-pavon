@@ -50,8 +50,6 @@ export default function CampeonesPage() {
         ))}
       </section>
 
-      <KahlImageScatter page="campeones" count={4} variant="compact" />
-
       <section className="relegationPanel" aria-label="Descendidos">
         <div>
           <p className="eyebrow">Descendidos</p>
@@ -67,6 +65,8 @@ export default function CampeonesPage() {
           ))}
         </div>
       </section>
+
+      <KahlImageScatter page="campeones" count={4} variant="compact" />
     </div>
   );
 }

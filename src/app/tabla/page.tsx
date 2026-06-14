@@ -271,8 +271,6 @@ export default function TablaPage() {
 
       {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
-      <KahlImageScatter page="tabla" count={4} variant="compact" />
-
       <section className="tableShell">
         <div className="tableNote">
           <strong>Tabla</strong>
@@ -370,24 +368,6 @@ export default function TablaPage() {
             ) : null}
           </tbody>
         </table>
-      </section>
-
-      <section className="metricGrid" aria-label="Estado de tabla">
-        <article className="metric">
-          <Users size={20} aria-hidden="true" />
-          <span>Participantes</span>
-          <strong>{rows.length}</strong>
-        </article>
-        <article className="metric">
-          <Trophy size={20} aria-hidden="true" />
-          <span>Partidos con resultado</span>
-          <strong>{data.playedMatches}/72</strong>
-        </article>
-        <article className="metric alert">
-          <Brackets size={20} aria-hidden="true" />
-          <span>Eliminatorias con resultado</span>
-          <strong>{data.playedKnockoutMatches}/{data.knockoutFixtures}</strong>
-        </article>
       </section>
 
       <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">
@@ -532,6 +512,26 @@ export default function TablaPage() {
           </div>
         </section>
       ) : null}
+
+      <section className="metricGrid" aria-label="Estado de tabla">
+        <article className="metric">
+          <Users size={20} aria-hidden="true" />
+          <span>Participantes</span>
+          <strong>{rows.length}</strong>
+        </article>
+        <article className="metric">
+          <Trophy size={20} aria-hidden="true" />
+          <span>Partidos con resultado</span>
+          <strong>{data.playedMatches}/72</strong>
+        </article>
+        <article className="metric alert">
+          <Brackets size={20} aria-hidden="true" />
+          <span>Eliminatorias con resultado</span>
+          <strong>{data.playedKnockoutMatches}/{data.knockoutFixtures}</strong>
+        </article>
+      </section>
+
+      <KahlImageScatter page="tabla" count={4} variant="compact" />
     </div>
   );
 }
