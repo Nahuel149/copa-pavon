@@ -246,7 +246,7 @@ export default function TablaPage() {
 
   return (
     <div className="pageStack">
-      <section className="heroBand tableHero">
+      <section className="heroBand tableHero standingsHero">
         <div>
           <p className="eyebrow">Tabla</p>
           <h1>Posiciones del prode.</h1>

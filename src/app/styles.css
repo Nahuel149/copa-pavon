@@ -105,7 +105,7 @@ a {
 
 .masthead nav {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   border-left: 1px solid rgba(5, 5, 5, 0.15);
 }
 
@@ -243,6 +243,14 @@ a {
 .tableHero {
   background:
     linear-gradient(90deg, rgba(5, 5, 5, 0.58), rgba(5, 5, 5, 0.06)),
+    linear-gradient(135deg, var(--blue) 0%, var(--green) 48%, var(--amber) 100%);
+}
+
+.standingsHero {
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.78), rgba(5, 5, 5, 0.26) 55%, rgba(5, 5, 5, 0.54)),
+    linear-gradient(0deg, rgba(5, 5, 5, 0.18), rgba(5, 5, 5, 0.18)),
+    url("/kahl-assets/copa-kahl.jpeg") center 46% / cover no-repeat,
     linear-gradient(135deg, var(--blue) 0%, var(--green) 48%, var(--amber) 100%);
 }
 
@@ -2601,7 +2609,7 @@ tbody tr.relegationRow:hover {
 
   .mobileNavPrimary {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .mobileNavMore {
