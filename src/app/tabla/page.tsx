@@ -156,34 +156,28 @@ export default function TablaPage() {
     const matchPending = Math.max(data.playedMatches - row.exactHits - row.winnerHits, 0);
     return [
       {
-        label: "Partidos",
+        label: "Aciertos partidos de grupo",
         value: row.matchPoints,
         help: "Puntos por partidos de fase de grupos.",
         meta: `${row.exactHits} exactos · ${row.winnerHits} ganador/empate · ${matchPending} sin punto`,
       },
       {
-        label: "Grupos",
+        label: "Aciertos ganadores de grupos",
         value: row.groupPoints,
         help: "Bonus por acertar los dos clasificados de cada grupo.",
         meta: `${row.groupHits} grupos acertados · ${data.decidedGroups} grupos definidos`,
       },
       {
-        label: "Eliminatorias",
+        label: "Aciertos en eliminatorias",
         value: row.knockoutPoints,
         help: "Incluye exactos, clasificados y bonus de goleador.",
         meta: `${row.knockoutExactHits} exactos · ${row.knockoutScorerHits} goleadores · ${row.playedKnockoutMatches} jugados`,
       },
       {
-        label: "Goleadores",
+        label: "Aciertos en goleadores",
         value: row.knockoutScorerHits,
         help: "+1 si acierta un goleador o deja vacio y sale 0-0.",
         meta: row.playedKnockoutMatches > 0 ? `${row.knockoutScorerHits}/${row.playedKnockoutMatches} aciertos` : "Arranca en eliminatorias",
-      },
-      {
-        label: "Ajustes",
-        value: row.manualAdjustmentPoints,
-        help: "Correcciones manuales cargadas desde admin.",
-        meta: row.manualAdjustmentPoints === 0 ? "Sin ajustes" : "Sumado al total de la tabla",
       },
     ];
   }
