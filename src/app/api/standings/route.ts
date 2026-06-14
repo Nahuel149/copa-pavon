@@ -34,6 +34,7 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
       groupResults: [],
       knockoutFixtures: [],
       knockoutResults: [],
+      manualAdjustments: results.manualAdjustments ?? [],
     });
   });
 
@@ -44,6 +45,7 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
         groupResults: results.groupResults,
         knockoutFixtures: [],
         knockoutResults: [],
+        manualAdjustments: results.manualAdjustments ?? [],
       }),
     );
   }

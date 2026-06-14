@@ -61,20 +61,23 @@ export default function TablaPage() {
     [fullGraphHistory, graphHistoryLimit],
   );
   const selectedGraphSnapshot = graphHistory.at(-1);
-  const latestGraphSnapshot = fullGraphHistory.at(-1);
-  const previousLatestGraphSnapshot = fullGraphHistory.at(-2);
+  const previousMovementSnapshot = fullGraphHistory.length > 1 ? fullGraphHistory.at(-2) : undefined;
+  const movementBaseSnapshot =
+    graphHistoryLimit > 0 && graphHistoryLimit < fullGraphHistory.length ? selectedGraphSnapshot : previousMovementSnapshot;
+  const movementBaseLabel = movementBaseSnapshot ? `Cambios vs ${movementBaseSnapshot.label}` : "Cambios desde el corte anterior";
   const effectiveGraphDisplayLimit = graphDisplayLimit > 0 ? graphDisplayLimit : rows.length;
   const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, effectiveGraphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
   const movementById = useMemo(() => {
-    const previousPositions = new Map((previousLatestGraphSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
+    const previousPositions = new Map((movementBaseSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
     return new Map(
-      (latestGraphSnapshot?.positions ?? []).map((row) => {
+      rows.map((row, index) => {
         const previous = previousPositions.get(row.submissionId);
-        return [row.submissionId, typeof previous === "number" ? previous - row.position : 0];
+        const current = index + 1;
+        return [row.submissionId, typeof previous === "number" ? previous - current : 0];
       }),
     );
-  }, [latestGraphSnapshot?.positions, previousLatestGraphSnapshot?.positions]);
+  }, [movementBaseSnapshot?.positions, rows]);
   const graphWidth = 680;
   const graphHeight = 300;
   const graphPadX = 46;
@@ -137,8 +140,8 @@ export default function TablaPage() {
 
   function movementLabel(submissionId: string) {
     const movement = movementById.get(submissionId) ?? 0;
-    if (movement > 0) return `↑ +${movement}`;
-    if (movement < 0) return `↓ ${movement}`;
+    if (movement > 0) return `+${movement}`;
+    if (movement < 0) return `${movement}`;
     return "=";
   }
 
@@ -270,7 +273,7 @@ export default function TablaPage() {
           <strong>Tabla</strong>
           <span>
             Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
-            de eliminatorias.
+            de eliminatorias. {movementBaseLabel}.
           </span>
         </div>
         <table>
