@@ -1845,22 +1845,76 @@ a {
   background: rgba(248, 248, 240, 0.96);
 }
 
+.playerPointPanel {
+  display: grid;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.playerPointSummary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: stretch;
+  padding: 12px;
+  border: 3px solid var(--ink);
+  background: #f4fff0;
+  box-shadow: 4px 4px 0 rgba(5, 5, 5, 0.16);
+}
+
+.playerPointSummary > div {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+}
+
+.playerPointSummary > div:last-child {
+  min-width: 96px;
+  justify-items: center;
+  border-left: 2px solid rgba(5, 5, 5, 0.18);
+}
+
+.playerPointSummary span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.playerPointSummary strong {
+  font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+  line-height: 1.05;
+}
+
+.playerPointSummary > div:last-child strong {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
 .pointBreakdown {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
 }
 
 .pointBreakdown.compact {
-  padding: 10px 0;
+  padding: 0;
 }
 
 .pointBreakdown article {
   display: grid;
-  gap: 4px;
+  gap: 8px;
+  align-content: start;
   padding: 12px;
   border: 2px solid var(--ink);
   background: #fff;
+}
+
+.pointBreakdown article > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: start;
 }
 
 .pointBreakdown span {
@@ -1871,7 +1925,22 @@ a {
 }
 
 .pointBreakdown strong {
-  font-size: 1.45rem;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.pointBreakdown p,
+.pointBreakdown small {
+  margin: 0;
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.pointBreakdown small {
+  color: var(--ink);
+  font-weight: 900;
 }
 
 .editState {
@@ -2617,6 +2686,31 @@ tbody tr.relegationRow:hover {
 
   .positionCell {
     gap: 4px;
+  }
+
+  .playerPointPanel {
+    padding: 8px 0;
+  }
+
+  .playerPointSummary {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .playerPointSummary > div:last-child {
+    min-width: 0;
+    justify-items: start;
+    padding-top: 8px;
+    border-left: 0;
+    border-top: 2px solid rgba(5, 5, 5, 0.18);
+  }
+
+  .pointBreakdown {
+    grid-template-columns: 1fr;
+  }
+
+  .pointBreakdown article {
+    padding: 10px;
   }
 
   .movement {

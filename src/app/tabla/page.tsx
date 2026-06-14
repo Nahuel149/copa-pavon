@@ -149,6 +149,42 @@ export default function TablaPage() {
     return "movement same";
   }
 
+  function pointDetailCards(row: StandingRow) {
+    const matchPending = Math.max(data.playedMatches - row.exactHits - row.winnerHits, 0);
+    return [
+      {
+        label: "Partidos",
+        value: row.matchPoints,
+        help: "Puntos por partidos de fase de grupos.",
+        meta: `${row.exactHits} exactos · ${row.winnerHits} ganador/empate · ${matchPending} sin punto`,
+      },
+      {
+        label: "Grupos",
+        value: row.groupPoints,
+        help: "Bonus por acertar los dos clasificados de cada grupo.",
+        meta: `${row.groupHits} grupos acertados · ${data.decidedGroups} grupos definidos`,
+      },
+      {
+        label: "Eliminatorias",
+        value: row.knockoutPoints,
+        help: "Incluye exactos, clasificados y bonus de goleador.",
+        meta: `${row.knockoutExactHits} exactos · ${row.knockoutScorerHits} goleadores · ${row.playedKnockoutMatches} jugados`,
+      },
+      {
+        label: "Goleadores",
+        value: row.knockoutScorerHits,
+        help: "+1 si acierta un goleador o deja vacio y sale 0-0.",
+        meta: row.playedKnockoutMatches > 0 ? `${row.knockoutScorerHits}/${row.playedKnockoutMatches} aciertos` : "Arranca en eliminatorias",
+      },
+      {
+        label: "Ajustes",
+        value: row.manualAdjustmentPoints,
+        help: "Correcciones manuales cargadas desde admin.",
+        meta: row.manualAdjustmentPoints === 0 ? "Sin ajustes" : "Sumado al total de la tabla",
+      },
+    ];
+  }
+
   const awards = useMemo(() => {
     if (rows.length === 0) return [];
     const exactLeader = [...rows].sort(
@@ -270,12 +306,29 @@ export default function TablaPage() {
                   {expandedPlayerId === row.submissionId ? (
                     <tr className="detailRow">
                       <td colSpan={4}>
-                        <div className="pointBreakdown compact">
-                          <article><span>Partidos</span><strong>{row.matchPoints}</strong></article>
-                          <article><span>Grupos</span><strong>{row.groupPoints}</strong></article>
-                          <article><span>Eliminatorias</span><strong>{row.knockoutPoints}</strong></article>
-                          <article><span>Goleadores</span><strong>{row.knockoutScorerHits}</strong></article>
-                          <article><span>Ajustes</span><strong>{row.manualAdjustmentPoints}</strong></article>
+                        <div className="playerPointPanel">
+                          <div className="playerPointSummary">
+                            <div>
+                              <span>Detalle de puntos</span>
+                              <strong>{row.name}</strong>
+                            </div>
+                            <div>
+                              <span>Total</span>
+                              <strong>{row.totalPoints}</strong>
+                            </div>
+                          </div>
+                          <div className="pointBreakdown compact">
+                            {pointDetailCards(row).map((card) => (
+                              <article key={card.label}>
+                                <div>
+                                  <span>{card.label}</span>
+                                  <strong>{card.value}</strong>
+                                </div>
+                                <p>{card.help}</p>
+                                <small>{card.meta}</small>
+                              </article>
+                            ))}
+                          </div>
                         </div>
                       </td>
                     </tr>
