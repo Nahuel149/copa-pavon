@@ -10,6 +10,7 @@ import { countCompleteKnockoutPredictions } from "@/lib/prode";
 
 type FixtureResponse = {
   fixtures: KnockoutFixture[];
+  fixtureStatus?: Record<string, { kickoffAt: string; editDeadline: string; open: boolean }>;
 };
 
 type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string; goalScorer: string }>;
@@ -51,6 +52,7 @@ function readSavedKnockoutDraft(fixtures: KnockoutFixture[]): SavedKnockoutDraft
 
 export default function EliminatoriasPage() {
   const [fixtures, setFixtures] = useState<KnockoutFixture[]>([]);
+  const [fixtureStatus, setFixtureStatus] = useState<Record<string, { kickoffAt: string; editDeadline: string; open: boolean }>>({});
   const [predictions, setPredictions] = useState<KnockoutDraft>({});
   const [name, setName] = useState("");
   const [status, setStatus] = useState<"loading" | "idle" | "saving" | "done">("loading");
@@ -58,10 +60,11 @@ export default function EliminatoriasPage() {
   const [draftReady, setDraftReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
 
-  const completed = countCompleteKnockoutPredictions(predictions, fixtures);
+  const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
+  const completed = countCompleteKnockoutPredictions(predictions, openFixtures);
   const missingName = name.trim().length < 2;
-  const missingFixtures = fixtures.length - completed;
-  const canSubmit = !missingName && fixtures.length > 0 && missingFixtures === 0 && status !== "saving";
+  const missingFixtures = openFixtures.length - completed;
+  const canSubmit = !missingName && openFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
   const validationMessages = [
     ...(missingName ? ["Poné el mismo nombre que usaste en fase de grupos."] : []),
     ...(fixtures.length === 0 ? ["Todavía no hay cruces eliminatorios cargados desde admin."] : []),
@@ -79,6 +82,7 @@ export default function EliminatoriasPage() {
       const response = await fetch("/api/knockout-fixtures", { cache: "no-store" });
       const body = await readJsonResponse<FixtureResponse>(response);
       const loadedFixtures = body.fixtures ?? [];
+      setFixtureStatus(body.fixtureStatus ?? {});
       const savedDraft = readSavedKnockoutDraft(loadedFixtures);
       setFixtures(loadedFixtures);
       if (savedDraft) {
@@ -183,7 +187,7 @@ export default function EliminatoriasPage() {
           <div>
             <p className="eyebrow">Enviado</p>
             <h1>Eliminatorias guardadas.</h1>
-            <p className="heroCopy">Marcadores exactos definitivos para {name.trim()}.</p>
+            <p className="heroCopy">Marcadores exactos guardados para {name.trim()}. Los cruces abiertos se pueden volver a editar hasta su cierre.</p>
           </div>
           <div className="scoreSeal">
             <CheckCircle2 size={34} aria-hidden="true" />
@@ -204,7 +208,7 @@ export default function EliminatoriasPage() {
           <p className="heroCopy">
             Los 16avos empiezan el 28 de junio. En eliminatorias se carga marcador exacto: si acertás exacto sumás el
             premio grande, si acertás ganador/clasificado sumás parcial y podés sumar +1 con un goleador. Si lo dejás
-            vacío, apostás a 0-0 sin goleadores.
+            vacío, apostás a 0-0 sin goleadores. Cada cruce se puede editar hasta 10 minutos antes de empezar.
           </p>
         </div>
         <div className="heroControl">
@@ -217,7 +221,7 @@ export default function EliminatoriasPage() {
             placeholder="Mismo nombre"
             disabled={status === "saving"}
           />
-          <span>{completed}/{fixtures.length} cruces completos</span>
+          <span>{completed}/{openFixtures.length} cruces abiertos completos</span>
         </div>
       </section>
 
@@ -297,6 +301,9 @@ export default function EliminatoriasPage() {
             <div className="matchGrid">
               {stageFixtures.map((fixture) => {
                 const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "", goalScorer: "" };
+                const lock = fixtureStatus[fixture.id];
+                const fixtureOpen = lock?.open ?? true;
+                const deadline = lock?.editDeadline ? new Date(lock.editDeadline).toLocaleString("es-AR") : "10 min antes";
                 return (
                   <article className="matchCard exact" key={fixture.id}>
                     <div className="matchHeader">
@@ -308,6 +315,9 @@ export default function EliminatoriasPage() {
                       <span>vs.</span>
                       <TeamBadge team={fixture.away} />
                     </h2>
+                    <small className={fixtureOpen ? "editState open" : "editState closed"}>
+                      {fixtureOpen ? `Editable hasta ${deadline}` : "Este cruce ya cerro."}
+                    </small>
                     <div className="scoreInputs">
                       <label>
                         <TeamBadge compact team={fixture.home} />
@@ -315,7 +325,7 @@ export default function EliminatoriasPage() {
                           inputMode="numeric"
                           value={value.homeGoals}
                           onChange={(event) => setScore(fixture.id, "homeGoals", event.target.value)}
-                          disabled={status === "saving"}
+                          disabled={!fixtureOpen || status === "saving"}
                         />
                       </label>
                       <b>-</b>
@@ -325,7 +335,7 @@ export default function EliminatoriasPage() {
                           inputMode="numeric"
                           value={value.awayGoals}
                           onChange={(event) => setScore(fixture.id, "awayGoals", event.target.value)}
-                          disabled={status === "saving"}
+                          disabled={!fixtureOpen || status === "saving"}
                         />
                       </label>
                     </div>
@@ -334,7 +344,7 @@ export default function EliminatoriasPage() {
                       <input
                         value={value.goalScorer ?? ""}
                         onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
-                        disabled={status === "saving"}
+                        disabled={!fixtureOpen || status === "saving"}
                         placeholder="Ej: Balogun"
                       />
                     </label>
@@ -360,7 +370,7 @@ export default function EliminatoriasPage() {
       <div className="submitDock">
         <div>
           <span>{name.trim() || "Sin nombre"}</span>
-          <strong>{completed}/{fixtures.length}</strong>
+          <strong>{completed}/{openFixtures.length}</strong>
         </div>
         <button className="primaryAction" disabled={!canSubmit} type="submit">
           {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}

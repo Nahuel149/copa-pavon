@@ -437,10 +437,13 @@ export function validateSubmission(
 export function validateKnockoutSubmission(
   payload: RawKnockoutSubmission,
   fixtures: KnockoutFixture[],
+  options: { excludedFixtureIds?: Iterable<string> } = {},
 ): KnockoutValidationResult {
   const errors: string[] = [];
   const name = typeof payload.name === "string" ? payload.name.trim().replace(/\s+/g, " ") : "";
   const normalizedName = normalizeName(name);
+  const excludedFixtureIds = new Set(options.excludedFixtureIds ?? []);
+  const requiredFixtures = fixtures.filter((fixture) => !excludedFixtureIds.has(fixture.id));
 
   if (name.length < 2) errors.push("Ingresá un nombre de al menos 2 caracteres.");
   if (fixtures.length === 0) errors.push("Todavía no hay cruces eliminatorios cargados.");
@@ -462,7 +465,7 @@ export function validateKnockoutSubmission(
   }
 
   const predictions: KnockoutPrediction[] = [];
-  for (const fixture of fixtures) {
+  for (const fixture of requiredFixtures) {
     const raw = rawByFixture.get(fixture.id);
     if (!raw) {
       errors.push(`Falta ${fixture.home} vs. ${fixture.away}.`);
@@ -539,6 +542,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       stage: item.stage,
       home,
       away,
+      ...(typeof item.kickoffAt === "string" && !Number.isNaN(new Date(item.kickoffAt).getTime()) ? { kickoffAt: item.kickoffAt } : {}),
     };
     fixtureById.set(fixture.id, fixture);
     knockoutFixtures.push(fixture);

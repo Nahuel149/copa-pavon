@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getKnockoutEditDeadline, isKnockoutFixtureEditable } from "./knockout-deadlines";
 import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knockout-visibility";
 import { groups, matches, type KnockoutFixture } from "./matches";
 import {
@@ -229,6 +230,39 @@ describe("prode scoring", () => {
     );
 
     expect(result.ok).toBe(true);
+  });
+
+  it("closes each knockout fixture ten minutes before kickoff", () => {
+    const fixture: KnockoutFixture = {
+      id: "k-deadline",
+      order: 1,
+      stage: "R32",
+      home: "Argentina",
+      away: "Francia",
+      kickoffAt: "2026-06-28T19:00:00.000Z",
+    };
+
+    expect(getKnockoutEditDeadline(fixture)).toBe("2026-06-28T18:50:00.000Z");
+    expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:49:59.000Z"))).toBe(true);
+    expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:50:00.000Z"))).toBe(false);
+  });
+
+  it("validates only knockout fixtures that are still open", () => {
+    const fixtures: KnockoutFixture[] = [
+      { id: "closed", order: 1, stage: "R32", home: "Argentina", away: "Francia" },
+      { id: "open", order: 2, stage: "R32", home: "Brasil", away: "Espana" },
+    ];
+    const result = validateKnockoutSubmission(
+      {
+        name: "Nahuel",
+        predictions: [{ fixtureId: "open", homeGoals: "2", awayGoals: "1" }],
+      },
+      fixtures,
+      { excludedFixtureIds: ["closed"] },
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.predictions).toEqual([{ fixtureId: "open", homeGoals: 2, awayGoals: 1 }]);
   });
 
   it("hides public knockout predictions until each stage starts", () => {

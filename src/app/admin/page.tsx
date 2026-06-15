@@ -5,6 +5,7 @@ import { Download, Eye, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Sear
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
+import { getKnockoutKickoffAt } from "@/lib/knockout-deadlines";
 import {
   groups,
   knockoutStageLabels,
@@ -58,6 +59,19 @@ type AuditResponse = {
 
 type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; scorerNames?: string }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
+
+function isoToLocalInput(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+}
+
+function localInputToIso(value: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
 
 const emptyMatchResults = matches.reduce<ResultDraft>((draft, match) => {
   draft[match.id] = { homeGoals: "", awayGoals: "" };
@@ -226,10 +240,11 @@ export default function AdminPage() {
   const [knockoutFixtures, setKnockoutFixtures] = useState<KnockoutFixture[]>([]);
   const [knockoutDraft, setKnockoutDraft] = useState<ResultDraft>({});
   const [manualAdjustments, setManualAdjustments] = useState<ResultStore["manualAdjustments"]>([]);
-  const [newFixture, setNewFixture] = useState<{ stage: KnockoutStage; home: string; away: string }>({
+  const [newFixture, setNewFixture] = useState<{ stage: KnockoutStage; home: string; away: string; kickoffAt: string }>({
     stage: "R32",
     home: "",
     away: "",
+    kickoffAt: "",
   });
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "syncing" | "ready">("idle");
   const [error, setError] = useState("");
@@ -445,6 +460,16 @@ export default function AdminPage() {
     }));
   }
 
+  function setKnockoutKickoff(fixtureId: string, value: string) {
+    setKnockoutFixtures((current) =>
+      current.map((fixture) => {
+        if (fixture.id !== fixtureId) return fixture;
+        const kickoffAt = localInputToIso(value);
+        return kickoffAt ? { ...fixture, kickoffAt } : { ...fixture, kickoffAt: undefined };
+      }),
+    );
+  }
+
   function addKnockoutFixture() {
     const home = newFixture.home.trim().replace(/\s+/g, " ");
     const away = newFixture.away.trim().replace(/\s+/g, " ");
@@ -455,10 +480,11 @@ export default function AdminPage() {
       stage: newFixture.stage,
       home,
       away,
+      ...(newFixture.kickoffAt ? { kickoffAt: localInputToIso(newFixture.kickoffAt) } : {}),
     };
     setKnockoutFixtures((current) => [...current, fixture]);
     setKnockoutDraft((current) => ({ ...current, [fixture.id]: { homeGoals: "", awayGoals: "" } }));
-    setNewFixture({ stage: newFixture.stage, home: "", away: "" });
+    setNewFixture({ stage: newFixture.stage, home: "", away: "", kickoffAt: "" });
   }
 
   function removeKnockoutFixture(fixtureId: string) {
@@ -753,6 +779,12 @@ export default function AdminPage() {
         </select>
         <input value={newFixture.home} onChange={(event) => setNewFixture((current) => ({ ...current, home: event.target.value }))} placeholder="Equipo A" />
         <input value={newFixture.away} onChange={(event) => setNewFixture((current) => ({ ...current, away: event.target.value }))} placeholder="Equipo B" />
+        <input
+          type="datetime-local"
+          value={newFixture.kickoffAt}
+          onChange={(event) => setNewFixture((current) => ({ ...current, kickoffAt: event.target.value }))}
+          title="Horario del partido"
+        />
         <button className="primaryAction light" onClick={addKnockoutFixture} type="button">
           <Plus size={18} aria-hidden="true" />
           Agregar cruce
@@ -766,6 +798,14 @@ export default function AdminPage() {
             <article className="resultCard knockoutResult" key={fixture.id}>
               <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
               <strong>{fixture.home} vs. {fixture.away}</strong>
+              <label className="adminTextInput">
+                <span>Horario del partido</span>
+                <input
+                  type="datetime-local"
+                  value={isoToLocalInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
+                  onChange={(event) => setKnockoutKickoff(fixture.id, event.target.value)}
+                />
+              </label>
               <div className="scoreInputs compact">
                 <label>
                   <span>{fixture.home}</span>

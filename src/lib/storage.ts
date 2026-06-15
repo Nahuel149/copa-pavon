@@ -173,15 +173,16 @@ export async function appendKnockoutPredictions(normalizedName: string, predicti
       return { ok: false as const, reason: "missing-submission" };
     }
 
-    const existingFixtureIds = new Set((submission.knockoutPredictions ?? []).map((prediction) => prediction.fixtureId));
-    const duplicateFixture = predictions.find((prediction) => existingFixtureIds.has(prediction.fixtureId));
-    if (duplicateFixture) {
-      return { ok: false as const, reason: "duplicate-fixture" };
-    }
+    const nextPredictions = [
+      ...(submission.knockoutPredictions ?? []).filter(
+        (prediction) => !predictions.some((nextPrediction) => nextPrediction.fixtureId === prediction.fixtureId),
+      ),
+      ...predictions,
+    ];
 
     await collections.submissions.updateOne(
       { normalizedName },
-      { $push: { knockoutPredictions: { $each: predictions } } } as Document,
+      { $set: { knockoutPredictions: nextPredictions, updatedAt: new Date().toISOString() } } as Document,
     );
     return { ok: true as const };
   }
@@ -192,13 +193,13 @@ export async function appendKnockoutPredictions(normalizedName: string, predicti
     return { ok: false as const, reason: "missing-submission" };
   }
 
-  const existingFixtureIds = new Set((submission.knockoutPredictions ?? []).map((prediction) => prediction.fixtureId));
-  const duplicateFixture = predictions.find((prediction) => existingFixtureIds.has(prediction.fixtureId));
-  if (duplicateFixture) {
-    return { ok: false as const, reason: "duplicate-fixture" };
-  }
-
-  submission.knockoutPredictions = [...(submission.knockoutPredictions ?? []), ...predictions];
+  submission.knockoutPredictions = [
+    ...(submission.knockoutPredictions ?? []).filter(
+      (prediction) => !predictions.some((nextPrediction) => nextPrediction.fixtureId === prediction.fixtureId),
+    ),
+    ...predictions,
+  ];
+  submission.updatedAt = new Date().toISOString();
   const tempPath = `${storePath}.tmp`;
   await fs.writeFile(tempPath, JSON.stringify(store, null, 2), "utf8");
   await fs.rename(tempPath, storePath);

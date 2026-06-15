@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isKnockoutFixtureEditable } from "@/lib/knockout-deadlines";
 import { validateKnockoutSubmission } from "@/lib/prode";
 import { appendKnockoutPredictions, readResultStore } from "@/lib/storage";
 
@@ -10,13 +11,25 @@ export async function POST(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ errors: ["No se pudo leer el envío."] }, { status: 400 });
+    return NextResponse.json({ errors: ["No se pudo leer el envio."] }, { status: 400 });
   }
 
   const results = await readResultStore();
+  const closedFixtureIds = results.knockoutFixtures
+    .filter((fixture) => !isKnockoutFixtureEditable(fixture))
+    .map((fixture) => fixture.id);
+
+  if (results.knockoutFixtures.length > 0 && closedFixtureIds.length === results.knockoutFixtures.length) {
+    return NextResponse.json(
+      { errors: ["No hay cruces abiertos para editar. Cada partido cierra 10 minutos antes de empezar."] },
+      { status: 403 },
+    );
+  }
+
   const validation = validateKnockoutSubmission(
     payload as Parameters<typeof validateKnockoutSubmission>[0],
     results.knockoutFixtures,
+    { excludedFixtureIds: closedFixtureIds },
   );
 
   if (!validation.ok) {
@@ -26,14 +39,8 @@ export async function POST(request: Request) {
   const saved = await appendKnockoutPredictions(validation.normalizedName, validation.predictions);
   if (!saved.ok && saved.reason === "missing-submission") {
     return NextResponse.json(
-      { errors: ["Ese nombre no tiene envío de fase de grupos. Usá el mismo nombre con el que participaste."] },
+      { errors: ["Ese nombre no tiene envio de fase de grupos. Usa el mismo nombre con el que participaste."] },
       { status: 404 },
-    );
-  }
-  if (!saved.ok && saved.reason === "duplicate-fixture") {
-    return NextResponse.json(
-      { errors: ["Ya hay pronósticos eliminatorios guardados para al menos uno de esos cruces."] },
-      { status: 409 },
     );
   }
 

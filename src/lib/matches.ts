@@ -24,6 +24,7 @@ export type KnockoutFixture = {
   stage: KnockoutStage;
   home: string;
   away: string;
+  kickoffAt?: string;
 };
 
 export const groups: Group[] = [
