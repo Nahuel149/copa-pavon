@@ -191,10 +191,13 @@ export default function TablaPage() {
 
   const awards = useMemo(() => {
     if (rows.length === 0) return [];
-    const exactLeader = [...rows].sort(
-      (a, b) => b.exactHits + b.knockoutExactHits - (a.exactHits + a.knockoutExactHits) || a.name.localeCompare(b.name, "es"),
+    const historicHitsLeader = [...rows].sort(
+      (a, b) =>
+        b.exactHits + b.winnerHits + b.knockoutExactHits - (a.exactHits + a.winnerHits + a.knockoutExactHits) ||
+        b.totalPoints - a.totalPoints ||
+        a.name.localeCompare(b.name, "es"),
     )[0];
-    const exactLeaderHits = exactLeader.exactHits + exactLeader.knockoutExactHits;
+    const historicHits = historicHitsLeader.exactHits + historicHitsLeader.winnerHits + historicHitsLeader.knockoutExactHits;
     const biggestRise = [...rows]
       .map((row) => ({ row, movement: movementById.get(row.submissionId) ?? 0 }))
       .sort((a, b) => b.movement - a.movement || a.row.name.localeCompare(b.row.name, "es"))[0];
@@ -202,7 +205,7 @@ export default function TablaPage() {
     const batacazo = biggestRise?.movement > 0 ? biggestRise : null;
     return [
       { label: "Puntero", value: rows[0].name, detail: `${rows[0].totalPoints} pts` },
-      { label: "Mas exactos", value: exactLeaderHits > 0 ? exactLeader.name : "Pendiente", detail: `${exactLeaderHits} exactos` },
+      { label: "Mas aciertos historicos", value: historicHitsLeader.name, detail: `${historicHits} resultados` },
       { label: "Racha positiva", value: biggestRise?.movement > 0 ? biggestRise.row.name : "Sin cambios", detail: biggestRise?.movement > 0 ? `Subio ${biggestRise.movement}` : "=" },
       { label: "Ultimo de la B", value: last?.name ?? "-", detail: `${last?.totalPoints ?? 0} pts` },
       { label: "Pego el batacazo", value: batacazo?.row.name ?? "Pendiente", detail: batacazo ? `+${batacazo.movement} puestos` : "Sin salto fuerte" },
