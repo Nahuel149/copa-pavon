@@ -191,24 +191,64 @@ export default function TablaPage() {
 
   const awards = useMemo(() => {
     if (rows.length === 0) return [];
-    const historicHitsLeader = [...rows].sort(
-      (a, b) =>
-        b.exactHits + b.winnerHits + b.knockoutExactHits - (a.exactHits + a.winnerHits + a.knockoutExactHits) ||
-        b.totalPoints - a.totalPoints ||
-        a.name.localeCompare(b.name, "es"),
-    )[0];
-    const historicHits = historicHitsLeader.exactHits + historicHitsLeader.winnerHits + historicHitsLeader.knockoutExactHits;
-    const biggestRise = [...rows]
+    const usedAwardIds = new Set<string>();
+    const remember = (row?: StandingRow) => {
+      if (row) usedAwardIds.add(row.submissionId);
+      return row;
+    };
+    const topRow = remember(rows[0]);
+    const historicHitsCandidates = rows
+      .map((row) => ({
+        row,
+        hits: row.exactHits + row.winnerHits + row.knockoutExactHits,
+      }))
+      .sort(
+        (a, b) =>
+          b.hits - a.hits ||
+          b.row.totalPoints - a.row.totalPoints ||
+          a.row.name.localeCompare(b.row.name, "es"),
+      );
+    const historicHitsLeader = historicHitsCandidates[0];
+    const historicHitsAward =
+      !usedAwardIds.has(historicHitsLeader.row.submissionId) || historicHitsLeader.hits === 0
+        ? historicHitsLeader
+        : historicHitsCandidates.find((candidate) => candidate.hits > 0 && !usedAwardIds.has(candidate.row.submissionId));
+    if (historicHitsAward) remember(historicHitsAward.row);
+
+    const movementCandidates = rows
       .map((row) => ({ row, movement: movementById.get(row.submissionId) ?? 0 }))
-      .sort((a, b) => b.movement - a.movement || a.row.name.localeCompare(b.row.name, "es"))[0];
+      .sort((a, b) => b.movement - a.movement || a.row.name.localeCompare(b.row.name, "es"));
+    const riseAward = movementCandidates.find((candidate) => candidate.movement > 0 && !usedAwardIds.has(candidate.row.submissionId));
+    if (riseAward) remember(riseAward.row);
+
     const last = rows.at(-1);
-    const batacazo = biggestRise?.movement > 0 ? biggestRise : null;
+    if (last) remember(last);
+
+    const batacazoAward = movementCandidates.find((candidate) => candidate.movement >= 3 && !usedAwardIds.has(candidate.row.submissionId));
+    if (batacazoAward) remember(batacazoAward.row);
+
+    const historicLabel =
+      historicHitsAward && historicHitsAward.row.submissionId !== historicHitsLeader.row.submissionId
+        ? "Otro con aciertos historicos"
+        : "Mas aciertos historicos";
     return [
-      { label: "Puntero", value: rows[0].name, detail: `${rows[0].totalPoints} pts` },
-      { label: "Mas aciertos historicos", value: historicHitsLeader.name, detail: `${historicHits} resultados` },
-      { label: "Racha positiva", value: biggestRise?.movement > 0 ? biggestRise.row.name : "Sin cambios", detail: biggestRise?.movement > 0 ? `Subio ${biggestRise.movement}` : "=" },
+      { label: "Puntero", value: topRow?.name ?? "-", detail: `${topRow?.totalPoints ?? 0} pts` },
+      {
+        label: historicLabel,
+        value: historicHitsAward ? historicHitsAward.row.name : "Sin datos",
+        detail: historicHitsAward ? `${historicHitsAward.hits} resultados` : "Sin otro jugador",
+      },
+      {
+        label: "Racha positiva",
+        value: riseAward ? riseAward.row.name : "Sin cambios",
+        detail: riseAward ? `Subio ${riseAward.movement}` : "=",
+      },
       { label: "Ultimo de la B", value: last?.name ?? "-", detail: `${last?.totalPoints ?? 0} pts` },
-      { label: "Pego el batacazo", value: batacazo?.row.name ?? "Pendiente", detail: batacazo ? `+${batacazo.movement} puestos` : "Sin salto fuerte" },
+      {
+        label: "Pego el batacazo",
+        value: batacazoAward ? batacazoAward.row.name : "Sin batacazo",
+        detail: batacazoAward ? `+${batacazoAward.movement} puestos` : "Sin otro salto fuerte",
+      },
     ];
   }, [movementById, rows]);
 
