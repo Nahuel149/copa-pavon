@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knockout-visibility";
 import { groups, matches, type KnockoutFixture } from "./matches";
 import {
   buildStandings,
@@ -228,6 +229,32 @@ describe("prode scoring", () => {
     );
 
     expect(result.ok).toBe(true);
+  });
+
+  it("hides public knockout predictions until each stage starts", () => {
+    const fixtures: KnockoutFixture[] = [
+      { id: "k-r32", order: 1, stage: "R32", home: "Argentina", away: "Francia" },
+      { id: "k-r16", order: 2, stage: "R16", home: "Brasil", away: "Espana" },
+    ];
+    const predictions = [
+      { fixtureId: "k-r32", homeGoals: 2, awayGoals: 1 },
+      { fixtureId: "k-r16", homeGoals: 1, awayGoals: 0 },
+    ];
+
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T18:59:00.000Z"))).toEqual([]);
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T19:00:00.000Z"))).toEqual([
+      predictions[0],
+    ]);
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-07-04T17:00:00.000Z"))).toEqual(
+      predictions,
+    );
+  });
+
+  it("reports knockout public visibility by stage", () => {
+    const visibility = getKnockoutVisibility(new Date("2026-07-04T16:59:00.000Z"));
+
+    expect(visibility.R32.public).toBe(true);
+    expect(visibility.R16.public).toBe(false);
   });
 
   it("parses scorer names from the automatic result source", () => {

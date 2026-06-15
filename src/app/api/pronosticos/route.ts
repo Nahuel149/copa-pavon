@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { autoSyncGroupMatchResults } from "@/lib/auto-results";
+import { getKnockoutVisibility, hideLockedKnockoutPredictions } from "@/lib/knockout-visibility";
 import { buildStandings } from "@/lib/prode";
 import { publicSubmission, readResultStore, readSubmissionStore, writeResultStore } from "@/lib/storage";
 
@@ -15,15 +16,18 @@ export async function GET() {
     }
 
     const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
+    const now = new Date();
     const submissions = submissionStore.submissions
       .toSorted((a, b) => a.name.localeCompare(b.name, "es"))
-      .map(publicSubmission);
+      .map(publicSubmission)
+      .map((submission) => hideLockedKnockoutPredictions(submission, results.knockoutFixtures, now));
     const standings = buildStandings(submissionStore.submissions, results);
 
     return NextResponse.json({
       submissions,
       standings,
       results,
+      knockoutVisibility: getKnockoutVisibility(now),
       updatedAt: new Date().toISOString(),
     });
   } catch {

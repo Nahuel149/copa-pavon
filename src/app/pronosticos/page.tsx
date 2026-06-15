@@ -5,7 +5,7 @@ import { BarChart3, Eye, Loader2, Target, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
-import { matches, roundLabels, type Match, type MatchRound } from "@/lib/matches";
+import { matches, roundLabels, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
   serializePrediction,
@@ -23,6 +23,7 @@ type PronosticosResponse = {
   submissions: PublicSubmission[];
   standings: StandingRow[];
   results: ResultStore;
+  knockoutVisibility?: Record<KnockoutStage, { label: string; public: boolean; unlockAt: string }>;
   updatedAt: string;
 };
 
