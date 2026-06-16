@@ -27,6 +27,8 @@ type WorldCup26Game = {
 export type SyncResultReport = {
   sourceUrl: string;
   imported: number;
+  added: number;
+  corrected: number;
   unchanged: number;
   skipped: number;
   checkedAt: string;
@@ -58,6 +60,8 @@ function extractGames(payload: unknown): WorldCup26Game[] {
 function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
   const byMatch = new Map(current.map((result) => [result.matchId, result]));
   let changed = 0;
+  let added = 0;
+  let corrected = 0;
   let unchanged = 0;
 
   for (const result of imported) {
@@ -73,10 +77,14 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
     }
     byMatch.set(result.matchId, result);
     changed += 1;
+    if (previous) corrected += 1;
+    else added += 1;
   }
 
   return {
     changed,
+    added,
+    corrected,
     unchanged,
     results: matches
       .map((match) => byMatch.get(match.id))
@@ -101,6 +109,8 @@ function sameTeams(a: unknown, b: unknown) {
 function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResult[]) {
   const byFixture = new Map(current.map((result) => [result.fixtureId, result]));
   let changed = 0;
+  let added = 0;
+  let corrected = 0;
   let unchanged = 0;
 
   for (const result of imported) {
@@ -118,10 +128,14 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
     }
     byFixture.set(result.fixtureId, result);
     changed += 1;
+    if (previous) corrected += 1;
+    else added += 1;
   }
 
   return {
     changed,
+    added,
+    corrected,
     unchanged,
     results: current
       .map((result) => byFixture.get(result.fixtureId))
@@ -201,6 +215,8 @@ export async function syncGroupMatchResults(current: ResultStore) {
   const report: SyncResultReport = {
     sourceUrl,
     imported: merged.changed + mergedKnockout.changed,
+    added: merged.added + mergedKnockout.added,
+    corrected: merged.corrected + mergedKnockout.corrected,
     unchanged: merged.unchanged + mergedKnockout.unchanged,
     skipped,
     checkedAt: new Date().toISOString(),

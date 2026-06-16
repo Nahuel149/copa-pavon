@@ -35,16 +35,30 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "No se pudieron leer los resultados." }, { status: 400 });
   }
 
-  const results = await writeResultStore(validateResultStore(payload));
+  let syncReport = null;
+  let authoritativeResults = validateResultStore(payload);
+  try {
+    const synced = await syncGroupMatchResults(authoritativeResults);
+    authoritativeResults = synced.results;
+    syncReport = synced.report;
+  } catch {
+    syncReport = null;
+  }
+
+  const results = await writeResultStore(authoritativeResults);
   await appendAuditEvent({
     actor: "admin",
     type: "results",
-    message: "Guardo resultados oficiales.",
+    message: syncReport?.corrected
+      ? "Guardo resultados oficiales y corrigio marcadores con la API."
+      : "Guardo resultados oficiales.",
     meta: {
       matchResults: results.matchResults.length,
       groupResults: results.groupResults.length,
       knockoutResults: results.knockoutResults.length,
       manualAdjustments: results.manualAdjustments?.length ?? 0,
+      sourceCorrections: syncReport?.corrected ?? 0,
+      sourceAdded: syncReport?.added ?? 0,
     },
   });
   return NextResponse.json(results);
