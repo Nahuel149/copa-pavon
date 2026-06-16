@@ -2042,6 +2042,34 @@ tbody tr.relegationRow:hover {
   background: #ffcfc3;
 }
 
+.standingsTable .pointsHeader {
+  background: var(--red);
+  color: #fff;
+}
+
+.standingsTable .pointsCell {
+  background: rgba(255, 65, 38, 0.12);
+  font-weight: 900;
+}
+
+.standingsTable .pointsCell strong {
+  display: inline-flex;
+  min-width: 42px;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--ink);
+  background: var(--red);
+  color: #fff;
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.standingsTable .playerCell {
+  min-width: 180px;
+}
+
 .positionCell {
   display: inline-flex;
   gap: 6px;
@@ -2699,6 +2727,115 @@ tbody tr.relegationRow:hover {
   td {
     padding: 10px 8px;
     font-size: 0.84rem;
+  }
+
+  .tableShell:has(.standingsTable) {
+    overflow-x: visible;
+  }
+
+  .standingsTable,
+  .standingsTable tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .standingsTable thead {
+    display: none;
+  }
+
+  .standingsTable tr {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 0;
+    padding: 10px;
+    border-bottom: 2px solid rgba(5, 5, 5, 0.18);
+  }
+
+  .standingsTable tr.detailRow {
+    display: block;
+    padding: 0;
+  }
+
+  .standingsTable tr.detailRow td {
+    display: block;
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .standingsTable td {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 6px;
+    border-bottom: 0;
+    font-size: 0.82rem;
+  }
+
+  .standingsTable td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .standingsTable .pointsCell {
+    grid-row: span 12;
+    align-self: stretch;
+    justify-content: center;
+    border: 3px solid var(--ink);
+    background: var(--red);
+    color: #fff;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+
+  .standingsTable .pointsCell::before {
+    color: rgba(255, 255, 255, 0.86);
+  }
+
+  .standingsTable .pointsCell strong {
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 2rem;
+  }
+
+  .standingsTable .playerCell {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .standingsTable .playerCell::before {
+    display: none;
+  }
+
+  .standingsTable .playerCell .tableButton,
+  .adminStandingsTable .playerCell {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    font-size: 0.95rem;
+    font-weight: 900;
+  }
+
+  .publicStandingsTable td:nth-child(n + 4),
+  .adminStandingsTable td:nth-child(n + 4) {
+    border-top: 1px solid rgba(5, 5, 5, 0.12);
+  }
+
+  .publicStandingsTable td:nth-child(n + 4) {
+    grid-column: 2;
+  }
+
+  .adminStandingsTable tr {
+    grid-template-columns: 78px minmax(0, 1fr);
+  }
+
+  .adminStandingsTable .playerCell {
+    grid-column: 2;
   }
 
   .positionCell {

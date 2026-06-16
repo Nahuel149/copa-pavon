@@ -342,15 +342,15 @@ export default function TablaPage() {
             ) : null}
           </div>
         </div>
-        <table>
+        <table className="standingsTable publicStandingsTable">
           <thead>
             <tr>
+              <th className="pointsHeader">Puntos</th>
               <th>#</th>
               <th>Participante</th>
               <th>Jugados</th>
               <th>Ganados</th>
               <th>Perdidos</th>
-              <th>Puntos</th>
               <th>Exactos</th>
             </tr>
           </thead>
@@ -361,22 +361,22 @@ export default function TablaPage() {
               return (
                 <Fragment key={row.submissionId}>
                   <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""}>
-                    <td>
+                    <td className="pointsCell" data-label="Puntos"><strong>{row.totalPoints}</strong></td>
+                    <td data-label="Posicion">
                       <span className="positionCell">
                         <b>{index + 1}</b>
                         <span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span>
                       </span>
                     </td>
-                    <td>
+                    <td className="playerCell" data-label="Participante">
                       <button className="tableButton inlineButton" onClick={() => setExpandedPlayerId(expandedPlayerId === row.submissionId ? null : row.submissionId)} type="button">
                         {row.name}
                       </button>
                     </td>
-                    <td>{row.predictionMatchesPlayed}</td>
-                    <td>{row.predictionWins}</td>
-                    <td>{row.predictionLosses}</td>
-                    <td>{row.totalPoints}</td>
-                    <td>{row.exactHits + row.knockoutExactHits}</td>
+                    <td data-label="Jugados">{row.predictionMatchesPlayed}</td>
+                    <td data-label="Ganados">{row.predictionWins}</td>
+                    <td data-label="Perdidos">{row.predictionLosses}</td>
+                    <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
                   </tr>
                   {expandedPlayerId === row.submissionId ? (
                     <tr className="detailRow">
@@ -413,7 +413,7 @@ export default function TablaPage() {
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={4}>La tabla aparece cuando haya envios guardados.</td>
+                <td colSpan={7}>La tabla aparece cuando haya envios guardados.</td>
               </tr>
             ) : null}
           </tbody>

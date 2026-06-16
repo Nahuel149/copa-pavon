@@ -624,12 +624,12 @@ export default function AdminPage() {
       <details className="adminFold" open>
         <summary>Tabla y puntos</summary>
       <section className="tableShell">
-        <table>
+        <table className="standingsTable adminStandingsTable">
           <thead>
             <tr>
+              <th className="pointsHeader">Total</th>
               <th>#</th>
               <th>Participante</th>
-              <th>Total</th>
               <th>Pts partidos</th>
               <th>Jugados</th>
               <th>Ganados</th>
@@ -644,17 +644,17 @@ export default function AdminPage() {
             {standings.map((row, index) => {
               return (
                 <tr key={row.submissionId}>
-                  <td>{index + 1}</td>
-                  <td>{row.name}</td>
-                  <td>{row.totalPoints}</td>
-                  <td>{row.matchPoints}</td>
-                  <td>{row.predictionMatchesPlayed}</td>
-                  <td>{row.predictionWins}</td>
-                  <td>{row.predictionLosses}</td>
-                  <td>{row.groupPoints}</td>
-                  <td>{row.knockoutPoints}</td>
-                  <td>{row.exactHits + row.knockoutExactHits}</td>
-                  <td>{row.winnerHits}</td>
+                  <td className="pointsCell" data-label="Total"><strong>{row.totalPoints}</strong></td>
+                  <td data-label="Posicion">{index + 1}</td>
+                  <td className="playerCell" data-label="Participante">{row.name}</td>
+                  <td data-label="Pts partidos">{row.matchPoints}</td>
+                  <td data-label="Jugados">{row.predictionMatchesPlayed}</td>
+                  <td data-label="Ganados">{row.predictionWins}</td>
+                  <td data-label="Perdidos">{row.predictionLosses}</td>
+                  <td data-label="Grupos">{row.groupPoints}</td>
+                  <td data-label="Elim.">{row.knockoutPoints}</td>
+                  <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
+                  <td data-label="Ganadores">{row.winnerHits}</td>
                 </tr>
               );
             })}
