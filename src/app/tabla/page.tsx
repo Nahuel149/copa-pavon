@@ -6,6 +6,10 @@ import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { readJsonResponse } from "@/lib/client-json";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
+function shortParticipantName(name: string) {
+  return name.length > 8 ? `${name.slice(0, 8)}...` : name;
+}
+
 type StandingsResponse = {
   standings: StandingRow[];
   standingsByClan: Record<ClanId, StandingRow[]>;
@@ -345,9 +349,9 @@ export default function TablaPage() {
         <table className="standingsTable publicStandingsTable">
           <thead>
             <tr>
-              <th className="pointsHeader">Puntos</th>
               <th>#</th>
               <th>Participante</th>
+              <th className="pointsHeader">Puntos</th>
               <th>Jugados</th>
               <th>Ganados</th>
               <th>Perdidos</th>
@@ -361,7 +365,6 @@ export default function TablaPage() {
               return (
                 <Fragment key={row.submissionId}>
                   <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""}>
-                    <td className="pointsCell" data-label="Puntos"><strong>{row.totalPoints}</strong></td>
                     <td data-label="Posicion">
                       <span className="positionCell">
                         <b>{index + 1}</b>
@@ -369,10 +372,11 @@ export default function TablaPage() {
                       </span>
                     </td>
                     <td className="playerCell" data-label="Participante">
-                      <button className="tableButton inlineButton" onClick={() => setExpandedPlayerId(expandedPlayerId === row.submissionId ? null : row.submissionId)} type="button">
-                        {row.name}
+                      <button className="tableButton inlineButton" onClick={() => setExpandedPlayerId(expandedPlayerId === row.submissionId ? null : row.submissionId)} title={row.name} type="button">
+                        {shortParticipantName(row.name)}
                       </button>
                     </td>
+                    <td className="pointsCell" data-label="Puntos"><strong>{row.totalPoints}</strong></td>
                     <td data-label="Jugados">{row.predictionMatchesPlayed}</td>
                     <td data-label="Ganados">{row.predictionWins}</td>
                     <td data-label="Perdidos">{row.predictionLosses}</td>

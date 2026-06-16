@@ -61,6 +61,10 @@ type AuditResponse = {
   error?: string;
 };
 
+function shortParticipantName(name: string) {
+  return name.length > 8 ? `${name.slice(0, 8)}...` : name;
+}
+
 type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; scorerNames?: string }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
 
@@ -631,9 +635,9 @@ export default function AdminPage() {
         <table className="standingsTable adminStandingsTable">
           <thead>
             <tr>
-              <th className="pointsHeader">Total</th>
               <th>#</th>
               <th>Participante</th>
+              <th className="pointsHeader">Total</th>
               <th>Pts partidos</th>
               <th>Jugados</th>
               <th>Ganados</th>
@@ -648,9 +652,9 @@ export default function AdminPage() {
             {standings.map((row, index) => {
               return (
                 <tr key={row.submissionId}>
-                  <td className="pointsCell" data-label="Total"><strong>{row.totalPoints}</strong></td>
                   <td data-label="Posicion">{index + 1}</td>
-                  <td className="playerCell" data-label="Participante">{row.name}</td>
+                  <td className="playerCell" data-label="Participante" title={row.name}>{shortParticipantName(row.name)}</td>
+                  <td className="pointsCell" data-label="Total"><strong>{row.totalPoints}</strong></td>
                   <td data-label="Pts partidos">{row.matchPoints}</td>
                   <td data-label="Jugados">{row.predictionMatchesPlayed}</td>
                   <td data-label="Ganados">{row.predictionWins}</td>

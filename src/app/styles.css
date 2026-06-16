@@ -2825,21 +2825,21 @@ tbody tr.relegationRow:hover {
   .publicStandingsTable td:nth-child(1),
   .adminStandingsTable th:nth-child(1),
   .adminStandingsTable td:nth-child(1) {
-    width: 46px;
+    width: 38px;
   }
 
   .publicStandingsTable th:nth-child(2),
   .publicStandingsTable td:nth-child(2),
   .adminStandingsTable th:nth-child(2),
   .adminStandingsTable td:nth-child(2) {
-    width: 42px;
+    width: 74px;
   }
 
   .publicStandingsTable th:nth-child(3),
   .publicStandingsTable td:nth-child(3),
   .adminStandingsTable th:nth-child(3),
   .adminStandingsTable td:nth-child(3) {
-    width: auto;
+    width: 46px;
   }
 
   .publicStandingsTable th:nth-child(4),
@@ -2848,7 +2848,7 @@ tbody tr.relegationRow:hover {
   .publicStandingsTable td:nth-child(5),
   .publicStandingsTable th:nth-child(6),
   .publicStandingsTable td:nth-child(6) {
-    width: 38px;
+    width: 37px;
   }
 
   .publicStandingsTable th:nth-child(7),
@@ -2873,7 +2873,7 @@ tbody tr.relegationRow:hover {
   .adminStandingsTable td:nth-child(6),
   .adminStandingsTable th:nth-child(7),
   .adminStandingsTable td:nth-child(7) {
-    width: 38px;
+    width: 37px;
   }
 
   .adminStandingsTable th:nth-child(10),
