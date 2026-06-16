@@ -160,22 +160,23 @@ export default function TablaPage() {
   }
 
   function pointDetailCards(row: StandingRow) {
-    const matchPending = Math.max(data.playedMatches - row.exactHits - row.winnerHits, 0);
+    const matchHits = row.exactHits + row.winnerHits;
+    const matchPending = Math.max(data.playedMatches - matchHits, 0);
     return [
       {
-        label: "Aciertos partidos de grupo",
+        label: "Puntos partidos de grupo",
         value: row.matchPoints,
         help: "Puntos por partidos de fase de grupos.",
-        meta: `${row.exactHits} exactos · ${row.winnerHits} ganador/empate · ${matchPending} sin punto`,
+        meta: `${matchHits}/${data.playedMatches} aciertos · ${matchPending} errores · ${row.exactHits} exactos`,
       },
       {
-        label: "Aciertos ganadores de grupos",
+        label: "Puntos ganadores de grupos",
         value: row.groupPoints,
         help: "Bonus por acertar los dos clasificados de cada grupo.",
         meta: `${row.groupHits} grupos acertados · ${data.decidedGroups} grupos definidos`,
       },
       {
-        label: "Aciertos en eliminatorias",
+        label: "Puntos en eliminatorias",
         value: row.knockoutPoints,
         help: "Incluye exactos, clasificados y bonus de goleador.",
         meta: `${row.knockoutExactHits} exactos · ${row.knockoutScorerHits} goleadores · ${row.playedKnockoutMatches} jugados`,

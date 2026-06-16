@@ -185,10 +185,13 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
     "Nombre",
     "Fecha",
     "Total",
-    "Partidos",
+    "Pts partidos",
+    "Partidos jugados",
+    "Aciertos partidos",
+    "Errores partidos",
     "Grupos",
     "Eliminatorias",
-    "Exactos grupos",
+    "Exactos",
     "Ganadores",
     "Exactos eliminatorias",
     ...matches.map((match) => `${match.order}. ${match.home} vs ${match.away}`),
@@ -197,6 +200,8 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
   ];
   const rows = submissions.map((submission) => {
     const standing = standingById.get(submission.id);
+    const matchHits = (standing?.exactHits ?? 0) + (standing?.winnerHits ?? 0);
+    const playedMatches = standing?.playedMatches ?? 0;
     const byMatch = new Map(submission.predictions.map((prediction) => [prediction.matchId, prediction]));
     const byGroup = new Map((submission.groupPredictions ?? []).map((prediction) => [prediction.groupId, prediction]));
     const byKnockout = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
@@ -205,6 +210,9 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
       new Date(submission.createdAt).toLocaleString("es-AR"),
       standing?.totalPoints ?? 0,
       standing?.matchPoints ?? 0,
+      playedMatches,
+      matchHits,
+      Math.max(playedMatches - matchHits, 0),
       standing?.groupPoints ?? 0,
       standing?.knockoutPoints ?? 0,
       standing?.exactHits ?? 0,
@@ -624,7 +632,10 @@ export default function AdminPage() {
               <th>#</th>
               <th>Participante</th>
               <th>Total</th>
-              <th>Partidos</th>
+              <th>Pts partidos</th>
+              <th>Jugados</th>
+              <th>Aciertos</th>
+              <th>Errores</th>
               <th>Grupos</th>
               <th>Elim.</th>
               <th>Exactos</th>
@@ -632,21 +643,28 @@ export default function AdminPage() {
             </tr>
           </thead>
           <tbody>
-            {standings.map((row, index) => (
-              <tr key={row.submissionId}>
-                <td>{index + 1}</td>
-                <td>{row.name}</td>
-                <td>{row.totalPoints}</td>
-                <td>{row.matchPoints}</td>
-                <td>{row.groupPoints}</td>
-                <td>{row.knockoutPoints}</td>
-                <td>{row.exactHits + row.knockoutExactHits}</td>
-                <td>{row.winnerHits}</td>
-              </tr>
-            ))}
+            {standings.map((row, index) => {
+              const matchHits = row.exactHits + row.winnerHits;
+              const matchMisses = Math.max(row.playedMatches - matchHits, 0);
+              return (
+                <tr key={row.submissionId}>
+                  <td>{index + 1}</td>
+                  <td>{row.name}</td>
+                  <td>{row.totalPoints}</td>
+                  <td>{row.matchPoints}</td>
+                  <td>{row.playedMatches}</td>
+                  <td>{matchHits}</td>
+                  <td>{matchMisses}</td>
+                  <td>{row.groupPoints}</td>
+                  <td>{row.knockoutPoints}</td>
+                  <td>{row.exactHits + row.knockoutExactHits}</td>
+                  <td>{row.winnerHits}</td>
+                </tr>
+              );
+            })}
             {standings.length === 0 ? (
               <tr>
-                <td colSpan={8}>Sin tabla todavía.</td>
+                <td colSpan={11}>Sin tabla todavía.</td>
               </tr>
             ) : null}
           </tbody>
