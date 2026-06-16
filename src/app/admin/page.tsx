@@ -65,7 +65,7 @@ function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
 }
 
-type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; highlightUrl?: string; scorerNames?: string }>;
+type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; highlightUrl?: string; goalScorers?: MatchResult["goalScorers"]; scorerNames?: string }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
 
 function isoToLocalInput(value: string) {
@@ -100,6 +100,7 @@ function scoreFromDraft(matchId: string, draft: ResultDraft) {
     homeGoals: Number(value.homeGoals),
     awayGoals: Number(value.awayGoals),
     ...(highlightUrl ? { highlightUrl } : {}),
+    ...(value.goalScorers?.length ? { goalScorers: value.goalScorers } : {}),
   };
 }
 
@@ -157,6 +158,7 @@ function draftFromResults(results: ResultStore) {
       homeGoals: String(result.homeGoals),
       awayGoals: String(result.awayGoals),
       highlightUrl: result.highlightUrl ?? "",
+      goalScorers: result.goalScorers ?? [],
     };
   }
 

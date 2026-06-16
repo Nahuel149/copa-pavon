@@ -2,6 +2,7 @@ import { matches } from "./matches";
 import {
   getOutcome,
   normalizeName,
+  parseScorerEvents,
   parseScorerNames,
   validateResultStore,
   type KnockoutResult,
@@ -80,13 +81,30 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
 
   for (const result of imported) {
     const previous = byMatch.get(result.matchId);
+    const previousScorers = JSON.stringify(previous?.goalScorers ?? []);
+    const nextScorers = JSON.stringify(result.goalScorers ?? []);
+    if (
+      previous &&
+      previous.homeGoals === result.homeGoals &&
+      previous.awayGoals === result.awayGoals &&
+      previous.outcome === result.outcome &&
+      previousScorers === nextScorers
+    ) {
+      unchanged += 1;
+      continue;
+    }
     if (
       previous &&
       previous.homeGoals === result.homeGoals &&
       previous.awayGoals === result.awayGoals &&
       previous.outcome === result.outcome
     ) {
-      unchanged += 1;
+      byMatch.set(result.matchId, {
+        ...previous,
+        ...(result.goalScorers?.length ? { goalScorers: result.goalScorers } : {}),
+      });
+      changed += 1;
+      corrected += 1;
       continue;
     }
     if (previous?.source === "manual") {
@@ -96,6 +114,7 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
     byMatch.set(result.matchId, {
       ...result,
       ...(previous?.highlightUrl ? { highlightUrl: previous.highlightUrl } : {}),
+      ...(previous?.goalScorers?.length && !result.goalScorers?.length ? { goalScorers: previous.goalScorers } : {}),
     });
     changed += 1;
     if (previous) corrected += 1;
@@ -216,6 +235,7 @@ export async function syncGroupMatchResults(current: ResultStore) {
             homeGoals,
             awayGoals,
             outcome: getOutcome(homeGoals, awayGoals),
+            goalScorers: [...parseScorerEvents(game.home_scorers, "home"), ...parseScorerEvents(game.away_scorers, "away")],
             source: "api",
           });
         }

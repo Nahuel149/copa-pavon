@@ -86,7 +86,14 @@ export type MatchResult = {
   awayGoals: number;
   outcome: PredictionChoice;
   highlightUrl?: string;
+  goalScorers?: MatchGoalScorer[];
   source?: "api" | "manual";
+};
+
+export type MatchGoalScorer = {
+  team: "home" | "away";
+  name: string;
+  minute?: string;
 };
 
 export type GroupResult = {
@@ -225,6 +232,30 @@ export function parseScorerNames(value: unknown) {
     .filter(Boolean);
 }
 
+export function parseScorerEvents(value: unknown, team: "home" | "away"): MatchGoalScorer[] {
+  if (typeof value !== "string") return [];
+  const raw = value.trim();
+  if (!raw || raw.toLowerCase() === "null") return [];
+
+  return raw
+    .replace(/[{}"]/g, "")
+    .split(",")
+    .map((item) => {
+      const minuteMatch = item.match(/(\d{1,3}'(?:\+\d{1,2}')?)/);
+      const name = item
+        .replace(/\d{1,3}'(?:\+\d{1,2}')?/g, "")
+        .replace(/\((?:OG|P|Pen)\)/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return {
+        team,
+        name,
+        ...(minuteMatch?.[1] ? { minute: minuteMatch[1] } : {}),
+      };
+    })
+    .filter((item) => item.name);
+}
+
 function levenshteinDistance(a: string, b: string) {
   const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
   const current = Array.from({ length: b.length + 1 }, () => 0);
@@ -313,6 +344,26 @@ function isSafeHttpUrl(value: string) {
   } catch {
     return false;
   }
+}
+
+function parseMatchGoalScorers(value: unknown): MatchGoalScorer[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((raw) => {
+      if (!raw || typeof raw !== "object") return null;
+      const item = raw as Partial<MatchGoalScorer>;
+      const team = item.team === "home" || item.team === "away" ? item.team : null;
+      const name = typeof item.name === "string" ? item.name.trim().replace(/\s+/g, " ") : "";
+      const minute = typeof item.minute === "string" ? item.minute.trim().replace(/\s+/g, "") : "";
+      if (!team || name.length < 2) return null;
+      return {
+        team,
+        name,
+        ...(minute ? { minute } : {}),
+      };
+    })
+    .filter((item): item is MatchGoalScorer => Boolean(item))
+    .slice(0, 30);
 }
 
 function isGroupId(value: unknown): value is GroupId {
@@ -522,12 +573,14 @@ export function validateResultStore(payload: unknown): ResultStore {
     if (homeGoals === null || awayGoals === null || homeGoals < 0 || awayGoals < 0 || homeGoals > 30 || awayGoals > 30) {
       continue;
     }
+    const goalScorers = parseMatchGoalScorers(item.goalScorers);
     matchResults.push({
       matchId: item.matchId,
       homeGoals,
       awayGoals,
       outcome: getOutcome(homeGoals, awayGoals),
       ...(typeof item.highlightUrl === "string" && isSafeHttpUrl(item.highlightUrl) ? { highlightUrl: item.highlightUrl.trim() } : {}),
+      ...(goalScorers.length > 0 ? { goalScorers } : {}),
       ...(item.source === "manual" || item.source === "api" ? { source: item.source } : {}),
     });
   }

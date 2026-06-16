@@ -1141,6 +1141,45 @@ a {
   text-transform: uppercase;
 }
 
+.goalScorerStrip {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.goalScorerStrip p,
+.goalScorerEmpty {
+  margin: 0;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.goalScorerStrip p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 2px solid rgba(5, 5, 5, 0.2);
+  background: #fff7ef;
+}
+
+.goalScorerStrip .teamBadge {
+  min-width: 0;
+}
+
+.goalScorerStrip span {
+  overflow-wrap: anywhere;
+}
+
+.goalScorerEmpty {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
 .matchVideoPanel {
   display: grid;
   gap: 14px;

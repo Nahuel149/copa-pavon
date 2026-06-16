@@ -9,13 +9,14 @@ const emptyResults: ResultStore = {
   knockoutResults: [],
 };
 
-function game(id: number, homeScore: number, awayScore: number) {
+function game(id: number, homeScore: number, awayScore: number, extra: Record<string, unknown> = {}) {
   return {
     id,
     type: "group",
     home_score: homeScore,
     away_score: awayScore,
     finished: true,
+    ...extra,
   };
 }
 
@@ -73,5 +74,28 @@ describe("automatic result sync", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(report.sourceUrls).toEqual(["https://api-one.test/games", "https://api-two.test/games"]);
     expect(report.added).toBe(1);
+  });
+
+  it("imports group goal scorers with minutes", async () => {
+    process.env.PRODE_RESULTS_SYNC_URL = "https://api-one.test/games";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse([
+          game(1, 2, 1, {
+            home_scorers: "{\"S. Gimenez 31'\",\"H. Lozano 77'\"}",
+            away_scorers: "{\"P. Tau 44'\"}",
+          }),
+        ]),
+      ),
+    );
+
+    const { results } = await syncGroupMatchResults(emptyResults);
+
+    expect(results.matchResults[0].goalScorers).toEqual([
+      { team: "home", name: "S. Gimenez", minute: "31'" },
+      { team: "home", name: "H. Lozano", minute: "77'" },
+      { team: "away", name: "P. Tau", minute: "44'" },
+    ]);
   });
 });

@@ -1,13 +1,63 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Brackets, RefreshCw, Trophy, Users } from "lucide-react";
+import { Brackets, Download, Loader2, RefreshCw, Share2, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { readJsonResponse } from "@/lib/client-json";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
 function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
+}
+
+function escapeXml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function compactText(value: string, maxLength: number) {
+  return value.length > maxLength ? `${value.slice(0, Math.max(0, maxLength - 1))}…` : value;
+}
+
+function svgText(value: string, x: number, y: number, options: { size?: number; weight?: number; fill?: string; anchor?: string } = {}) {
+  const size = options.size ?? 26;
+  const weight = options.weight ?? 800;
+  const fill = options.fill ?? "#050505";
+  const anchor = options.anchor ? ` text-anchor="${options.anchor}"` : "";
+  return `<text x="${x}" y="${y}" font-family="Trebuchet MS, Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}"${anchor}>${escapeXml(value)}</text>`;
+}
+
+async function svgToPngFile(svg: string, filename: string) {
+  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  try {
+    const image = new Image();
+    image.decoding = "async";
+    const loaded = new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("No se pudo crear la imagen."));
+    });
+    image.src = url;
+    await loaded;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("No se pudo preparar la imagen.");
+    context.fillStyle = "#fffdf7";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0);
+    const pngBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((result) => (result ? resolve(result) : reject(new Error("No se pudo descargar la imagen."))), "image/png");
+    });
+    return new File([pngBlob], filename, { type: "image/png" });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 type StandingsResponse = {
@@ -50,6 +100,8 @@ export default function TablaPage() {
   const [hiddenGraphIds, setHiddenGraphIds] = useState<string[]>([]);
   const [graphDisplayLimit, setGraphDisplayLimit] = useState(0);
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState<"idle" | "working">("idle");
+  const [shareMessage, setShareMessage] = useState("");
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
@@ -192,6 +244,104 @@ export default function TablaPage() {
         meta: row.playedKnockoutMatches > 0 ? `${row.knockoutScorerHits}/${row.playedKnockoutMatches} aciertos` : "Arranca en eliminatorias",
       },
     ];
+  }
+
+  function buildStandingsShareSvg() {
+    const width = 1080;
+    const rowHeight = 54;
+    const headerHeight = 190;
+    const footerHeight = 64;
+    const tableTop = headerHeight;
+    const height = tableTop + 56 + Math.max(rows.length, 1) * rowHeight + footerHeight;
+    const red = "#fa3b22";
+    const cream = "#fffdf7";
+    const pale = "#fff1ec";
+    const green = "#e5f7df";
+    const ink = "#050505";
+    const muted = "#625d55";
+    const left = 36;
+    const usable = width - left * 2;
+    const col = {
+      rank: 68,
+      name: 298,
+      points: 120,
+      played: 120,
+      wins: 120,
+      losses: 120,
+      exacts: 120,
+    };
+    const headers = [
+      { label: "#", x: left, width: col.rank, anchor: "middle" },
+      { label: "Participante", x: left + col.rank, width: col.name, anchor: "start" },
+      { label: "Pts", x: left + col.rank + col.name, width: col.points, anchor: "middle" },
+      { label: "Jug", x: left + col.rank + col.name + col.points, width: col.played, anchor: "middle" },
+      { label: "Gan", x: left + col.rank + col.name + col.points + col.played, width: col.wins, anchor: "middle" },
+      { label: "Per", x: left + col.rank + col.name + col.points + col.played + col.wins, width: col.losses, anchor: "middle" },
+      { label: "Exa", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses, width: col.exacts, anchor: "middle" },
+    ];
+    const tableWidth = usable;
+    const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleString("es-AR") : "Actualizando";
+    const rowsSvg = rows.map((row, index) => {
+      const y = tableTop + 56 + index * rowHeight;
+      const fill = index === 0 ? green : index >= rows.length - relegationCount ? "#ffe2dc" : index % 2 ? "#fff8ef" : cream;
+      return [
+        `<rect x="${left}" y="${y}" width="${tableWidth}" height="${rowHeight}" fill="${fill}" stroke="#d3cec4" stroke-width="2"/>`,
+        `<rect x="${left + col.rank + col.name}" y="${y}" width="${col.points}" height="${rowHeight}" fill="${red}" stroke="${ink}" stroke-width="2"/>`,
+        svgText(String(index + 1), left + col.rank / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(compactText(row.name, 18), left + col.rank + 16, y + 35, { size: 24, weight: 900, fill: ink }),
+        svgText(String(row.totalPoints), left + col.rank + col.name + col.points / 2, y + 38, { size: 34, weight: 900, fill: "#ffffff", anchor: "middle" }),
+        svgText(String(row.predictionMatchesPlayed), left + col.rank + col.name + col.points + col.played / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.predictionWins), left + col.rank + col.name + col.points + col.played + col.wins / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.predictionLosses), left + col.rank + col.name + col.points + col.played + col.wins + col.losses / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.exactHits + row.knockoutExactHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+      ].join("");
+    }).join("");
+    const headersSvg = headers.map((header) => {
+      const textX = header.anchor === "start" ? header.x + 16 : header.x + header.width / 2;
+      return [
+        `<rect x="${header.x}" y="${tableTop}" width="${header.width}" height="56" fill="${pale}" stroke="${ink}" stroke-width="2"/>`,
+        svgText(header.label, textX, tableTop + 36, { size: 19, weight: 900, fill: ink, anchor: header.anchor === "start" ? undefined : "middle" }),
+      ].join("");
+    }).join("");
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="${width}" height="${height}" fill="${cream}"/>
+      <rect x="0" y="0" width="${width}" height="128" fill="${red}"/>
+      ${svgText("CK", 64, 82, { size: 34, weight: 900, fill: "#fff" })}
+      ${svgText("Copa Kahl", 124, 70, { size: 48, weight: 900, fill: "#fff" })}
+      ${svgText("Tabla actual", 124, 108, { size: 24, weight: 900, fill: "#fff1ec" })}
+      <rect x="${left}" y="144" width="${tableWidth}" height="34" fill="#f4fff0" stroke="${ink}" stroke-width="2"/>
+      ${svgText(`${rows.length} participantes · ${data.playedMatches}/72 partidos · Actualizada ${updated}`, left + 16, 168, { size: 20, weight: 900, fill: muted })}
+      ${headersSvg}
+      ${rowsSvg || svgText("La tabla aparece cuando haya envios.", left + 20, tableTop + 98, { size: 28, weight: 900 })}
+      <rect x="${left}" y="${height - 46}" width="${tableWidth}" height="2" fill="${ink}"/>
+      ${svgText("Puntos, jugados, ganados, perdidos y exactos del prode.", left, height - 18, { size: 18, weight: 900, fill: muted })}
+    </svg>`;
+  }
+
+  async function shareStandingsImage() {
+    if (rows.length === 0 || shareStatus === "working") return;
+    setShareStatus("working");
+    setShareMessage("");
+    try {
+      const file = await svgToPngFile(buildStandingsShareSvg(), `copa-kahl-tabla-${new Date().toISOString().slice(0, 10)}.png`);
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: "Tabla Copa Kahl", text: "Tabla actual de la Copa Kahl", files: [file] });
+        setShareMessage("Imagen lista para compartir.");
+      } else {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        URL.revokeObjectURL(url);
+        setShareMessage("Imagen descargada.");
+      }
+    } catch (shareError) {
+      setShareMessage(shareError instanceof Error ? shareError.message : "No se pudo generar la imagen.");
+    } finally {
+      setShareStatus("idle");
+    }
   }
 
   const awards = useMemo(() => {
@@ -431,6 +581,27 @@ export default function TablaPage() {
             ) : null}
           </tbody>
         </table>
+      </section>
+
+      <section className="shareCardPanel standingsSharePanel" aria-label="Compartir tabla actual">
+        <div className="shareCardPreview">
+          <div>
+            <strong>Imagen para compartir la tabla</strong>
+            <p>{rows.length} participantes · {data.playedMatches}/72 partidos con resultado.</p>
+          </div>
+          <Trophy size={28} aria-hidden="true" />
+        </div>
+        <div className="shareActions">
+          <button className="primaryAction" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
+            {shareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
+            Compartir tabla
+          </button>
+          <button className="primaryAction light" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
+            <Download size={18} aria-hidden="true" />
+            Descargar imagen
+          </button>
+        </div>
+        {shareMessage ? <p className="shareMessage">{shareMessage}</p> : null}
       </section>
 
       <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">

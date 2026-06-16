@@ -54,7 +54,13 @@ function resultLabel(result: MatchResult | undefined) {
   return result ? `${result.homeGoals}-${result.awayGoals}` : "Pendiente";
 }
 
-function youtubeEmbedUrl(value: string | undefined) {
+function scorersLabel(result: MatchResult | undefined, side: "home" | "away") {
+  const scorers = result?.goalScorers?.filter((scorer) => scorer.team === side) ?? [];
+  if (scorers.length === 0) return "";
+  return scorers.map((scorer) => `${scorer.name}${scorer.minute ? ` ${scorer.minute}` : ""}`).join(", ");
+}
+
+function mediaEmbedUrl(value: string | undefined) {
   if (!value) return "";
   try {
     const url = new URL(value);
@@ -69,6 +75,16 @@ function youtubeEmbedUrl(value: string | undefined) {
       if (shortsMatch?.[1]) return `https://www.youtube.com/embed/${shortsMatch[1]}`;
       const embedMatch = url.pathname.match(/^\/embed\/([^/?]+)/);
       if (embedMatch?.[1]) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+    }
+    if (url.hostname === "dai.ly") {
+      const id = url.pathname.replace("/", "").split("_")[0];
+      return id ? `https://www.dailymotion.com/embed/video/${id}` : "";
+    }
+    if (url.hostname.endsWith("dailymotion.com")) {
+      const directMatch = url.pathname.match(/^\/video\/([^/?_]+)/);
+      if (directMatch?.[1]) return `https://www.dailymotion.com/embed/video/${directMatch[1]}`;
+      const embedMatch = url.pathname.match(/^\/embed\/video\/([^/?_]+)/);
+      if (embedMatch?.[1]) return `https://www.dailymotion.com/embed/video/${embedMatch[1]}`;
     }
   } catch {
     return "";
@@ -320,7 +336,10 @@ export default function PronosticosPage() {
   const totalParticipants = data?.submissions.length ?? 0;
   const selectedResult = resultByMatch.get(selectedMatch.id);
   const selectedHighlightUrl = selectedResult?.highlightUrl;
-  const selectedEmbedUrl = youtubeEmbedUrl(selectedHighlightUrl);
+  const selectedEmbedUrl = mediaEmbedUrl(selectedHighlightUrl);
+  const homeScorersLabel = scorersLabel(selectedResult, "home");
+  const awayScorersLabel = scorersLabel(selectedResult, "away");
+  const hasGoalScorers = Boolean(homeScorersLabel || awayScorersLabel);
   const leader = data?.standings[0];
 
   function buildShareSvg() {
@@ -530,6 +549,24 @@ export default function PronosticosPage() {
                 </button>
               ) : null}
             </div>
+            {hasGoalScorers ? (
+              <div className="goalScorerStrip" aria-label="Goles del partido">
+                {homeScorersLabel ? (
+                  <p>
+                    <TeamBadge compact team={selectedMatch.home} />
+                    <span>{homeScorersLabel}</span>
+                  </p>
+                ) : null}
+                {awayScorersLabel ? (
+                  <p>
+                    <TeamBadge compact team={selectedMatch.away} />
+                    <span>{awayScorersLabel}</span>
+                  </p>
+                ) : null}
+              </div>
+            ) : selectedResult ? (
+              <p className="goalScorerEmpty">Goleadores: sin datos cargados.</p>
+            ) : null}
           </div>
 
           {showGoalVideo && selectedHighlightUrl ? (

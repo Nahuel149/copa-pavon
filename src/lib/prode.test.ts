@@ -8,6 +8,7 @@ import {
   defaultClan,
   getOutcome,
   normalizeName,
+  parseScorerEvents,
   parseScorerNames,
   scoreSubmission,
   validateKnockoutSubmission,
@@ -319,6 +320,10 @@ describe("prode scoring", () => {
 
   it("parses scorer names from the automatic result source", () => {
     expect(parseScorerNames("{\"F. Balogun 31'\",\"L. Messi 90'+2'\"}")).toEqual(["F. Balogun", "L. Messi"]);
+    expect(parseScorerEvents("{\"F. Balogun 31'\",\"L. Messi 90'+2'\"}", "home")).toEqual([
+      { team: "home", name: "F. Balogun", minute: "31'" },
+      { team: "home", name: "L. Messi", minute: "90'+2'" },
+    ]);
   });
 
   it("adds one knockout point for a fuzzy scorer hit", () => {
