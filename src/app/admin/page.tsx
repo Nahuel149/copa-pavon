@@ -40,8 +40,12 @@ type SyncResultsResponse = {
   results?: ResultStore;
   report?: {
     sourceUrl: string;
+    sourceUrls?: string[];
     imported: number;
+    added?: number;
+    corrected?: number;
     unchanged: number;
+    protected?: number;
     skipped: number;
     checkedAt: string;
   };
@@ -401,7 +405,7 @@ export default function AdminPage() {
     setKnockoutDraft(drafts.knockoutDraft);
     setManualAdjustments(body.results.manualAdjustments ?? []);
     setSyncSummary(
-      `Busqueda lista: ${body.report.imported} nuevos/actualizados, ${body.report.unchanged} sin cambios. Fuente: ${body.report.sourceUrl}`,
+      `Busqueda lista: ${body.report.imported} nuevos/actualizados, ${body.report.unchanged} sin cambios, ${body.report.protected ?? 0} protegidos por admin. Fuente: ${body.report.sourceUrl}`,
     );
     setStatus("ready");
   }

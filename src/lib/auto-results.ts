@@ -26,16 +26,29 @@ type WorldCup26Game = {
 
 export type SyncResultReport = {
   sourceUrl: string;
+  sourceUrls: string[];
   imported: number;
   added: number;
   corrected: number;
   unchanged: number;
+  protected: number;
   skipped: number;
   checkedAt: string;
 };
 
 let lastAutoSyncAt = 0;
 let autoSyncPromise: Promise<SyncResultReport> | null = null;
+
+function getSourceUrls() {
+  const configured = [
+    ...(process.env.PRODE_RESULTS_SYNC_URLS ?? "")
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean),
+    ...(process.env.PRODE_RESULTS_SYNC_URL ? [process.env.PRODE_RESULTS_SYNC_URL] : []),
+  ];
+  return Array.from(new Set(configured.length > 0 ? configured : [defaultSourceUrl]));
+}
 
 function parseScore(value: unknown) {
   if (typeof value === "number" && Number.isInteger(value)) return value;
@@ -63,6 +76,7 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
   let added = 0;
   let corrected = 0;
   let unchanged = 0;
+  let protectedCount = 0;
 
   for (const result of imported) {
     const previous = byMatch.get(result.matchId);
@@ -73,6 +87,10 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
       previous.outcome === result.outcome
     ) {
       unchanged += 1;
+      continue;
+    }
+    if (previous?.source === "manual") {
+      protectedCount += 1;
       continue;
     }
     byMatch.set(result.matchId, result);
@@ -86,6 +104,7 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
     added,
     corrected,
     unchanged,
+    protected: protectedCount,
     results: matches
       .map((match) => byMatch.get(match.id))
       .filter((result): result is MatchResult => Boolean(result)),
@@ -112,6 +131,7 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
   let added = 0;
   let corrected = 0;
   let unchanged = 0;
+  let protectedCount = 0;
 
   for (const result of imported) {
     const previous = byFixture.get(result.fixtureId);
@@ -126,6 +146,10 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
       unchanged += 1;
       continue;
     }
+    if (previous?.source === "manual") {
+      protectedCount += 1;
+      continue;
+    }
     byFixture.set(result.fixtureId, result);
     changed += 1;
     if (previous) corrected += 1;
@@ -137,6 +161,7 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
     added,
     corrected,
     unchanged,
+    protected: protectedCount,
     results: current
       .map((result) => byFixture.get(result.fixtureId))
       .filter((result): result is KnockoutResult => Boolean(result))
@@ -145,67 +170,82 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
 }
 
 export async function syncGroupMatchResults(current: ResultStore) {
-  const sourceUrl = process.env.PRODE_RESULTS_SYNC_URL ?? defaultSourceUrl;
-  const response = await fetch(sourceUrl, {
-    cache: "no-store",
-    headers: { accept: "application/json" },
-  });
-
-  if (!response.ok) {
-    throw new Error(`La fuente de resultados respondio ${response.status}.`);
-  }
-
-  const payload = await response.json();
-  const games = extractGames(payload);
-  const imported: MatchResult[] = [];
-  const importedKnockout: KnockoutResult[] = [];
+  const sourceUrls = getSourceUrls();
+  const importedByMatch = new Map<string, MatchResult>();
+  const importedKnockoutByFixture = new Map<string, KnockoutResult>();
   let skipped = 0;
+  let successfulSources = 0;
 
-  for (const game of games) {
-    const sourceId = Number(game.id);
-    const match = matches[sourceId - 1];
-    const gameType = String(game.type ?? "group").toLowerCase();
-    if (!isFinishedGame(game)) {
-      skipped += 1;
-      continue;
-    }
-
-    const homeGoals = parseScore(game.home_score);
-    const awayGoals = parseScore(game.away_score);
-    if (homeGoals === null || awayGoals === null || homeGoals > 30 || awayGoals > 30) {
-      skipped += 1;
-      continue;
-    }
-
-    if (gameType === "group" && match) {
-      imported.push({
-        matchId: match.id,
-        homeGoals,
-        awayGoals,
-        outcome: getOutcome(homeGoals, awayGoals),
-      });
-      continue;
-    }
-
-    const fixture = current.knockoutFixtures.find(
-      (item) =>
-        sameTeams(item.home, game.home_team_name_en) &&
-        sameTeams(item.away, game.away_team_name_en),
-    );
-    if (!fixture) {
-      skipped += 1;
-      continue;
-    }
-    importedKnockout.push({
-      fixtureId: fixture.id,
-      homeGoals,
-      awayGoals,
-      scorerNames: [...parseScorerNames(game.home_scorers), ...parseScorerNames(game.away_scorers)],
+  for (const sourceUrl of sourceUrls) {
+    const response = await fetch(sourceUrl, {
+      cache: "no-store",
+      headers: { accept: "application/json" },
     });
+
+    if (!response.ok) {
+      continue;
+    }
+
+    successfulSources += 1;
+    const payload = await response.json();
+    const games = extractGames(payload);
+
+    for (const game of games) {
+      const sourceId = Number(game.id);
+      const match = matches[sourceId - 1];
+      const gameType = String(game.type ?? "group").toLowerCase();
+      if (!isFinishedGame(game)) {
+        skipped += 1;
+        continue;
+      }
+
+      const homeGoals = parseScore(game.home_score);
+      const awayGoals = parseScore(game.away_score);
+      if (homeGoals === null || awayGoals === null || homeGoals > 30 || awayGoals > 30) {
+        skipped += 1;
+        continue;
+      }
+
+      if (gameType === "group" && match) {
+        if (!importedByMatch.has(match.id)) {
+          importedByMatch.set(match.id, {
+            matchId: match.id,
+            homeGoals,
+            awayGoals,
+            outcome: getOutcome(homeGoals, awayGoals),
+            source: "api",
+          });
+        }
+        continue;
+      }
+
+      const fixture = current.knockoutFixtures.find(
+        (item) =>
+          sameTeams(item.home, game.home_team_name_en) &&
+          sameTeams(item.away, game.away_team_name_en),
+      );
+      if (!fixture) {
+        skipped += 1;
+        continue;
+      }
+      if (!importedKnockoutByFixture.has(fixture.id)) {
+        importedKnockoutByFixture.set(fixture.id, {
+          fixtureId: fixture.id,
+          homeGoals,
+          awayGoals,
+          scorerNames: [...parseScorerNames(game.home_scorers), ...parseScorerNames(game.away_scorers)],
+          source: "api",
+        });
+      }
+    }
   }
 
-  const merged = mergeMatchResults(current.matchResults, imported);
-  const mergedKnockout = mergeKnockoutResults(current.knockoutResults, importedKnockout);
+  if (successfulSources === 0) {
+    throw new Error("No se pudo leer ninguna fuente de resultados.");
+  }
+
+  const merged = mergeMatchResults(current.matchResults, Array.from(importedByMatch.values()));
+  const mergedKnockout = mergeKnockoutResults(current.knockoutResults, Array.from(importedKnockoutByFixture.values()));
   const results = validateResultStore({
     ...current,
     matchResults: merged.results,
@@ -213,11 +253,13 @@ export async function syncGroupMatchResults(current: ResultStore) {
   });
 
   const report: SyncResultReport = {
-    sourceUrl,
+    sourceUrl: sourceUrls.join(", "),
+    sourceUrls,
     imported: merged.changed + mergedKnockout.changed,
     added: merged.added + mergedKnockout.added,
     corrected: merged.corrected + mergedKnockout.corrected,
     unchanged: merged.unchanged + mergedKnockout.unchanged,
+    protected: merged.protected + mergedKnockout.protected,
     skipped,
     checkedAt: new Date().toISOString(),
   };

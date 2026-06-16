@@ -85,6 +85,7 @@ export type MatchResult = {
   homeGoals: number;
   awayGoals: number;
   outcome: PredictionChoice;
+  source?: "api" | "manual";
 };
 
 export type GroupResult = {
@@ -98,6 +99,7 @@ export type KnockoutResult = {
   homeGoals: number;
   awayGoals: number;
   scorerNames?: string[];
+  source?: "api" | "manual";
 };
 
 export type ManualPointAdjustment = {
@@ -515,6 +517,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       homeGoals,
       awayGoals,
       outcome: getOutcome(homeGoals, awayGoals),
+      ...(item.source === "manual" || item.source === "api" ? { source: item.source } : {}),
     });
   }
 
@@ -569,6 +572,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       homeGoals,
       awayGoals,
       ...(scorerNames.length > 0 ? { scorerNames } : {}),
+      ...(item.source === "manual" || item.source === "api" ? { source: item.source } : {}),
     });
   }
 

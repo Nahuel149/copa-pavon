@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { appendAuditEvent, readResultStore, writeResultStore } from "@/lib/storage";
-import { validateResultStore } from "@/lib/prode";
+import { validateResultStore, type ResultStore } from "@/lib/prode";
 import { syncGroupMatchResults } from "@/lib/auto-results";
 
 export const runtime = "nodejs";
@@ -12,6 +12,14 @@ function adminAllowed(request: Request) {
   const url = new URL(request.url);
   const providedPin = request.headers.get("x-prode-admin-pin") ?? url.searchParams.get("pin");
   return providedPin === requiredPin;
+}
+
+function markAdminResultsAsManual(results: ResultStore): ResultStore {
+  return {
+    ...results,
+    matchResults: results.matchResults.map((result) => ({ ...result, source: "manual" })),
+    knockoutResults: results.knockoutResults.map((result) => ({ ...result, source: "manual" })),
+  };
 }
 
 export async function GET(request: Request) {
@@ -35,30 +43,17 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "No se pudieron leer los resultados." }, { status: 400 });
   }
 
-  let syncReport = null;
-  let authoritativeResults = validateResultStore(payload);
-  try {
-    const synced = await syncGroupMatchResults(authoritativeResults);
-    authoritativeResults = synced.results;
-    syncReport = synced.report;
-  } catch {
-    syncReport = null;
-  }
-
-  const results = await writeResultStore(authoritativeResults);
+  const results = await writeResultStore(markAdminResultsAsManual(validateResultStore(payload)));
   await appendAuditEvent({
     actor: "admin",
     type: "results",
-    message: syncReport?.corrected
-      ? "Guardo resultados oficiales y corrigio marcadores con la API."
-      : "Guardo resultados oficiales.",
+    message: "Guardo resultados oficiales manuales.",
     meta: {
       matchResults: results.matchResults.length,
       groupResults: results.groupResults.length,
       knockoutResults: results.knockoutResults.length,
       manualAdjustments: results.manualAdjustments?.length ?? 0,
-      sourceCorrections: syncReport?.corrected ?? 0,
-      sourceAdded: syncReport?.added ?? 0,
+      manualResults: results.matchResults.filter((result) => result.source === "manual").length,
     },
   });
   return NextResponse.json(results);
