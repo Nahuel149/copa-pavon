@@ -93,7 +93,10 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
       protectedCount += 1;
       continue;
     }
-    byMatch.set(result.matchId, result);
+    byMatch.set(result.matchId, {
+      ...result,
+      ...(previous?.highlightUrl ? { highlightUrl: previous.highlightUrl } : {}),
+    });
     changed += 1;
     if (previous) corrected += 1;
     else added += 1;

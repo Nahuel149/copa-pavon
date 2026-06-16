@@ -85,6 +85,7 @@ export type MatchResult = {
   homeGoals: number;
   awayGoals: number;
   outcome: PredictionChoice;
+  highlightUrl?: string;
   source?: "api" | "manual";
 };
 
@@ -305,6 +306,15 @@ function parseGoal(value: unknown) {
   return null;
 }
 
+function isSafeHttpUrl(value: string) {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 function isGroupId(value: unknown): value is GroupId {
   return typeof value === "string" && groupMap.has(value as GroupId);
 }
@@ -517,6 +527,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       homeGoals,
       awayGoals,
       outcome: getOutcome(homeGoals, awayGoals),
+      ...(typeof item.highlightUrl === "string" && isSafeHttpUrl(item.highlightUrl) ? { highlightUrl: item.highlightUrl.trim() } : {}),
       ...(item.source === "manual" || item.source === "api" ? { source: item.source } : {}),
     });
   }

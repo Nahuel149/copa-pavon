@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Download, Eye, Loader2, Share2, Target, Trophy, Users } from "lucide-react";
+import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2, Target, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
@@ -52,6 +52,28 @@ function percent(value: number, total: number) {
 
 function resultLabel(result: MatchResult | undefined) {
   return result ? `${result.homeGoals}-${result.awayGoals}` : "Pendiente";
+}
+
+function youtubeEmbedUrl(value: string | undefined) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    if (url.hostname === "youtu.be") {
+      const id = url.pathname.replace("/", "");
+      return id ? `https://www.youtube.com/embed/${id}` : "";
+    }
+    if (url.hostname.endsWith("youtube.com")) {
+      const id = url.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}`;
+      const shortsMatch = url.pathname.match(/^\/shorts\/([^/?]+)/);
+      if (shortsMatch?.[1]) return `https://www.youtube.com/embed/${shortsMatch[1]}`;
+      const embedMatch = url.pathname.match(/^\/embed\/([^/?]+)/);
+      if (embedMatch?.[1]) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+    }
+  } catch {
+    return "";
+  }
+  return "";
 }
 
 function escapeXml(value: string) {
@@ -113,6 +135,7 @@ export default function PronosticosPage() {
   const [shareDay, setShareDay] = useState(matches[0].dateLabel);
   const [shareStatus, setShareStatus] = useState<"idle" | "working">("idle");
   const [shareMessage, setShareMessage] = useState("");
+  const [showGoalVideo, setShowGoalVideo] = useState(false);
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
 
@@ -134,6 +157,10 @@ export default function PronosticosPage() {
   useEffect(() => {
     void loadData();
   }, []);
+
+  useEffect(() => {
+    setShowGoalVideo(false);
+  }, [selectedMatchId]);
 
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? roundMatches[0] ?? matches[0];
@@ -292,6 +319,8 @@ export default function PronosticosPage() {
 
   const totalParticipants = data?.submissions.length ?? 0;
   const selectedResult = resultByMatch.get(selectedMatch.id);
+  const selectedHighlightUrl = selectedResult?.highlightUrl;
+  const selectedEmbedUrl = youtubeEmbedUrl(selectedHighlightUrl);
   const leader = data?.standings[0];
 
   function buildShareSvg() {
@@ -492,8 +521,38 @@ export default function PronosticosPage() {
           <div className="matchFocus">
             <span>Grupo {selectedMatch.groupId} · {selectedMatch.exactScore ? "Marcador exacto" : "1X2"}</span>
             <h2><TeamBadge team={selectedMatch.home} /> <b>vs</b> <TeamBadge team={selectedMatch.away} /></h2>
-            <p>Resultado oficial: <strong>{resultLabel(selectedResult)}</strong></p>
+            <div className="matchResultLine">
+              <p>Resultado oficial: <strong>{resultLabel(selectedResult)}</strong></p>
+              {selectedHighlightUrl ? (
+                <button className="matchVideoButton" type="button" onClick={() => setShowGoalVideo((current) => !current)}>
+                  <PlayCircle size={18} aria-hidden="true" />
+                  {showGoalVideo ? "Ocultar resumen" : "Resumen de goles"}
+                </button>
+              ) : null}
+            </div>
           </div>
+
+          {showGoalVideo && selectedHighlightUrl ? (
+            <section className="matchVideoPanel" aria-label="Resumen de goles">
+              <div>
+                <PlayCircle size={20} aria-hidden="true" />
+                <strong>Resumen de goles</strong>
+              </div>
+              {selectedEmbedUrl ? (
+                <iframe
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  src={selectedEmbedUrl}
+                  title={`Resumen ${selectedMatch.home} vs ${selectedMatch.away}`}
+                />
+              ) : (
+                <a href={selectedHighlightUrl} rel="noreferrer" target="_blank">
+                  <ExternalLink size={18} aria-hidden="true" />
+                  Abrir resumen
+                </a>
+              )}
+            </section>
+          ) : null}
 
           <div className="pollGrid" aria-label="Porcentajes del partido">
             {choiceOrder.map((choice) => {

@@ -65,7 +65,7 @@ function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
 }
 
-type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; scorerNames?: string }>;
+type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; highlightUrl?: string; scorerNames?: string }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
 
 function isoToLocalInput(value: string) {
@@ -94,10 +94,12 @@ const emptyGroupResults = groups.reduce<GroupResultDraft>((draft, group) => {
 function scoreFromDraft(matchId: string, draft: ResultDraft) {
   const value = draft[matchId];
   if (!value.homeGoals || !value.awayGoals) return null;
+  const highlightUrl = value.highlightUrl?.trim();
   return {
     matchId,
     homeGoals: Number(value.homeGoals),
     awayGoals: Number(value.awayGoals),
+    ...(highlightUrl ? { highlightUrl } : {}),
   };
 }
 
@@ -154,6 +156,7 @@ function draftFromResults(results: ResultStore) {
     matchDraft[result.matchId] = {
       homeGoals: String(result.homeGoals),
       awayGoals: String(result.awayGoals),
+      highlightUrl: result.highlightUrl ?? "",
     };
   }
 
@@ -452,6 +455,13 @@ export default function AdminPage() {
     }));
   }
 
+  function setResultHighlight(matchId: string, value: string) {
+    setMatchDraft((current) => ({
+      ...current,
+      [matchId]: { ...current[matchId], highlightUrl: value },
+    }));
+  }
+
   function setGroupResult(groupId: GroupId, side: "first" | "second", value: string) {
     setGroupDraft((current) => ({
       ...current,
@@ -743,6 +753,16 @@ export default function AdminPage() {
                   />
                 </label>
               </div>
+              <label className="highlightUrlInput">
+                <span>Video resumen</span>
+                <input
+                  type="url"
+                  value={value.highlightUrl ?? ""}
+                  onChange={(event) => setResultHighlight(match.id, event.target.value)}
+                  placeholder="https://..."
+                  aria-label={`Video resumen de ${match.home} vs ${match.away}`}
+                />
+              </label>
             </article>
           );
         })}
