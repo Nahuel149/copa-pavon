@@ -137,6 +137,9 @@ describe("prode scoring", () => {
     expect(row.matchPoints).toBe(3);
     expect(row.exactHits).toBe(1);
     expect(row.winnerHits).toBe(1);
+    expect(row.predictionMatchesPlayed).toBe(2);
+    expect(row.predictionWins).toBe(2);
+    expect(row.predictionLosses).toBe(0);
   });
 
   it("scores group top 2 without caring about order", () => {
@@ -167,6 +170,9 @@ describe("prode scoring", () => {
 
     expect(row.knockoutPoints).toBe(3);
     expect(row.knockoutExactHits).toBe(0);
+    expect(row.knockoutWinnerHits).toBe(1);
+    expect(row.predictionMatchesPlayed).toBe(1);
+    expect(row.predictionWins).toBe(1);
   });
 
   it("scores final exact result with final exact points", () => {
@@ -184,6 +190,26 @@ describe("prode scoring", () => {
 
     expect(row.knockoutPoints).toBe(8);
     expect(row.knockoutExactHits).toBe(1);
+    expect(row.knockoutWinnerHits).toBe(0);
+    expect(row.predictionMatchesPlayed).toBe(1);
+    expect(row.predictionWins).toBe(1);
+  });
+
+  it("tracks played, won and lost predictions and keeps point totals consistent", () => {
+    const row = scoreSubmission(submissionFromPayload("Nahuel"), {
+      ...emptyResults,
+      matchResults: [
+        { matchId: "m-04", homeGoals: 2, awayGoals: 1, outcome: "home" },
+        { matchId: "m-01", homeGoals: 0, awayGoals: 1, outcome: "away" },
+      ],
+      groupResults: [{ groupId: "A", first: groups[0].teams[1], second: groups[0].teams[0] }],
+      manualAdjustments: [{ normalizedName: "nahuel", points: 1, reason: "Ajuste" }],
+    });
+
+    expect(row.predictionMatchesPlayed).toBe(2);
+    expect(row.predictionWins).toBe(1);
+    expect(row.predictionLosses).toBe(1);
+    expect(row.totalPoints).toBe(row.matchPoints + row.groupPoints + row.knockoutPoints + row.manualAdjustmentPoints);
   });
 
   it("accumulates standings automatically from official results", () => {

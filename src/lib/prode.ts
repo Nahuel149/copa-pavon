@@ -127,11 +127,15 @@ export type StandingRow = {
   winnerHits: number;
   groupHits: number;
   knockoutExactHits: number;
+  knockoutWinnerHits: number;
   knockoutScorerHits: number;
   manualAdjustmentPoints: number;
   playedMatches: number;
   decidedGroups: number;
   playedKnockoutMatches: number;
+  predictionMatchesPlayed: number;
+  predictionWins: number;
+  predictionLosses: number;
 };
 
 type RawPrediction = {
@@ -641,7 +645,10 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   let winnerHits = 0;
   let groupHits = 0;
   let knockoutExactHits = 0;
+  let knockoutWinnerHits = 0;
   let knockoutScorerHits = 0;
+  let playedMatchPredictions = 0;
+  let playedKnockoutPredictions = 0;
   const manualAdjustmentPoints = (results.manualAdjustments ?? [])
     .filter((adjustment) => adjustment.normalizedName === submission.normalizedName)
     .reduce((total, adjustment) => total + adjustment.points, 0);
@@ -649,6 +656,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   for (const prediction of submission.predictions) {
     const result = resultByMatch.get(prediction.matchId);
     if (!result) continue;
+    playedMatchPredictions += 1;
 
     if (
       prediction.type === "score" &&
@@ -681,12 +689,14 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     const result = knockoutResultByFixture.get(prediction.fixtureId);
     const fixture = knockoutFixtureById.get(prediction.fixtureId);
     if (!result) continue;
+    playedKnockoutPredictions += 1;
     const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
     if (prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals) {
       knockoutPoints += scoring.exact;
       knockoutExactHits += 1;
     } else if (getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals)) {
       knockoutPoints += scoring.winner;
+      knockoutWinnerHits += 1;
     }
 
     if (knockoutScorerBonusMatches(prediction, result)) {
@@ -694,6 +704,9 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
       knockoutScorerHits += 1;
     }
   }
+
+  const predictionMatchesPlayed = playedMatchPredictions + playedKnockoutPredictions;
+  const predictionWins = exactHits + winnerHits + knockoutExactHits + knockoutWinnerHits;
 
   return {
     submissionId: submission.id,
@@ -707,11 +720,15 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     winnerHits,
     groupHits,
     knockoutExactHits,
+    knockoutWinnerHits,
     knockoutScorerHits,
     manualAdjustmentPoints,
     playedMatches: results.matchResults.length,
     decidedGroups: results.groupResults.length,
     playedKnockoutMatches: results.knockoutResults.length,
+    predictionMatchesPlayed,
+    predictionWins,
+    predictionLosses: Math.max(predictionMatchesPlayed - predictionWins, 0),
   };
 }
 

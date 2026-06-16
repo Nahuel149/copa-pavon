@@ -179,7 +179,7 @@ export default function TablaPage() {
         label: "Puntos en eliminatorias",
         value: row.knockoutPoints,
         help: "Incluye exactos, clasificados y bonus de goleador.",
-        meta: `${row.knockoutExactHits} exactos · ${row.knockoutScorerHits} goleadores · ${row.playedKnockoutMatches} jugados`,
+        meta: `${row.knockoutExactHits} exactos · ${row.knockoutWinnerHits} clasificados · ${row.knockoutScorerHits} goleadores`,
       },
       {
         label: "Aciertos en goleadores",
@@ -321,7 +321,7 @@ export default function TablaPage() {
           <div>
             <span>
               Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
-              de eliminatorias. {movementBaseLabel}.
+              de eliminatorias. Ganados/perdidos son aciertos y errores del prode. {movementBaseLabel}.
             </span>
             {fullGraphHistory.length > 1 ? (
               <div className="movementCutSelector" role="group" aria-label="Elegir tramo de cambios de posiciones">
@@ -347,6 +347,9 @@ export default function TablaPage() {
             <tr>
               <th>#</th>
               <th>Participante</th>
+              <th>Jugados</th>
+              <th>Ganados</th>
+              <th>Perdidos</th>
               <th>Puntos</th>
               <th>Exactos</th>
             </tr>
@@ -369,12 +372,15 @@ export default function TablaPage() {
                         {row.name}
                       </button>
                     </td>
+                    <td>{row.predictionMatchesPlayed}</td>
+                    <td>{row.predictionWins}</td>
+                    <td>{row.predictionLosses}</td>
                     <td>{row.totalPoints}</td>
                     <td>{row.exactHits + row.knockoutExactHits}</td>
                   </tr>
                   {expandedPlayerId === row.submissionId ? (
                     <tr className="detailRow">
-                      <td colSpan={4}>
+                      <td colSpan={7}>
                         <div className="playerPointPanel">
                           <div className="playerPointSummary">
                             <div>
