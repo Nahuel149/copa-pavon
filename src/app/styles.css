@@ -2734,108 +2734,151 @@ tbody tr.relegationRow:hover {
   }
 
   .standingsTable,
+  .standingsTable thead,
   .standingsTable tbody {
-    display: block;
+    display: table;
     width: 100%;
   }
 
-  .standingsTable thead {
-    display: none;
+  .standingsTable {
+    table-layout: fixed;
+    border-collapse: collapse;
   }
 
   .standingsTable tr {
-    display: grid;
-    grid-template-columns: 78px minmax(0, 1fr);
-    gap: 0;
-    padding: 10px;
-    border-bottom: 2px solid rgba(5, 5, 5, 0.18);
+    display: table-row;
+    padding: 0;
+    border-bottom: 0;
   }
 
   .standingsTable tr.detailRow {
-    display: block;
+    display: table-row;
     padding: 0;
   }
 
   .standingsTable tr.detailRow td {
-    display: block;
-    padding: 0;
-    border-bottom: 0;
+    display: table-cell;
+    padding: 8px 4px;
   }
 
   .standingsTable td {
-    display: flex;
+    display: table-cell;
     min-width: 0;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 6px;
-    border-bottom: 0;
-    font-size: 0.82rem;
+    padding: 7px 3px;
+    border-bottom: 2px solid rgba(5, 5, 5, 0.16);
+    font-size: 0.72rem;
+    line-height: 1.12;
+    text-align: center;
+    vertical-align: middle;
   }
 
   .standingsTable td::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font-size: 0.68rem;
-    font-weight: 900;
-    text-transform: uppercase;
+    content: none;
   }
 
   .standingsTable .pointsCell {
-    grid-row: span 12;
-    align-self: stretch;
-    justify-content: center;
-    border: 3px solid var(--ink);
+    width: 44px;
+    border-right: 2px solid var(--ink);
     background: var(--red);
     color: #fff;
-    box-shadow: 4px 4px 0 var(--ink);
-  }
-
-  .standingsTable .pointsCell::before {
-    color: rgba(255, 255, 255, 0.86);
   }
 
   .standingsTable .pointsCell strong {
-    min-width: 0;
-    min-height: 0;
+    min-width: 34px;
+    min-height: 28px;
     border: 0;
     background: transparent;
     box-shadow: none;
-    font-size: 2rem;
+    font-size: 1.08rem;
   }
 
   .standingsTable .playerCell {
     min-width: 0;
-    justify-content: flex-start;
-  }
-
-  .standingsTable .playerCell::before {
-    display: none;
+    text-align: left;
   }
 
   .standingsTable .playerCell .tableButton,
   .adminStandingsTable .playerCell {
+    display: block;
     max-width: 100%;
-    overflow-wrap: anywhere;
-    font-size: 0.95rem;
+    overflow: hidden;
+    padding: 4px 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
     font-weight: 900;
   }
 
   .publicStandingsTable td:nth-child(n + 4),
   .adminStandingsTable td:nth-child(n + 4) {
-    border-top: 1px solid rgba(5, 5, 5, 0.12);
+    border-top: 0;
   }
 
-  .publicStandingsTable td:nth-child(n + 4) {
-    grid-column: 2;
+  .standingsTable th {
+    padding: 7px 3px;
+    font-size: 0.62rem;
+    text-align: center;
+    white-space: nowrap;
   }
 
-  .adminStandingsTable tr {
-    grid-template-columns: 78px minmax(0, 1fr);
+  .publicStandingsTable th:nth-child(1),
+  .publicStandingsTable td:nth-child(1),
+  .adminStandingsTable th:nth-child(1),
+  .adminStandingsTable td:nth-child(1) {
+    width: 46px;
   }
 
-  .adminStandingsTable .playerCell {
-    grid-column: 2;
+  .publicStandingsTable th:nth-child(2),
+  .publicStandingsTable td:nth-child(2),
+  .adminStandingsTable th:nth-child(2),
+  .adminStandingsTable td:nth-child(2) {
+    width: 42px;
+  }
+
+  .publicStandingsTable th:nth-child(3),
+  .publicStandingsTable td:nth-child(3),
+  .adminStandingsTable th:nth-child(3),
+  .adminStandingsTable td:nth-child(3) {
+    width: auto;
+  }
+
+  .publicStandingsTable th:nth-child(4),
+  .publicStandingsTable td:nth-child(4),
+  .publicStandingsTable th:nth-child(5),
+  .publicStandingsTable td:nth-child(5),
+  .publicStandingsTable th:nth-child(6),
+  .publicStandingsTable td:nth-child(6) {
+    width: 38px;
+  }
+
+  .publicStandingsTable th:nth-child(7),
+  .publicStandingsTable td:nth-child(7) {
+    width: 32px;
+  }
+
+  .adminStandingsTable th:nth-child(4),
+  .adminStandingsTable td:nth-child(4),
+  .adminStandingsTable th:nth-child(8),
+  .adminStandingsTable td:nth-child(8),
+  .adminStandingsTable th:nth-child(9),
+  .adminStandingsTable td:nth-child(9),
+  .adminStandingsTable th:nth-child(11),
+  .adminStandingsTable td:nth-child(11) {
+    display: none;
+  }
+
+  .adminStandingsTable th:nth-child(5),
+  .adminStandingsTable td:nth-child(5),
+  .adminStandingsTable th:nth-child(6),
+  .adminStandingsTable td:nth-child(6),
+  .adminStandingsTable th:nth-child(7),
+  .adminStandingsTable td:nth-child(7) {
+    width: 38px;
+  }
+
+  .adminStandingsTable th:nth-child(10),
+  .adminStandingsTable td:nth-child(10) {
+    width: 32px;
   }
 
   .positionCell {
