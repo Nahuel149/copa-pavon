@@ -347,6 +347,15 @@ export default function TablaPage() {
           </div>
         </div>
         <table className="standingsTable publicStandingsTable">
+          <colgroup>
+            <col className="standingPositionCol" />
+            <col className="standingPlayerCol" />
+            <col className="standingPointsCol" />
+            <col className="standingMetricCol" />
+            <col className="standingMetricCol" />
+            <col className="standingMetricCol" />
+            <col className="standingExactCol" />
+          </colgroup>
           <thead>
             <tr>
               <th>#</th>

@@ -2734,10 +2734,17 @@ tbody tr.relegationRow:hover {
   }
 
   .standingsTable,
-  .standingsTable thead,
   .standingsTable tbody {
     display: table;
     width: 100%;
+  }
+
+  .standingsTable thead {
+    display: table-header-group;
+  }
+
+  .standingsTable tbody {
+    display: table-row-group;
   }
 
   .standingsTable {
@@ -2764,9 +2771,9 @@ tbody tr.relegationRow:hover {
   .standingsTable td {
     display: table-cell;
     min-width: 0;
-    padding: 7px 3px;
+    padding: 7px 2px;
     border-bottom: 2px solid rgba(5, 5, 5, 0.16);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     line-height: 1.12;
     text-align: center;
     vertical-align: middle;
@@ -2777,14 +2784,13 @@ tbody tr.relegationRow:hover {
   }
 
   .standingsTable .pointsCell {
-    width: 44px;
     border-right: 2px solid var(--ink);
     background: var(--red);
     color: #fff;
   }
 
   .standingsTable .pointsCell strong {
-    min-width: 34px;
+    min-width: 30px;
     min-height: 28px;
     border: 0;
     background: transparent;
@@ -2815,10 +2821,36 @@ tbody tr.relegationRow:hover {
   }
 
   .standingsTable th {
-    padding: 7px 3px;
-    font-size: 0.62rem;
+    overflow: hidden;
+    padding: 7px 2px;
+    font-size: 0.54rem;
     text-align: center;
+    text-overflow: clip;
     white-space: nowrap;
+  }
+
+  .standingsTable col.standingPositionCol {
+    width: 38px;
+  }
+
+  .standingsTable col.standingPlayerCol {
+    width: 74px;
+  }
+
+  .standingsTable col.standingPointsCol {
+    width: 38px;
+  }
+
+  .standingsTable col.standingMetricCol {
+    width: 33px;
+  }
+
+  .standingsTable col.standingExactCol {
+    width: 29px;
+  }
+
+  .adminStandingsTable col.standingHiddenMobileCol {
+    display: none;
   }
 
   .publicStandingsTable th:nth-child(1),
@@ -2839,7 +2871,7 @@ tbody tr.relegationRow:hover {
   .publicStandingsTable td:nth-child(3),
   .adminStandingsTable th:nth-child(3),
   .adminStandingsTable td:nth-child(3) {
-    width: 46px;
+    width: 38px;
   }
 
   .publicStandingsTable th:nth-child(4),
@@ -2848,12 +2880,12 @@ tbody tr.relegationRow:hover {
   .publicStandingsTable td:nth-child(5),
   .publicStandingsTable th:nth-child(6),
   .publicStandingsTable td:nth-child(6) {
-    width: 37px;
+    width: 33px;
   }
 
   .publicStandingsTable th:nth-child(7),
   .publicStandingsTable td:nth-child(7) {
-    width: 32px;
+    width: 29px;
   }
 
   .adminStandingsTable th:nth-child(4),
@@ -2873,12 +2905,12 @@ tbody tr.relegationRow:hover {
   .adminStandingsTable td:nth-child(6),
   .adminStandingsTable th:nth-child(7),
   .adminStandingsTable td:nth-child(7) {
-    width: 37px;
+    width: 33px;
   }
 
   .adminStandingsTable th:nth-child(10),
   .adminStandingsTable td:nth-child(10) {
-    width: 32px;
+    width: 29px;
   }
 
   .positionCell {

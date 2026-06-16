@@ -633,6 +633,19 @@ export default function AdminPage() {
         <summary>Tabla y puntos</summary>
       <section className="tableShell">
         <table className="standingsTable adminStandingsTable">
+          <colgroup>
+            <col className="standingPositionCol" />
+            <col className="standingPlayerCol" />
+            <col className="standingPointsCol" />
+            <col className="standingHiddenMobileCol" />
+            <col className="standingMetricCol" />
+            <col className="standingMetricCol" />
+            <col className="standingMetricCol" />
+            <col className="standingHiddenMobileCol" />
+            <col className="standingHiddenMobileCol" />
+            <col className="standingExactCol" />
+            <col className="standingHiddenMobileCol" />
+          </colgroup>
           <thead>
             <tr>
               <th>#</th>
