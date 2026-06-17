@@ -17,12 +17,14 @@ const storePath = path.join(dataDir, "submissions.json");
 const resultsPath = path.join(dataDir, "results.json");
 const settingsPath = path.join(dataDir, "settings.json");
 const auditPath = path.join(dataDir, "audit-log.json");
+const commentsPath = path.join(dataDir, "comments.json");
 const mongoUri = process.env.MONGODB_URI;
 const mongoDbName = process.env.MONGODB_DB ?? "copa_kahl";
 const submissionsCollectionName = process.env.MONGODB_SUBMISSIONS_COLLECTION ?? "submissions";
 const resultsCollectionName = process.env.MONGODB_RESULTS_COLLECTION ?? "results";
 const settingsCollectionName = process.env.MONGODB_SETTINGS_COLLECTION ?? "settings";
 const auditCollectionName = process.env.MONGODB_AUDIT_COLLECTION ?? "auditLog";
+const commentsCollectionName = process.env.MONGODB_COMMENTS_COLLECTION ?? "comments";
 const resultsDocumentId = "current";
 const settingsDocumentId = "current";
 
@@ -41,6 +43,13 @@ export type AuditEvent = {
   message: string;
   createdAt: string;
   meta?: Record<string, unknown>;
+};
+
+export type TablaComment = {
+  id: string;
+  name: string;
+  comment: string;
+  createdAt: string;
 };
 
 let mongoClientPromise: Promise<MongoClient> | null = null;
@@ -63,6 +72,7 @@ async function getMongoCollections(): Promise<{
   results: Collection<Document>;
   settings: Collection<Document>;
   audit: Collection<Document>;
+  comments: Collection<Document>;
 } | null> {
   const db = await getMongoDb();
   if (!db) return null;
@@ -70,12 +80,13 @@ async function getMongoCollections(): Promise<{
   const results = db.collection<Document>(resultsCollectionName);
   const settings = db.collection<Document>(settingsCollectionName);
   const audit = db.collection<Document>(auditCollectionName);
+  const comments = db.collection<Document>(commentsCollectionName);
   if (!indexesReady) {
     await submissions.createIndex({ normalizedName: 1 }, { unique: true, name: "unique_normalized_name" });
     await submissions.createIndex({ clan: 1, createdAt: -1 }, { name: "clan_created_at" });
     indexesReady = true;
   }
-  return { submissions, results, settings, audit };
+  return { submissions, results, settings, audit, comments };
 }
 
 function cleanSettings(settings: Partial<AppSettings> | null | undefined): AppSettings {
@@ -377,4 +388,57 @@ export async function readAuditEvents(limit = 80) {
   const raw = await fs.readFile(auditPath, "utf8");
   const store = JSON.parse(raw) as { events?: AuditEvent[] };
   return (Array.isArray(store.events) ? store.events : []).slice(0, limit);
+}
+
+async function ensureCommentsFile() {
+  await fs.mkdir(dataDir, { recursive: true });
+  try {
+    await fs.access(commentsPath);
+  } catch {
+    await fs.writeFile(commentsPath, JSON.stringify({ comments: [] }, null, 2), "utf8");
+  }
+}
+
+function cleanComment(comment: Document | TablaComment): TablaComment {
+  return {
+    id: String(comment.id ?? ("_id" in comment ? comment._id : `${Date.now()}`)),
+    name: String(comment.name ?? "").trim().replace(/\s+/g, " ").slice(0, 40),
+    comment: String(comment.comment ?? "").trim().replace(/\s+/g, " ").slice(0, 240),
+    createdAt: typeof comment.createdAt === "string" ? comment.createdAt : new Date().toISOString(),
+  };
+}
+
+export async function readTablaComments(limit = 40) {
+  const collections = await getMongoCollections();
+  if (collections) {
+    const comments = await collections.comments.find({}).sort({ createdAt: -1 }).limit(limit).toArray();
+    return comments.map(cleanComment).filter((comment) => comment.name && comment.comment);
+  }
+
+  await ensureCommentsFile();
+  const raw = await fs.readFile(commentsPath, "utf8");
+  const store = JSON.parse(raw) as { comments?: TablaComment[] };
+  return (Array.isArray(store.comments) ? store.comments : []).map(cleanComment).filter((comment) => comment.name && comment.comment).slice(0, limit);
+}
+
+export async function appendTablaComment(input: { name: string; comment: string }) {
+  const entry: TablaComment = {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    name: input.name.trim().replace(/\s+/g, " ").slice(0, 40),
+    comment: input.comment.trim().replace(/\s+/g, " ").slice(0, 240),
+    createdAt: new Date().toISOString(),
+  };
+  const collections = await getMongoCollections();
+  if (collections) {
+    await collections.comments.insertOne(entry as Document);
+    return entry;
+  }
+
+  await ensureCommentsFile();
+  const raw = await fs.readFile(commentsPath, "utf8");
+  const store = JSON.parse(raw) as { comments?: TablaComment[] };
+  const comments = Array.isArray(store.comments) ? store.comments : [];
+  comments.unshift(entry);
+  await fs.writeFile(commentsPath, JSON.stringify({ comments: comments.slice(0, 200) }, null, 2), "utf8");
+  return entry;
 }

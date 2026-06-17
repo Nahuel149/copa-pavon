@@ -1,8 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
-import { Brackets, Download, Loader2, RefreshCw, Share2, Trophy, Users } from "lucide-react";
-import { KahlImageScatter } from "@/app/components/KahlImageScatter";
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Download, Loader2, MessageSquare, RefreshCw, Send, Share2, Trophy } from "lucide-react";
 import { readJsonResponse } from "@/lib/client-json";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
@@ -82,6 +81,19 @@ type StandingsResponse = {
   error?: string;
 };
 
+type TablaComment = {
+  id: string;
+  name: string;
+  comment: string;
+  createdAt: string;
+};
+
+type CommentsResponse = {
+  comments?: TablaComment[];
+  comment?: TablaComment;
+  error?: string;
+};
+
 export default function TablaPage() {
   const [data, setData] = useState<StandingsResponse>({
     standings: [],
@@ -102,6 +114,11 @@ export default function TablaPage() {
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<"idle" | "working">("idle");
   const [shareMessage, setShareMessage] = useState("");
+  const [comments, setComments] = useState<TablaComment[]>([]);
+  const [commentName, setCommentName] = useState("");
+  const [commentText, setCommentText] = useState("");
+  const [commentStatus, setCommentStatus] = useState<"idle" | "saving">("idle");
+  const [commentMessage, setCommentMessage] = useState("");
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
@@ -422,8 +439,52 @@ export default function TablaPage() {
     }
   }
 
+  async function loadComments() {
+    try {
+      const response = await fetch("/api/comments", { cache: "no-store" });
+      const body = await readJsonResponse<CommentsResponse>(response);
+      if (response.ok && Array.isArray(body.comments)) setComments(body.comments);
+    } catch {
+      // Comments are secondary; keep the table usable if they fail.
+    }
+  }
+
+  async function submitComment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = commentName.trim();
+    const comment = commentText.trim();
+    if (name.length < 2) {
+      setCommentMessage("Escribi tu nombre.");
+      return;
+    }
+    if (comment.length < 2) {
+      setCommentMessage("Escribi un comentario.");
+      return;
+    }
+
+    setCommentStatus("saving");
+    setCommentMessage("");
+    try {
+      const response = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, comment }),
+      });
+      const body = await readJsonResponse<CommentsResponse>(response);
+      if (!response.ok || body.error || !body.comment) throw new Error(body.error ?? "No se pudo guardar el comentario.");
+      setComments((current) => [body.comment as TablaComment, ...current].slice(0, 40));
+      setCommentText("");
+      setCommentMessage("Comentario publicado.");
+    } catch (commentError) {
+      setCommentMessage(commentError instanceof Error ? commentError.message : "No se pudo guardar el comentario.");
+    } finally {
+      setCommentStatus("idle");
+    }
+  }
+
   useEffect(() => {
     void loadStandings();
+    void loadComments();
     const intervalId = window.setInterval(() => {
       void loadStandings();
     }, 30000);
@@ -583,27 +644,6 @@ export default function TablaPage() {
         </table>
       </section>
 
-      <section className="shareCardPanel standingsSharePanel" aria-label="Compartir tabla actual">
-        <div className="shareCardPreview">
-          <div>
-            <strong>Imagen para compartir la tabla</strong>
-            <p>{rows.length} participantes · {data.playedMatches}/72 partidos con resultado.</p>
-          </div>
-          <Trophy size={28} aria-hidden="true" />
-        </div>
-        <div className="shareActions">
-          <button className="primaryAction" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
-            {shareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
-            Compartir tabla
-          </button>
-          <button className="primaryAction light" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
-            <Download size={18} aria-hidden="true" />
-            Descargar imagen
-          </button>
-        </div>
-        {shareMessage ? <p className="shareMessage">{shareMessage}</p> : null}
-      </section>
-
       <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">
         <div className="tableNote">
           <div>
@@ -747,25 +787,61 @@ export default function TablaPage() {
         </section>
       ) : null}
 
-      <section className="metricGrid" aria-label="Estado de tabla">
-        <article className="metric">
-          <Users size={20} aria-hidden="true" />
-          <span>Participantes</span>
-          <strong>{rows.length}</strong>
-        </article>
-        <article className="metric">
-          <Trophy size={20} aria-hidden="true" />
-          <span>Partidos con resultado</span>
-          <strong>{data.playedMatches}/72</strong>
-        </article>
-        <article className="metric alert">
-          <Brackets size={20} aria-hidden="true" />
-          <span>Eliminatorias con resultado</span>
-          <strong>{data.playedKnockoutMatches}/{data.knockoutFixtures}</strong>
-        </article>
+      <section className="shareCardPanel standingsSharePanel" aria-label="Compartir tabla actual">
+        <div className="shareCardPreview">
+          <div>
+            <strong>Imagen para compartir la tabla</strong>
+            <p>{rows.length} participantes · {data.playedMatches}/72 partidos con resultado.</p>
+          </div>
+          <Trophy size={28} aria-hidden="true" />
+        </div>
+        <div className="shareActions">
+          <button className="primaryAction" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
+            {shareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
+            Compartir tabla
+          </button>
+          <button className="primaryAction light" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
+            <Download size={18} aria-hidden="true" />
+            Descargar imagen
+          </button>
+        </div>
+        {shareMessage ? <p className="shareMessage">{shareMessage}</p> : null}
       </section>
 
-      <KahlImageScatter page="tabla" count={4} variant="compact" />
+      <section className="commentsPanel" aria-label="Comentarios">
+        <div className="tableNote">
+          <div>
+            <strong>Comentarios</strong>
+            <span>Deja una gastada, reclamo o mensaje para la fecha.</span>
+          </div>
+          <MessageSquare size={24} aria-hidden="true" />
+        </div>
+        <form className="commentForm" onSubmit={submitComment}>
+          <label>
+            <span>Nombre</span>
+            <input maxLength={40} onChange={(event) => setCommentName(event.target.value)} placeholder="Tu nombre" value={commentName} />
+          </label>
+          <label>
+            <span>Comentario</span>
+            <textarea maxLength={240} onChange={(event) => setCommentText(event.target.value)} placeholder="Escribi algo..." value={commentText} />
+          </label>
+          <button className="primaryAction" disabled={commentStatus === "saving"} type="submit">
+            {commentStatus === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
+            Publicar
+          </button>
+        </form>
+        {commentMessage ? <p className="shareMessage">{commentMessage}</p> : null}
+        <div className="commentList">
+          {comments.map((comment) => (
+            <article key={comment.id}>
+              <strong>{comment.name}</strong>
+              <p>{comment.comment}</p>
+              <small>{new Date(comment.createdAt).toLocaleString("es-AR")}</small>
+            </article>
+          ))}
+          {comments.length === 0 ? <div className="emptyState">Todavia no hay comentarios.</div> : null}
+        </div>
+      </section>
     </div>
   );
 }
