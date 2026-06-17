@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2, Target, Trophy, Users } from "lucide-react";
+import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2 } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
@@ -340,7 +340,6 @@ export default function PronosticosPage() {
   const homeScorersLabel = scorersLabel(selectedResult, "home");
   const awayScorersLabel = scorersLabel(selectedResult, "away");
   const hasGoalScorers = Boolean(homeScorersLabel || awayScorersLabel);
-  const leader = data?.standings[0];
 
   function buildShareSvg() {
     const width = 1080;
@@ -485,24 +484,6 @@ export default function PronosticosPage() {
       </section>
 
       {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
-
-      <section className="metricGrid" aria-label="Resumen de pronosticos">
-        <article className="metric">
-          <Users size={20} aria-hidden="true" />
-          <span>Participantes</span>
-          <strong>{totalParticipants}</strong>
-        </article>
-        <article className="metric">
-          <Trophy size={20} aria-hidden="true" />
-          <span>Puntero actual</span>
-          <strong>{leader?.name ?? "-"}</strong>
-        </article>
-        <article className="metric alert">
-          <Target size={20} aria-hidden="true" />
-          <span>Partido elegido</span>
-          <strong>#{selectedMatch.order}</strong>
-        </article>
-      </section>
 
       <section className="roundStrip" aria-label="Fechas de pronosticos">
         {([1, 2, 3] as MatchRound[]).map((round) => (
