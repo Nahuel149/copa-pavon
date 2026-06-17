@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2 } from "lucide-react";
-import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
 import { matches, roundLabels, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
@@ -634,6 +633,36 @@ export default function PronosticosPage() {
         </div>
       </section>
 
+      <section className="statsPanel" aria-label="Estadisticas de la fecha">
+        <div className="tableNote">
+          <strong>Estadisticas de {roundLabels[activeRound]}</strong>
+          <span>Resumen automatico de tendencias y aciertos de la fecha seleccionada.</span>
+        </div>
+        <div className="statsGrid">
+          <article>
+            <span>Resultado mas elegido</span>
+            <strong>{roundStats.mostPicked?.label ?? "Sin datos"}</strong>
+            <small>{roundStats.mostPicked ? `${roundStats.mostPicked.count}/${roundStats.mostPicked.total} participantes` : "-"}</small>
+          </article>
+          <article>
+            <span>Mas arriesgado</span>
+            <strong>{roundStats.risky?.different ? roundStats.risky.name : "Sin diferencias"}</strong>
+            <small>{roundStats.risky?.different ? `${roundStats.risky.different} picks contra la mayoria` : "Todos fueron parecidos"}</small>
+          </article>
+          <article>
+            <span>Exactos acertados</span>
+            <strong>{roundStats.exactRate === null ? "Pendiente" : `${roundStats.exactRate}%`}</strong>
+            <small>{roundStats.exactTotal > 0 ? `${roundStats.exactHits}/${roundStats.exactTotal} marcadores` : "Faltan resultados oficiales"}</small>
+          </article>
+          <article>
+            <span>Partido mas errado</span>
+            <strong>{roundStats.hardest?.label ?? "Pendiente"}</strong>
+            <small>{roundStats.hardest ? `${roundStats.hardest.missed}/${roundStats.hardest.total} erraron ganador` : "Faltan resultados oficiales"}</small>
+          </article>
+        </div>
+      </section>
+
+
       <section className="shareCardPanel">
         <div className="tableNote">
           <strong>Tarjeta para compartir</strong>
@@ -666,36 +695,6 @@ export default function PronosticosPage() {
         {shareMessage ? <p className="shareMessage" aria-live="polite">{shareMessage}</p> : null}
       </section>
 
-      <section className="statsPanel" aria-label="Estadisticas de la fecha">
-        <div className="tableNote">
-          <strong>Estadisticas de {roundLabels[activeRound]}</strong>
-          <span>Resumen automatico de tendencias y aciertos de la fecha seleccionada.</span>
-        </div>
-        <div className="statsGrid">
-          <article>
-            <span>Resultado mas elegido</span>
-            <strong>{roundStats.mostPicked?.label ?? "Sin datos"}</strong>
-            <small>{roundStats.mostPicked ? `${roundStats.mostPicked.count}/${roundStats.mostPicked.total} participantes` : "-"}</small>
-          </article>
-          <article>
-            <span>Mas arriesgado</span>
-            <strong>{roundStats.risky?.different ? roundStats.risky.name : "Sin diferencias"}</strong>
-            <small>{roundStats.risky?.different ? `${roundStats.risky.different} picks contra la mayoria` : "Todos fueron parecidos"}</small>
-          </article>
-          <article>
-            <span>Exactos acertados</span>
-            <strong>{roundStats.exactRate === null ? "Pendiente" : `${roundStats.exactRate}%`}</strong>
-            <small>{roundStats.exactTotal > 0 ? `${roundStats.exactHits}/${roundStats.exactTotal} marcadores` : "Faltan resultados oficiales"}</small>
-          </article>
-          <article>
-            <span>Partido mas errado</span>
-            <strong>{roundStats.hardest?.label ?? "Pendiente"}</strong>
-            <small>{roundStats.hardest ? `${roundStats.hardest.missed}/${roundStats.hardest.total} erraron ganador` : "Faltan resultados oficiales"}</small>
-          </article>
-        </div>
-      </section>
-
-      <KahlImageScatter page="tabla" count={1} variant="compact" />
     </div>
   );
 }
