@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { groups, matches, roundLabels, type GroupId, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
 import {
@@ -490,7 +491,7 @@ export default function PronosticosPage() {
           </p>
         </div>
         <div className="tableRefresh">
-          <span>{data?.updatedAt ? `Actualizada ${new Date(data.updatedAt).toLocaleTimeString("es-AR")}` : "Cargando..."}</span>
+          <span>{data?.updatedAt ? `Actualizada ${formatArgentinaTime(data.updatedAt)}` : "Cargando..."}</span>
           <button className="primaryAction light" onClick={loadData} type="button">
             {status === "loading" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
             Actualizar

@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, KeyRound, Loader2, Save, Search, Target, Trophy } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { formatArgentinaDateTime, formatArgentinaShortDeadline } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
 import {
@@ -75,16 +76,7 @@ function groupDraftFromSubmission(submission: Submission) {
 }
 
 function formatDeadline(value: string) {
-  const parts = new Intl.DateTimeFormat("es-AR", {
-    timeZone: "Asia/Tokyo",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(new Date(value));
-  const byType = new Map(parts.map((part) => [part.type, part.value]));
-  return `${byType.get("day")}/${byType.get("month")}, ${byType.get("hour")}:${byType.get("minute")}`;
+  return formatArgentinaShortDeadline(value);
 }
 
 function formatDraftPrediction(value: DraftPrediction, home: string, away: string) {
@@ -357,7 +349,7 @@ export default function EditarPage() {
           <div>
             <p className="eyebrow">Guardado</p>
             <h2>Edicion actualizada.</h2>
-            <p>{new Date(updatedAt).toLocaleString("es-AR")}</p>
+            <p>{formatArgentinaDateTime(updatedAt)}</p>
           </div>
           <CheckCircle2 size={34} aria-hidden="true" />
         </section>

@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Download, Loader2, MessageSquare, RefreshCw, Send, Share2, Trophy } from "lucide-react";
+import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
@@ -297,7 +298,7 @@ export default function TablaPage() {
       { label: "Exa", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses, width: col.exacts, anchor: "middle" },
     ];
     const tableWidth = usable;
-    const updated = data.updatedAt ? new Date(data.updatedAt).toLocaleString("es-AR") : "Actualizando";
+    const updated = data.updatedAt ? formatArgentinaDateTime(data.updatedAt) : "Actualizando";
     const rowsSvg = rows.map((row, index) => {
       const y = tableTop + 56 + index * rowHeight;
       const fill = index === 0 ? green : index >= rows.length - relegationCount ? "#ffe2dc" : index % 2 ? "#fff8ef" : cream;
@@ -520,7 +521,7 @@ export default function TablaPage() {
           </p>
         </div>
         <div className="tableRefresh">
-          <span>{data.updatedAt ? `Actualizada ${new Date(data.updatedAt).toLocaleTimeString("es-AR")}` : "Actualizando..."}</span>
+          <span>{data.updatedAt ? `Actualizada ${formatArgentinaTime(data.updatedAt)}` : "Actualizando..."}</span>
           <button className="primaryAction light" onClick={loadStandings} type="button">
             <RefreshCw className={status === "loading" ? "spin" : ""} size={18} aria-hidden="true" />
             Actualizar
@@ -836,7 +837,7 @@ export default function TablaPage() {
             <article key={comment.id}>
               <strong>{comment.name}</strong>
               <p>{comment.comment}</p>
-              <small>{new Date(comment.createdAt).toLocaleString("es-AR")}</small>
+              <small>{formatArgentinaDateTime(comment.createdAt)}</small>
             </article>
           ))}
           {comments.length === 0 ? <div className="emptyState">Todavia no hay comentarios.</div> : null}

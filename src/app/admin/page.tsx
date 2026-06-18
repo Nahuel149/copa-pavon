@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Download, Eye, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { argentinaInputToIso, formatArgentinaDate, formatArgentinaDateTime, isoToArgentinaInput } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { getKnockoutKickoffAt } from "@/lib/knockout-deadlines";
 import {
@@ -67,19 +68,6 @@ function shortParticipantName(name: string) {
 
 type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; highlightUrl?: string; goalScorers?: MatchResult["goalScorers"]; scorerNames?: string }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
-
-function isoToLocalInput(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
-}
-
-function localInputToIso(value: string) {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
-}
 
 const emptyMatchResults = matches.reduce<ResultDraft>((draft, match) => {
   draft[match.id] = { homeGoals: "", awayGoals: "" };
@@ -218,7 +206,7 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
     const byKnockout = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
     return [
       submission.name,
-      new Date(submission.createdAt).toLocaleString("es-AR"),
+      formatArgentinaDateTime(submission.createdAt),
       standing?.totalPoints ?? 0,
       standing?.matchPoints ?? 0,
       standing?.predictionMatchesPlayed ?? 0,
@@ -490,7 +478,7 @@ export default function AdminPage() {
     setKnockoutFixtures((current) =>
       current.map((fixture) => {
         if (fixture.id !== fixtureId) return fixture;
-        const kickoffAt = localInputToIso(value);
+        const kickoffAt = argentinaInputToIso(value);
         return kickoffAt ? { ...fixture, kickoffAt } : { ...fixture, kickoffAt: undefined };
       }),
     );
@@ -506,7 +494,7 @@ export default function AdminPage() {
       stage: newFixture.stage,
       home,
       away,
-      ...(newFixture.kickoffAt ? { kickoffAt: localInputToIso(newFixture.kickoffAt) } : {}),
+      ...(newFixture.kickoffAt ? { kickoffAt: argentinaInputToIso(newFixture.kickoffAt) } : {}),
     };
     setKnockoutFixtures((current) => [...current, fixture]);
     setKnockoutDraft((current) => ({ ...current, [fixture.id]: { homeGoals: "", awayGoals: "" } }));
@@ -579,7 +567,7 @@ export default function AdminPage() {
         <article className="metric alert">
           <RefreshCw size={20} aria-hidden="true" />
           <span>Último</span>
-          <strong>{latest ? new Date(latest).toLocaleDateString("es-AR") : "-"}</strong>
+          <strong>{latest ? formatArgentinaDate(latest) : "-"}</strong>
         </article>
       </section>
 
@@ -592,7 +580,7 @@ export default function AdminPage() {
               ? "La pagina Cargar acepta nuevos participantes."
               : "Nadie puede anotarse ni enviar un prode nuevo hasta que vuelvas a abrir la carga."}
           </p>
-          {appSettings.updatedAt ? <small>Ultimo cambio: {new Date(appSettings.updatedAt).toLocaleString("es-AR")}</small> : null}
+          {appSettings.updatedAt ? <small>Ultimo cambio: {formatArgentinaDateTime(appSettings.updatedAt)}</small> : null}
         </div>
         <button
           className={appSettings.submissionsOpen ? "primaryAction danger" : "primaryAction"}
@@ -859,7 +847,7 @@ export default function AdminPage() {
                 <span>Horario del partido</span>
                 <input
                   type="datetime-local"
-                  value={isoToLocalInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
+                  value={isoToArgentinaInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
                   onChange={(event) => setKnockoutKickoff(fixture.id, event.target.value)}
                 />
               </label>
@@ -912,7 +900,7 @@ export default function AdminPage() {
               {submissions.map((submission) => (
                 <tr key={submission.id}>
                   <td>{submission.name}</td>
-                  <td>{new Date(submission.createdAt).toLocaleString("es-AR")}</td>
+                  <td>{formatArgentinaDateTime(submission.createdAt)}</td>
                   <td>{submission.predictions.length}</td>
                   <td>{submission.groupPredictions?.length ?? 0}</td>
                   <td>{submission.knockoutPredictions?.length ?? 0}</td>
@@ -971,7 +959,7 @@ export default function AdminPage() {
         <section className="auditPanel">
           {auditEvents.map((event) => (
             <article key={event.id}>
-              <span>{new Date(event.createdAt).toLocaleString("es-AR")} · {event.type}</span>
+              <span>{formatArgentinaDateTime(event.createdAt)} · {event.type}</span>
               <strong>{event.message}</strong>
               <small>{event.actor}</small>
             </article>

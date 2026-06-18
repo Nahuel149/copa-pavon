@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
 import { countCompleteKnockoutPredictions } from "@/lib/prode";
@@ -88,7 +89,7 @@ export default function EliminatoriasPage() {
       if (savedDraft) {
         setName(savedDraft.name);
         setPredictions(savedDraft.predictions);
-        setDraftStatus(`Restaurado: ${new Date(savedDraft.savedAt).toLocaleString("es-AR")}`);
+        setDraftStatus(`Restaurado: ${formatArgentinaDateTime(savedDraft.savedAt)}`);
       } else {
         setPredictions(draftFromFixtures(loadedFixtures));
         setDraftStatus("Se guarda provisorio en este navegador.");
@@ -110,7 +111,7 @@ export default function EliminatoriasPage() {
   function saveDraft(message = "Guardado provisorio listo") {
     const savedAt = new Date().toISOString();
     window.localStorage.setItem(knockoutDraftStorageKey, JSON.stringify({ name, predictions, savedAt }));
-    setDraftStatus(`${message}: ${new Date(savedAt).toLocaleTimeString("es-AR")}`);
+    setDraftStatus(`${message}: ${formatArgentinaTime(savedAt)}`);
   }
 
   function clearDraft() {
@@ -303,7 +304,7 @@ export default function EliminatoriasPage() {
                 const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "", goalScorer: "" };
                 const lock = fixtureStatus[fixture.id];
                 const fixtureOpen = lock?.open ?? true;
-                const deadline = lock?.editDeadline ? new Date(lock.editDeadline).toLocaleString("es-AR") : "10 min antes";
+                const deadline = lock?.editDeadline ? formatArgentinaDateTime(lock.editDeadline) : "10 min antes";
                 return (
                   <article className="matchCard exact" key={fixture.id}>
                     <div className="matchHeader">
