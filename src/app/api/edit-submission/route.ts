@@ -30,8 +30,15 @@ async function authorize(payload: { name?: unknown; pin?: unknown }) {
   return { ok: true as const, submission };
 }
 
-function groupPredictionKey(prediction: GroupPrediction) {
-  return `${prediction.groupId}:${prediction.first}:${prediction.second}`;
+function changedGroupTeams(original: GroupPrediction | undefined, next: GroupPrediction) {
+  if (!original) return 2;
+  const originalTeams = new Set([original.first, original.second]);
+  return [next.first, next.second].filter((team) => !originalTeams.has(team)).length;
+}
+
+function hasAnyGroupChange(originalGroupPredictions: GroupPrediction[], nextGroupPredictions: GroupPrediction[]) {
+  const originalByGroup = new Map(originalGroupPredictions.map((prediction) => [prediction.groupId, prediction]));
+  return nextGroupPredictions.some((prediction) => changedGroupTeams(originalByGroup.get(prediction.groupId), prediction) > 0);
 }
 
 function changedLockedPredictions(
@@ -55,10 +62,11 @@ function changedLockedPredictions(
   }
 
   if (!editWindow.rounds[1].open) {
-    const originalGroups = originalGroupPredictions.map(groupPredictionKey).sort().join("|");
-    const nextGroups = nextGroupPredictions.map(groupPredictionKey).sort().join("|");
-    if (originalGroups !== nextGroups) {
-      errors.push("Los pronosticos de grupos ya cerraron con el inicio de la Fecha 1.");
+    const originalByGroup = new Map(originalGroupPredictions.map((prediction) => [prediction.groupId, prediction]));
+    for (const prediction of nextGroupPredictions) {
+      if (changedGroupTeams(originalByGroup.get(prediction.groupId), prediction) > 1) {
+        errors.push(`En el Grupo ${prediction.groupId} solo podes cambiar 1 de los 2 equipos clasificados.`);
+      }
     }
   }
 
@@ -83,9 +91,6 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   const editWindow = getEditWindow();
-  if (!editWindow.open) {
-    return NextResponse.json({ errors: ["Ya cerraron todas las fechas de edicion disponibles."], editWindow }, { status: 403 });
-  }
 
   let payload: unknown;
   try {
@@ -103,6 +108,10 @@ export async function PUT(request: Request) {
   const result = validateSubmission(payload as Parameters<typeof validateSubmission>[0]);
   if (!result.ok) {
     return NextResponse.json({ errors: result.errors.slice(0, 12) }, { status: 400 });
+  }
+
+  if (!editWindow.open && !hasAnyGroupChange(auth.submission.groupPredictions ?? [], result.groupPredictions)) {
+    return NextResponse.json({ errors: ["Ya cerraron todas las fechas de edicion disponibles."], editWindow }, { status: 403 });
   }
 
   const lockedErrors = changedLockedPredictions(

@@ -103,8 +103,9 @@ function samePrediction(first: DraftPrediction, second: DraftPrediction) {
   return first.type === "choice" && second.type === "choice" && first.choice === second.choice;
 }
 
-function sameGroupPrediction(first: { first: string; second: string }, second: { first: string; second: string }) {
-  return first.first === second.first && first.second === second.second;
+function changedGroupTeamCount(original: { first: string; second: string }, next: { first: string; second: string }) {
+  const originalTeams = new Set([original.first, original.second]);
+  return [next.first, next.second].filter((team) => !originalTeams.has(team)).length;
 }
 
 function toPayload(name: string, pin: string, predictions: DraftState, groupPredictions: GroupDraftState) {
@@ -150,10 +151,19 @@ export default function EditarPage() {
   const missingPin = !/^\d{4,10}$/.test(pin.trim());
   const missingMatches = matches.length - completedMatches;
   const missingGroups = groups.length - completedGroups;
-  const canSave = loaded && editWindow.open && !missingName && !missingPin && missingMatches === 0 && missingGroups === 0 && status !== "saving";
-  const groupsOpen = editWindow.rounds[1]?.open ?? true;
+  const changedGroups = groups.filter((group) => changedGroupTeamCount(originalGroupPredictions[group.id], groupPredictions[group.id]) > 0).length;
+  const invalidGroupChanges = groups.filter((group) => changedGroupTeamCount(originalGroupPredictions[group.id], groupPredictions[group.id]) > 1);
+  const canSave =
+    loaded &&
+    (editWindow.open || changedGroups > 0) &&
+    !missingName &&
+    !missingPin &&
+    missingMatches === 0 &&
+    missingGroups === 0 &&
+    invalidGroupChanges.length === 0 &&
+    status !== "saving";
+  const groupsOpen = loaded;
   const changedMatches = matches.filter((match) => !samePrediction(predictions[match.id], originalPredictions[match.id])).length;
-  const changedGroups = groups.filter((group) => !sameGroupPrediction(groupPredictions[group.id], originalGroupPredictions[group.id])).length;
   const changedTotal = changedMatches + changedGroups;
   const pending = useMemo(() => {
     if (!myProde?.submission || !myProde.results) return { matches: 0, groups: 0, knockout: 0 };
@@ -246,7 +256,14 @@ export default function EditarPage() {
   }
 
   function setGroupPick(groupId: GroupId, side: "first" | "second", value: string) {
-    setGroupPredictions((current) => ({ ...current, [groupId]: { ...current[groupId], [side]: value } }));
+    setGroupPredictions((current) => {
+      const nextValue = { ...current[groupId], [side]: value };
+      if (changedGroupTeamCount(originalGroupPredictions[groupId], nextValue) > 1) {
+        setErrors([`En el Grupo ${groupId} solo podes cambiar 1 de los 2 equipos. Para elegir otro, primero volve uno al valor original.`]);
+        return current;
+      }
+      return { ...current, [groupId]: nextValue };
+    });
   }
 
   return (
@@ -420,15 +437,16 @@ export default function EditarPage() {
           <section className="sectionHeader">
             <p className="eyebrow">Grupos</p>
             <h2>Top 2 por grupo.</h2>
+            <p>Podés corregir como máximo 1 equipo por grupo. No se puede cambiar el top 2 completo.</p>
           </section>
           <section className="groupGrid">
             {groups.map((group) => {
               const value = groupPredictions[group.id];
               const originalValue = originalGroupPredictions[group.id];
-              const changed = !sameGroupPrediction(value, originalValue);
+              const changed = changedGroupTeamCount(originalValue, value) > 0;
               return (
                 <article className={changed ? "groupCard changed" : "groupCard"} key={group.id}>
-                  <div className="matchHeader"><span>Grupo {group.id}</span><strong>{groupsOpen ? "Top 2" : "Cerrado"}</strong></div>
+                  <div className="matchHeader"><span>Grupo {group.id}</span><strong>1 cambio permitido</strong></div>
                   <div className="teamList">{group.teams.map((team) => <TeamBadge compact key={team} team={team} />)}</div>
                   {changed ? <small className="previousPick">Anterior: {originalValue.first || "-"} / {originalValue.second || "-"}</small> : null}
                   <div className="groupSelectors">
