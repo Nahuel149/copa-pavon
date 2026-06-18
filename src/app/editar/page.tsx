@@ -153,16 +153,17 @@ export default function EditarPage() {
   const missingGroups = groups.length - completedGroups;
   const changedGroups = groups.filter((group) => changedGroupTeamCount(originalGroupPredictions[group.id], groupPredictions[group.id]) > 0).length;
   const invalidGroupChanges = groups.filter((group) => changedGroupTeamCount(originalGroupPredictions[group.id], groupPredictions[group.id]) > 1);
+  const groupsOpen = loaded && (editWindow.rounds[2]?.open ?? false);
   const canSave =
     loaded &&
-    (editWindow.open || changedGroups > 0) &&
+    (editWindow.open || (groupsOpen && changedGroups > 0)) &&
     !missingName &&
     !missingPin &&
     missingMatches === 0 &&
     missingGroups === 0 &&
+    (changedGroups === 0 || groupsOpen) &&
     invalidGroupChanges.length === 0 &&
     status !== "saving";
-  const groupsOpen = loaded;
   const changedMatches = matches.filter((match) => !samePrediction(predictions[match.id], originalPredictions[match.id])).length;
   const changedTotal = changedMatches + changedGroups;
   const pending = useMemo(() => {
@@ -179,6 +180,7 @@ export default function EditarPage() {
   const deadlineText = editWindow.deadline
     ? formatDeadline(editWindow.deadline)
     : "por fecha, segun el inicio de cada jornada";
+  const groupEditDeadlineText = formatDeadline(editWindow.rounds[2].deadline);
 
   async function loadMyProde(nextName = name, nextPin = pin) {
     const response = await fetch("/api/my-prode", {
@@ -339,6 +341,17 @@ export default function EditarPage() {
         </section>
       ) : null}
 
+      {loaded && groupsOpen ? (
+        <section className="validationPanel">
+          <p className="eyebrow">Ultimo aviso</p>
+          <h2>Correccion final de grupos.</h2>
+          <p>
+            Podes cambiar como maximo 1 equipo por grupo hasta el primer partido de Fecha 2 ({groupEditDeadlineText}).
+            Despues queda cerrado definitivamente.
+          </p>
+        </section>
+      ) : null}
+
       {status === "done" ? (
         <section className="receiptPanel">
           <div>
@@ -437,7 +450,11 @@ export default function EditarPage() {
           <section className="sectionHeader">
             <p className="eyebrow">Grupos</p>
             <h2>Top 2 por grupo.</h2>
-            <p>Podés corregir como máximo 1 equipo por grupo. No se puede cambiar el top 2 completo.</p>
+            <p>
+              {groupsOpen
+                ? `Ultimo momento para corregir grupos: cierra definitivamente con el primer partido de Fecha 2 (${groupEditDeadlineText}). Maximo 1 equipo por grupo.`
+                : `Los grupos cerraron definitivamente con el primer partido de Fecha 2 (${groupEditDeadlineText}).`}
+            </p>
           </section>
           <section className="groupGrid">
             {groups.map((group) => {

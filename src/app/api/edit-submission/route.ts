@@ -61,7 +61,9 @@ function changedLockedPredictions(
     }
   }
 
-  if (!editWindow.rounds[1].open) {
+  if (!editWindow.rounds[2].open && hasAnyGroupChange(originalGroupPredictions, nextGroupPredictions)) {
+    errors.push("Los pronosticos de grupos cerraron definitivamente con el inicio de la Fecha 2.");
+  } else if (!editWindow.rounds[1].open) {
     const originalByGroup = new Map(originalGroupPredictions.map((prediction) => [prediction.groupId, prediction]));
     for (const prediction of nextGroupPredictions) {
       if (changedGroupTeams(originalByGroup.get(prediction.groupId), prediction) > 1) {
