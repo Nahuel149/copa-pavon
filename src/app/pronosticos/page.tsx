@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
-import { matches, roundLabels, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
+import { groups, matches, roundLabels, type GroupId, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
   serializePrediction,
@@ -147,6 +147,7 @@ export default function PronosticosPage() {
   const [data, setData] = useState<PronosticosResponse | null>(null);
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [selectedMatchId, setSelectedMatchId] = useState(matches[0].id);
+  const [selectedGroupId, setSelectedGroupId] = useState<GroupId>(groups[0].id);
   const [shareDay, setShareDay] = useState(matches[0].dateLabel);
   const [shareStatus, setShareStatus] = useState<"idle" | "working">("idle");
   const [shareMessage, setShareMessage] = useState("");
@@ -215,6 +216,21 @@ export default function PronosticosPage() {
       }))
       .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
   }, [data?.submissions, shareDayMatches, standingPositionById]);
+
+  const selectedGroup = groups.find((group) => group.id === selectedGroupId) ?? groups[0];
+  const groupPredictionRows = useMemo(() => {
+    return (data?.submissions ?? [])
+      .map((submission) => {
+        const prediction = submission.groupPredictions?.find((item) => item.groupId === selectedGroup.id);
+        return {
+          submission,
+          prediction,
+          position: standingPositionById.get(submission.id) ?? 0,
+          label: prediction ? `${prediction.first} / ${prediction.second}` : "Sin cargar",
+        };
+      })
+      .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
+  }, [data?.submissions, selectedGroup.id, standingPositionById]);
 
   const aggregates = useMemo(() => {
     const outcomes = emptyOutcomeCount();
@@ -630,6 +646,39 @@ export default function PronosticosPage() {
             </article>
           ))}
           {predictionRows.length === 0 ? <div className="emptyState">No hay pronosticos para mostrar.</div> : null}
+        </div>
+      </section>
+
+      <section className="groupPredictionPanel">
+        <div className="tableNote compactPredictionHeader">
+          <strong>Pronosticos de grupos</strong>
+          <span>Top 2 que puso cada participante para el grupo seleccionado.</span>
+        </div>
+        <div className="groupTabs" role="group" aria-label="Elegir grupo">
+          {groups.map((group) => (
+            <button
+              className={selectedGroup.id === group.id ? "active" : ""}
+              key={group.id}
+              onClick={() => setSelectedGroupId(group.id)}
+              type="button"
+            >
+              Grupo {group.id}
+            </button>
+          ))}
+        </div>
+        <div className="groupFocusBar">
+          <span>Grupo {selectedGroup.id}</span>
+          <strong>{selectedGroup.teams.map((team) => team).join(" · ")}</strong>
+        </div>
+        <div className="compactPredictionRows">
+          {groupPredictionRows.map((row) => (
+            <article className="compactPredictionRow groupPredictionRow" key={row.submission.id}>
+              <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
+              <strong>{row.submission.name}</strong>
+              <span>{row.label}</span>
+            </article>
+          ))}
+          {groupPredictionRows.length === 0 ? <div className="emptyState">No hay pronosticos de grupos para mostrar.</div> : null}
         </div>
       </section>
 
