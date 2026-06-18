@@ -1567,6 +1567,17 @@ a {
   margin: -16px -16px 0;
 }
 
+.commentsPanel .tableNote > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: baseline;
+}
+
+.commentsPanel .tableNote span {
+  display: inline-block;
+}
+
 .commentForm {
   display: grid;
   grid-template-columns: minmax(180px, 0.45fr) minmax(260px, 1fr) auto;
@@ -1645,6 +1656,10 @@ a {
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.commentsMoreButton {
+  justify-self: start;
 }
 
 .matchCard {

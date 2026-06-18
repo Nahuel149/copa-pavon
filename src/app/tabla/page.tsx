@@ -120,7 +120,10 @@ export default function TablaPage() {
   const [commentText, setCommentText] = useState("");
   const [commentStatus, setCommentStatus] = useState<"idle" | "saving">("idle");
   const [commentMessage, setCommentMessage] = useState("");
+  const [showAllComments, setShowAllComments] = useState(false);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
+  const visibleComments = showAllComments ? comments : comments.slice(0, 10);
+  const hiddenCommentCount = Math.max(comments.length - visibleComments.length, 0);
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
     () =>
@@ -833,7 +836,7 @@ export default function TablaPage() {
         </form>
         {commentMessage ? <p className="shareMessage">{commentMessage}</p> : null}
         <div className="commentList">
-          {comments.map((comment) => (
+          {visibleComments.map((comment) => (
             <article key={comment.id}>
               <strong>{comment.name}</strong>
               <p>{comment.comment}</p>
@@ -842,6 +845,11 @@ export default function TablaPage() {
           ))}
           {comments.length === 0 ? <div className="emptyState">Todavia no hay comentarios.</div> : null}
         </div>
+        {comments.length > 10 ? (
+          <button className="tableButton commentsMoreButton" onClick={() => setShowAllComments((current) => !current)} type="button">
+            {showAllComments ? "Ver menos" : `Ver mas comentarios (${hiddenCommentCount})`}
+          </button>
+        ) : null}
       </section>
     </div>
   );
