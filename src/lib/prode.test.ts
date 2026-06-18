@@ -152,7 +152,7 @@ describe("prode scoring", () => {
       ],
     });
 
-    expect(result.groupPoints).toBe(5);
+    expect(result.groupPoints).toBe(3);
     expect(result.groupHits).toBe(1);
   });
 
@@ -226,9 +226,9 @@ describe("prode scoring", () => {
     })[0];
 
     expect(emptyRow.totalPoints).toBe(0);
-    expect(updatedRow.totalPoints).toBe(8);
+    expect(updatedRow.totalPoints).toBe(6);
     expect(updatedRow.matchPoints).toBe(3);
-    expect(updatedRow.groupPoints).toBe(5);
+    expect(updatedRow.groupPoints).toBe(3);
   });
 
   it("adds manual point adjustments to standings totals", () => {

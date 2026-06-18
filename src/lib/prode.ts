@@ -748,7 +748,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     if (!result) continue;
     const predicted = new Set([prediction.first, prediction.second]);
     if (predicted.has(result.first) && predicted.has(result.second)) {
-      groupPoints += 5;
+      groupPoints += 3;
       groupHits += 1;
     }
   }

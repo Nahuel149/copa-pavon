@@ -29,7 +29,7 @@ Desde el panel admin se cargan:
 - Fase de grupos hibrida: por cada fecha hay 10 partidos importantes con marcador exacto y 14 partidos con 1X2.
 - Marcador exacto acertado: 2 puntos.
 - Ganador, empate o perdedor correcto: 1 punto.
-- Top 2 de grupo: 5 puntos si acierta los dos equipos, aunque esten invertidos. Uno o cero aciertos: 0 puntos.
+- Top 2 de grupo: 3 puntos si acierta los dos equipos, aunque esten invertidos. Uno o cero aciertos: 0 puntos.
 - Eliminatorias: se cargan desde admin y se pronostican en `/eliminatorias`; solo suma el marcador exacto.
 
 ## Datos

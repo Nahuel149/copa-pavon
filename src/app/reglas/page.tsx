@@ -34,7 +34,7 @@ const scoringRules = [
   },
   {
     label: "Top 2 de grupo",
-    points: "5 pts",
+    points: "3 pts",
     copy: "Si acertás los dos clasificados del grupo, suma aunque el orden de 1º y 2º esté invertido.",
   },
 ];
@@ -116,7 +116,7 @@ export default function ReglasPage() {
           <p className="eyebrow">Clasificados</p>
           <h2>Top 2 por grupo</h2>
           <p>
-            Se eligen dos equipos por grupo. Si los dos equipos son correctos, sumás 5 puntos. Si acertás uno solo o
+            Se eligen dos equipos por grupo. Si los dos equipos son correctos, sumás 3 puntos. Si acertás uno solo o
             ninguno, suma 0.
           </p>
         </article>

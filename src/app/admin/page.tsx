@@ -954,7 +954,7 @@ export default function AdminPage() {
               </span>
               <span>
                 Top 2 grupo
-                <b>5</b>
+                <b>3</b>
               </span>
               <span>
                 Exacto eliminatorias
