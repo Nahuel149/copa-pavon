@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { Download, Eye, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, Trash2, Users } from "lucide-react";
+import { Fragment, FormEvent, useMemo, useState, type ChangeEvent } from "react";
+import { AlertTriangle, Download, Eye, FileUp, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, ShieldCheck, Trash2, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { argentinaInputToIso, formatArgentinaDate, formatArgentinaDateTime, isoToArgentinaInput } from "@/lib/argentina-time";
@@ -49,6 +49,13 @@ type SyncResultsResponse = {
     protected?: number;
     skipped: number;
     checkedAt: string;
+    conflicts?: Array<{
+      kind: "group" | "knockout";
+      id: string;
+      label: string;
+      manualScore: string;
+      apiScore: string;
+    }>;
   };
   error?: string;
 };
@@ -66,7 +73,14 @@ function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
 }
 
-type ResultDraft = Record<string, { homeGoals: string; awayGoals: string; highlightUrl?: string; goalScorers?: MatchResult["goalScorers"]; scorerNames?: string }>;
+type ResultDraft = Record<string, {
+  homeGoals: string;
+  awayGoals: string;
+  highlightUrl?: string;
+  goalScorers?: MatchResult["goalScorers"];
+  scorerNames?: string;
+  source?: "api" | "manual";
+}>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
 
 const emptyMatchResults = matches.reduce<ResultDraft>((draft, match) => {
@@ -147,6 +161,7 @@ function draftFromResults(results: ResultStore) {
       awayGoals: String(result.awayGoals),
       highlightUrl: result.highlightUrl ?? "",
       goalScorers: result.goalScorers ?? [],
+      source: result.source,
     };
   }
 
@@ -164,6 +179,7 @@ function draftFromResults(results: ResultStore) {
       homeGoals: result ? String(result.homeGoals) : "",
       awayGoals: result ? String(result.awayGoals) : "",
       scorerNames: result?.scorerNames?.join(", ") ?? "",
+      source: result?.source,
     };
     return draft;
   }, {});
@@ -258,6 +274,10 @@ export default function AdminPage() {
   const [syncSummary, setSyncSummary] = useState("");
   const [appSettings, setAppSettings] = useState<AppSettings>({ submissionsOpen: false });
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [syncConflicts, setSyncConflicts] = useState<NonNullable<SyncResultsResponse["report"]>["conflicts"]>([]);
+  const [expandedPointsId, setExpandedPointsId] = useState<string | null>(null);
+  const [restoreStatus, setRestoreStatus] = useState<"idle" | "restoring">("idle");
+  const [restoreMessage, setRestoreMessage] = useState("");
 
   const results = useMemo(
     () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft, manualAdjustments),
@@ -317,6 +337,7 @@ export default function AdminPage() {
     setManualAdjustments(resultsBody.manualAdjustments ?? []);
     setAppSettings({ submissionsOpen: settingsBody.submissionsOpen, updatedAt: settingsBody.updatedAt });
     setAuditEvents(auditBody.events ?? []);
+    setSyncConflicts([]);
     setStatus("ready");
   }
 
@@ -404,6 +425,7 @@ export default function AdminPage() {
     setSyncSummary(
       `Busqueda lista: ${body.report.imported} nuevos/actualizados, ${body.report.unchanged} sin cambios, ${body.report.protected ?? 0} protegidos por admin. Fuente: ${body.report.sourceUrl}`,
     );
+    setSyncConflicts(body.report.conflicts ?? []);
     setStatus("ready");
   }
 
@@ -435,6 +457,35 @@ export default function AdminPage() {
     link.click();
     URL.revokeObjectURL(url);
     void loadAdminData();
+  }
+
+  async function restoreJsonBackup(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!window.confirm(`Restaurar ${file.name}? Esto reemplaza participantes, resultados y configuracion actuales.`)) return;
+    setRestoreStatus("restoring");
+    setRestoreMessage("");
+    setError("");
+    try {
+      const payload = JSON.parse(await file.text()) as unknown;
+      const response = await fetch("/api/admin-backup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(pin ? { "x-prode-admin-pin": pin } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const body = await readJsonResponse<{ restored?: boolean; submissions?: number; matchResults?: number; error?: string }>(response);
+      if (!response.ok || body.error || !body.restored) throw new Error(body.error ?? "No se pudo restaurar el backup.");
+      setRestoreMessage(`Backup restaurado: ${body.submissions ?? 0} participantes y ${body.matchResults ?? 0} resultados.`);
+      await loadAdminData();
+    } catch (restoreError) {
+      setError(restoreError instanceof Error ? restoreError.message : "No se pudo restaurar el backup.");
+    } finally {
+      setRestoreStatus("idle");
+    }
   }
 
   function setResultScore(matchId: string, side: "homeGoals" | "awayGoals", value: string) {
@@ -614,6 +665,11 @@ export default function AdminPage() {
           <Download size={18} aria-hidden="true" />
           Backup JSON
         </button>
+        <label className="primaryAction light adminFileAction">
+          {restoreStatus === "restoring" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <FileUp size={18} aria-hidden="true" />}
+          Restaurar JSON
+          <input accept="application/json,.json" disabled={restoreStatus === "restoring"} onChange={restoreJsonBackup} type="file" />
+        </label>
         <button
           className="primaryAction light"
           disabled={submissions.length === 0}
@@ -628,6 +684,27 @@ export default function AdminPage() {
       </section>
 
       {syncSummary ? <section className="validationPanel">{syncSummary}</section> : null}
+      {restoreMessage ? <section className="validationPanel successPanel">{restoreMessage}</section> : null}
+      {syncConflicts && syncConflicts.length > 0 ? (
+        <section className="sourceConflictPanel" aria-live="polite">
+          <div>
+            <AlertTriangle size={22} aria-hidden="true" />
+            <div>
+              <strong>{syncConflicts.length} resultado(s) de admin protegidos</strong>
+              <p>La API informo otro marcador. Se conserva siempre el valor cargado manualmente.</p>
+            </div>
+          </div>
+          <ul>
+            {syncConflicts.map((conflict) => (
+              <li key={`${conflict.kind}-${conflict.id}`}>
+                <strong>{conflict.label}</strong>
+                <span>Admin {conflict.manualScore}</span>
+                <span>API {conflict.apiScore}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <details className="adminFold" open>
         <summary>Tabla y puntos</summary>
@@ -664,9 +741,14 @@ export default function AdminPage() {
           <tbody>
             {standings.map((row, index) => {
               return (
-                <tr key={row.submissionId}>
+                <Fragment key={row.submissionId}>
+                <tr>
                   <td data-label="Posicion">{index + 1}</td>
-                  <td className="playerCell" data-label="Participante" title={row.name}>{shortParticipantName(row.name)}</td>
+                  <td className="playerCell" data-label="Participante" title={row.name}>
+                    <button className="tableButton inlineButton" onClick={() => setExpandedPointsId(expandedPointsId === row.submissionId ? null : row.submissionId)} type="button">
+                      {shortParticipantName(row.name)}
+                    </button>
+                  </td>
                   <td className="pointsCell" data-label="Total"><strong>{row.totalPoints}</strong></td>
                   <td data-label="Pts partidos">{row.matchPoints}</td>
                   <td data-label="Jugados">{row.predictionMatchesPlayed}</td>
@@ -677,6 +759,33 @@ export default function AdminPage() {
                   <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
                   <td data-label="Ganadores">{row.winnerHits}</td>
                 </tr>
+                {expandedPointsId === row.submissionId ? (
+                  <tr className="detailRow adminPointAuditRow">
+                    <td colSpan={11}>
+                      <div className="pointAuditPanel">
+                        <div className="pointAuditHeader">
+                          <div><span>Auditoria de puntos</span><strong>{row.name}</strong></div>
+                          <div><span>Total</span><strong>{row.totalPoints}</strong></div>
+                        </div>
+                        <div className="pointAuditList">
+                          {row.pointAudit.map((entry) => (
+                            <article className={`pointAuditEntry ${entry.verdict}`} key={`${row.submissionId}-${entry.id}`}>
+                              <div><strong>{entry.label}</strong><span>{entry.prediction} / oficial {entry.official}</span></div>
+                              <b>{entry.points > 0 ? `+${entry.points}` : "0"}</b>
+                            </article>
+                          ))}
+                          {row.manualAdjustmentPoints !== 0 ? (
+                            <article className="pointAuditEntry adjustment">
+                              <div><strong>Ajuste manual</strong><span>Registrado por admin</span></div>
+                              <b>{row.manualAdjustmentPoints > 0 ? `+${row.manualAdjustmentPoints}` : row.manualAdjustmentPoints}</b>
+                            </article>
+                          ) : null}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : null}
+                </Fragment>
               );
             })}
             {standings.length === 0 ? (
@@ -721,6 +830,12 @@ export default function AdminPage() {
           return (
             <article className="resultCard" key={match.id}>
               <span>#{match.order} · Grupo {match.groupId}</span>
+              {value.source ? (
+                <small className={`resultSource ${value.source}`}>
+                  {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
+                  {value.source === "manual" ? "Admin" : "API"}
+                </small>
+              ) : null}
               <strong><TeamBadge team={match.home} /> <span>vs.</span> <TeamBadge team={match.away} /></strong>
               <div className="scoreInputs compact">
                 <label>
@@ -842,6 +957,12 @@ export default function AdminPage() {
           return (
             <article className="resultCard knockoutResult" key={fixture.id}>
               <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
+              {value.source ? (
+                <small className={`resultSource ${value.source}`}>
+                  {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
+                  {value.source === "manual" ? "Admin" : "API"}
+                </small>
+              ) : null}
               <strong>{fixture.home} vs. {fixture.away}</strong>
               <label className="adminTextInput">
                 <span>Horario del partido</span>

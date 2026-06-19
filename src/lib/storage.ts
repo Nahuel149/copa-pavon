@@ -149,6 +149,33 @@ export async function readSubmissionStore(): Promise<SubmissionStore> {
   };
 }
 
+export async function writeSubmissionStore(store: SubmissionStore) {
+  const submissions = store.submissions.map((submission) => ({
+    ...submission,
+    clan: parseClan(submission.clan),
+    predictions: Array.isArray(submission.predictions) ? submission.predictions : [],
+    groupPredictions: Array.isArray(submission.groupPredictions) ? submission.groupPredictions : [],
+    knockoutPredictions: Array.isArray(submission.knockoutPredictions) ? submission.knockoutPredictions : [],
+  }));
+  const normalizedNames = submissions.map((submission) => submission.normalizedName);
+  if (new Set(normalizedNames).size !== normalizedNames.length) {
+    throw new Error("El backup contiene participantes duplicados.");
+  }
+
+  const collections = await getMongoCollections();
+  if (collections) {
+    await collections.submissions.deleteMany({});
+    if (submissions.length > 0) await collections.submissions.insertMany(submissions);
+    return { submissions };
+  }
+
+  await ensureStoreFile();
+  const tempPath = `${storePath}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify({ submissions }, null, 2), "utf8");
+  await fs.rename(tempPath, storePath);
+  return { submissions };
+}
+
 export async function appendSubmission(submission: Submission) {
   const collections = await getMongoCollections();
   if (collections) {
@@ -441,4 +468,20 @@ export async function appendTablaComment(input: { name: string; comment: string 
   comments.unshift(entry);
   await fs.writeFile(commentsPath, JSON.stringify({ comments: comments.slice(0, 200) }, null, 2), "utf8");
   return entry;
+}
+
+export async function writeTablaComments(comments: TablaComment[]) {
+  const safeComments = comments.map((comment) => cleanComment(comment)).filter((comment) => comment.name && comment.comment);
+  const collections = await getMongoCollections();
+  if (collections) {
+    await collections.comments.deleteMany({});
+    if (safeComments.length > 0) await collections.comments.insertMany(safeComments as Document[]);
+    return safeComments;
+  }
+
+  await ensureCommentsFile();
+  const tempPath = `${commentsPath}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify({ comments: safeComments }, null, 2), "utf8");
+  await fs.rename(tempPath, commentsPath);
+  return safeComments;
 }

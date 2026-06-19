@@ -14,11 +14,25 @@ function adminAllowed(request: Request) {
   return providedPin === requiredPin;
 }
 
-function markAdminResultsAsManual(results: ResultStore): ResultStore {
+function markAdminResultsAsManual(results: ResultStore, current: ResultStore): ResultStore {
+  const currentMatches = new Map(current.matchResults.map((result) => [result.matchId, result]));
+  const currentKnockout = new Map(current.knockoutResults.map((result) => [result.fixtureId, result]));
   return {
     ...results,
-    matchResults: results.matchResults.map((result) => ({ ...result, source: "manual" })),
-    knockoutResults: results.knockoutResults.map((result) => ({ ...result, source: "manual" })),
+    matchResults: results.matchResults.map((result) => {
+      const previous = currentMatches.get(result.matchId);
+      const scoreUnchanged = previous && previous.homeGoals === result.homeGoals && previous.awayGoals === result.awayGoals;
+      return { ...result, source: scoreUnchanged ? previous.source ?? "manual" : "manual" };
+    }),
+    knockoutResults: results.knockoutResults.map((result) => {
+      const previous = currentKnockout.get(result.fixtureId);
+      const unchanged =
+        previous &&
+        previous.homeGoals === result.homeGoals &&
+        previous.awayGoals === result.awayGoals &&
+        JSON.stringify(previous.scorerNames ?? []) === JSON.stringify(result.scorerNames ?? []);
+      return { ...result, source: unchanged ? previous.source ?? "manual" : "manual" };
+    }),
   };
 }
 
@@ -43,7 +57,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "No se pudieron leer los resultados." }, { status: 400 });
   }
 
-  const results = await writeResultStore(markAdminResultsAsManual(validateResultStore(payload)));
+  const current = await readResultStore();
+  const results = await writeResultStore(markAdminResultsAsManual(validateResultStore(payload), current));
   await appendAuditEvent({
     actor: "admin",
     type: "results",

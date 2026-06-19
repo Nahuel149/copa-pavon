@@ -35,6 +35,15 @@ export type SyncResultReport = {
   protected: number;
   skipped: number;
   checkedAt: string;
+  conflicts: SyncResultConflict[];
+};
+
+export type SyncResultConflict = {
+  kind: "group" | "knockout";
+  id: string;
+  label: string;
+  manualScore: string;
+  apiScore: string;
 };
 
 let lastAutoSyncAt = 0;
@@ -78,6 +87,7 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
   let corrected = 0;
   let unchanged = 0;
   let protectedCount = 0;
+  const conflicts: SyncResultConflict[] = [];
 
   for (const result of imported) {
     const previous = byMatch.get(result.matchId);
@@ -93,6 +103,28 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
       unchanged += 1;
       continue;
     }
+    if (previous?.source === "manual") {
+      if (previous.homeGoals !== result.homeGoals || previous.awayGoals !== result.awayGoals) {
+        const match = matches.find((item) => item.id === result.matchId);
+        conflicts.push({
+          kind: "group",
+          id: result.matchId,
+          label: match ? `${match.home} vs. ${match.away}` : result.matchId,
+          manualScore: `${previous.homeGoals}-${previous.awayGoals}`,
+          apiScore: `${result.homeGoals}-${result.awayGoals}`,
+        });
+        protectedCount += 1;
+        continue;
+      }
+      if (!previous.goalScorers?.length && result.goalScorers?.length) {
+        byMatch.set(result.matchId, { ...previous, goalScorers: result.goalScorers });
+        changed += 1;
+        corrected += 1;
+      } else {
+        unchanged += 1;
+      }
+      continue;
+    }
     if (
       previous &&
       previous.homeGoals === result.homeGoals &&
@@ -105,10 +137,6 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
       });
       changed += 1;
       corrected += 1;
-      continue;
-    }
-    if (previous?.source === "manual") {
-      protectedCount += 1;
       continue;
     }
     byMatch.set(result.matchId, {
@@ -127,6 +155,7 @@ function mergeMatchResults(current: MatchResult[], imported: MatchResult[]) {
     corrected,
     unchanged,
     protected: protectedCount,
+    conflicts,
     results: matches
       .map((match) => byMatch.get(match.id))
       .filter((result): result is MatchResult => Boolean(result)),
@@ -154,6 +183,7 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
   let corrected = 0;
   let unchanged = 0;
   let protectedCount = 0;
+  const conflicts: SyncResultConflict[] = [];
 
   for (const result of imported) {
     const previous = byFixture.get(result.fixtureId);
@@ -169,7 +199,18 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
       continue;
     }
     if (previous?.source === "manual") {
-      protectedCount += 1;
+      if (previous.homeGoals !== result.homeGoals || previous.awayGoals !== result.awayGoals) {
+        conflicts.push({
+          kind: "knockout",
+          id: result.fixtureId,
+          label: result.fixtureId,
+          manualScore: `${previous.homeGoals}-${previous.awayGoals}`,
+          apiScore: `${result.homeGoals}-${result.awayGoals}`,
+        });
+        protectedCount += 1;
+      } else {
+        unchanged += 1;
+      }
       continue;
     }
     byFixture.set(result.fixtureId, result);
@@ -184,6 +225,7 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
     corrected,
     unchanged,
     protected: protectedCount,
+    conflicts,
     results: current
       .map((result) => byFixture.get(result.fixtureId))
       .filter((result): result is KnockoutResult => Boolean(result))
@@ -285,6 +327,7 @@ export async function syncGroupMatchResults(current: ResultStore) {
     protected: merged.protected + mergedKnockout.protected,
     skipped,
     checkedAt: new Date().toISOString(),
+    conflicts: [...merged.conflicts, ...mergedKnockout.conflicts],
   };
 
   return { results, report };

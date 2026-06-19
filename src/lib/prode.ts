@@ -125,6 +125,16 @@ export type ResultStore = {
   manualAdjustments?: ManualPointAdjustment[];
 };
 
+export type PointAuditEntry = {
+  id: string;
+  category: "group-match" | "group" | "knockout" | "scorer";
+  label: string;
+  prediction: string;
+  official: string;
+  points: number;
+  verdict: "exact" | "correct" | "miss";
+};
+
 export type StandingRow = {
   submissionId: string;
   name: string;
@@ -146,7 +156,10 @@ export type StandingRow = {
   predictionMatchesPlayed: number;
   predictionWins: number;
   predictionLosses: number;
+  pointAudit: PointAuditEntry[];
 };
+
+export const standingsTieBreakRules = ["Puntos totales", "Nombre en orden alfabetico inverso"] as const;
 
 type RawPrediction = {
   matchId?: unknown;
@@ -717,6 +730,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
   let knockoutScorerHits = 0;
   let playedMatchPredictions = 0;
   let playedKnockoutPredictions = 0;
+  const pointAudit: PointAuditEntry[] = [];
   const manualAdjustmentPoints = (results.manualAdjustments ?? [])
     .filter((adjustment) => adjustment.normalizedName === submission.normalizedName)
     .reduce((total, adjustment) => total + adjustment.points, 0);
@@ -725,32 +739,61 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     const result = resultByMatch.get(prediction.matchId);
     if (!result) continue;
     playedMatchPredictions += 1;
+    const match = matchMap.get(prediction.matchId);
+    const predictionLabel =
+      prediction.type === "score"
+        ? `${prediction.homeGoals}-${prediction.awayGoals}`
+        : choiceLabel(prediction.choice, match?.home ?? "Local", match?.away ?? "Visitante");
+    let points = 0;
+    let verdict: PointAuditEntry["verdict"] = "miss";
 
     if (
       prediction.type === "score" &&
       prediction.homeGoals === result.homeGoals &&
       prediction.awayGoals === result.awayGoals
     ) {
-      matchPoints += 2;
+      points = 2;
+      verdict = "exact";
       exactHits += 1;
-      continue;
+    } else {
+      const predictedOutcome = prediction.type === "score" ? prediction.outcome : prediction.choice;
+      if (predictedOutcome === result.outcome) {
+        points = 1;
+        verdict = "correct";
+        winnerHits += 1;
+      }
     }
-
-    const predictedOutcome = prediction.type === "score" ? prediction.outcome : prediction.choice;
-    if (predictedOutcome === result.outcome) {
-      matchPoints += 1;
-      winnerHits += 1;
-    }
+    matchPoints += points;
+    pointAudit.push({
+      id: prediction.matchId,
+      category: "group-match",
+      label: match ? `#${match.order} ${match.home} vs. ${match.away}` : prediction.matchId,
+      prediction: predictionLabel,
+      official: `${result.homeGoals}-${result.awayGoals}`,
+      points,
+      verdict,
+    });
   }
 
   for (const prediction of submission.groupPredictions ?? []) {
     const result = resultByGroup.get(prediction.groupId);
     if (!result) continue;
     const predicted = new Set([prediction.first, prediction.second]);
+    let points = 0;
     if (predicted.has(result.first) && predicted.has(result.second)) {
-      groupPoints += 3;
+      points = 3;
       groupHits += 1;
     }
+    groupPoints += points;
+    pointAudit.push({
+      id: `group-${prediction.groupId}`,
+      category: "group",
+      label: `Grupo ${prediction.groupId}`,
+      prediction: `${prediction.first} / ${prediction.second}`,
+      official: `${result.first} / ${result.second}`,
+      points,
+      verdict: points > 0 ? "correct" : "miss",
+    });
   }
 
   for (const prediction of submission.knockoutPredictions ?? []) {
@@ -759,18 +802,42 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     if (!result) continue;
     playedKnockoutPredictions += 1;
     const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
+    let basePoints = 0;
+    let baseVerdict: PointAuditEntry["verdict"] = "miss";
     if (prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals) {
-      knockoutPoints += scoring.exact;
+      basePoints = scoring.exact;
+      baseVerdict = "exact";
       knockoutExactHits += 1;
     } else if (getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals)) {
-      knockoutPoints += scoring.winner;
+      basePoints = scoring.winner;
+      baseVerdict = "correct";
       knockoutWinnerHits += 1;
     }
+    knockoutPoints += basePoints;
+    pointAudit.push({
+      id: prediction.fixtureId,
+      category: "knockout",
+      label: fixture ? `${fixture.home} vs. ${fixture.away}` : prediction.fixtureId,
+      prediction: `${prediction.homeGoals}-${prediction.awayGoals}`,
+      official: `${result.homeGoals}-${result.awayGoals}`,
+      points: basePoints,
+      verdict: baseVerdict,
+    });
 
-    if (knockoutScorerBonusMatches(prediction, result)) {
+    const scorerHit = knockoutScorerBonusMatches(prediction, result);
+    if (scorerHit) {
       knockoutPoints += 1;
       knockoutScorerHits += 1;
     }
+    pointAudit.push({
+      id: `${prediction.fixtureId}-scorer`,
+      category: "scorer",
+      label: fixture ? `Goleador: ${fixture.home} vs. ${fixture.away}` : `Goleador: ${prediction.fixtureId}`,
+      prediction: prediction.goalScorer?.trim() || "Sin goleador (0-0)",
+      official: result.scorerNames?.join(", ") || "Sin goleadores",
+      points: scorerHit ? 1 : 0,
+      verdict: scorerHit ? "correct" : "miss",
+    });
   }
 
   const predictionMatchesPlayed = playedMatchPredictions + playedKnockoutPredictions;
@@ -797,17 +864,16 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     predictionMatchesPlayed,
     predictionWins,
     predictionLosses: Math.max(predictionMatchesPlayed - predictionWins, 0),
+    pointAudit,
   };
 }
 
+export function compareStandingRows(a: StandingRow, b: StandingRow) {
+  if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+  const byReverseName = b.name.localeCompare(a.name, "es", { sensitivity: "base" });
+  return byReverseName || b.submissionId.localeCompare(a.submissionId);
+}
+
 export function buildStandings(submissions: Submission[], results: ResultStore) {
-  return submissions
-    .map((submission) => scoreSubmission(submission, results))
-    .sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      if (b.exactHits !== a.exactHits) return b.exactHits - a.exactHits;
-      if (b.knockoutExactHits !== a.knockoutExactHits) return b.knockoutExactHits - a.knockoutExactHits;
-      if (b.groupPoints !== a.groupPoints) return b.groupPoints - a.groupPoints;
-      return b.name.localeCompare(a.name, "es");
-    });
+  return submissions.map((submission) => scoreSubmission(submission, results)).sort(compareStandingRows);
 }

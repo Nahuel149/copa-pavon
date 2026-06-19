@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { autoSyncGroupMatchResults } from "@/lib/auto-results";
 import { matches } from "@/lib/matches";
-import { buildStandings, clans, type ResultStore, type Submission } from "@/lib/prode";
+import { buildStandings, clans, standingsTieBreakRules, type ResultStore, type Submission } from "@/lib/prode";
 import { readResultStore, readSubmissionStore, writeResultStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -71,6 +71,62 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
   return snapshots;
 }
 
+function buildDailyRecap(
+  submissions: Submission[],
+  results: ResultStore,
+  history: ReturnType<typeof buildStandingsHistory>,
+) {
+  const resultByMatch = new Map(results.matchResults.map((result) => [result.matchId, result]));
+  const latestPlayedMatch = matches.toReversed().find((match) => resultByMatch.has(match.id));
+  if (!latestPlayedMatch) return null;
+  const dayMatches = matches.filter((match) => match.dateLabel === latestPlayedMatch.dateLabel && resultByMatch.has(match.id));
+  const dayResults = dayMatches.map((match) => resultByMatch.get(match.id)).filter((result): result is NonNullable<typeof result> => Boolean(result));
+  const dailyStandings = buildStandings(submissions, {
+    matchResults: dayResults,
+    groupResults: [],
+    knockoutFixtures: [],
+    knockoutResults: [],
+    manualAdjustments: [],
+  });
+  const leader = dailyStandings[0];
+  const latestSnapshot = history.findLast((snapshot) => snapshot.label === latestPlayedMatch.dateLabel);
+  const latestIndex = latestSnapshot ? history.indexOf(latestSnapshot) : -1;
+  const previousSnapshot = latestIndex > 0 ? history[latestIndex - 1] : undefined;
+  const previousPosition = new Map((previousSnapshot?.positions ?? []).map((row) => [row.submissionId, row.position]));
+  const biggestRise = latestSnapshot?.positions
+    .map((row) => ({ ...row, movement: (previousPosition.get(row.submissionId) ?? row.position) - row.position }))
+    .toSorted((a, b) => b.movement - a.movement || b.points - a.points || b.name.localeCompare(a.name, "es"))[0];
+
+  return {
+    dateLabel: latestPlayedMatch.dateLabel,
+    matchesPlayed: dayMatches.length,
+    matches: dayMatches.map((match) => {
+      const result = resultByMatch.get(match.id)!;
+      return {
+        matchId: match.id,
+        label: `${match.home} vs. ${match.away}`,
+        score: `${result.homeGoals}-${result.awayGoals}`,
+        source: result.source ?? "api",
+      };
+    }),
+    leader: leader
+      ? {
+          submissionId: leader.submissionId,
+          name: leader.name,
+          points: leader.totalPoints,
+          hits: leader.predictionWins,
+          exacts: leader.exactHits,
+        }
+      : null,
+    correctPredictions: dailyStandings.reduce((total, row) => total + row.predictionWins, 0),
+    exactPredictions: dailyStandings.reduce((total, row) => total + row.exactHits, 0),
+    biggestRise:
+      biggestRise && biggestRise.movement > 0
+        ? { name: biggestRise.name, positions: biggestRise.movement }
+        : null,
+  };
+}
+
 export async function GET() {
   try {
     let syncReport = null;
@@ -82,12 +138,15 @@ export async function GET() {
 
     const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
     const standings = buildStandings(submissionStore.submissions, results);
+    const history = buildStandingsHistory(submissionStore.submissions, results);
     return NextResponse.json({
       standings,
       standingsByClan: Object.fromEntries(
         clans.map((clan) => [clan.id, standings.filter((standing) => standing.clan === clan.id)]),
       ),
-      history: buildStandingsHistory(submissionStore.submissions, results),
+      history,
+      dailyRecap: buildDailyRecap(submissionStore.submissions, results, history),
+      tieBreakRules: standingsTieBreakRules,
       playedMatches: results.matchResults.length,
       decidedGroups: results.groupResults.length,
       knockoutFixtures: results.knockoutFixtures.length,

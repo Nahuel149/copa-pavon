@@ -52,6 +52,36 @@ describe("automatic result sync", () => {
     });
     expect(report.imported).toBe(0);
     expect(report.protected).toBe(1);
+    expect(report.conflicts).toEqual([
+      expect.objectContaining({
+        kind: "group",
+        id: "m-01",
+        manualScore: "1-1",
+        apiScore: "2-2",
+      }),
+    ]);
+  });
+
+  it("keeps a manual score while allowing missing scorer details to be enriched", async () => {
+    process.env.PRODE_RESULTS_SYNC_URL = "https://api-one.test/games";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse([game(1, 1, 0, { home_scorers: "{\"S. Gimenez 31'\"}" })])),
+    );
+
+    const { results, report } = await syncGroupMatchResults({
+      ...emptyResults,
+      matchResults: [{ matchId: "m-01", homeGoals: 1, awayGoals: 0, outcome: "home", source: "manual" }],
+    });
+
+    expect(results.matchResults[0]).toMatchObject({
+      matchId: "m-01",
+      homeGoals: 1,
+      awayGoals: 0,
+      source: "manual",
+      goalScorers: [{ team: "home", name: "S. Gimenez", minute: "31'" }],
+    });
+    expect(report.conflicts).toEqual([]);
   });
 
   it("can import from a second source when the first source has no finished result", async () => {

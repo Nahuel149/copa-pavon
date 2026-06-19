@@ -141,6 +141,23 @@ describe("prode scoring", () => {
     expect(row.predictionMatchesPlayed).toBe(2);
     expect(row.predictionWins).toBe(2);
     expect(row.predictionLosses).toBe(0);
+    expect(row.pointAudit).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "m-04", points: 2, verdict: "exact" }),
+        expect.objectContaining({ id: "m-01", points: 1, verdict: "correct" }),
+      ]),
+    );
+  });
+
+  it("does not add winner points on top of an exact group-stage score", () => {
+    const row = scoreSubmission(submissionFromPayload(), {
+      ...emptyResults,
+      matchResults: [{ matchId: "m-04", homeGoals: 2, awayGoals: 1, outcome: "home" }],
+    });
+
+    expect(row.matchPoints).toBe(2);
+    expect(row.exactHits).toBe(1);
+    expect(row.winnerHits).toBe(0);
   });
 
   it("scores group top 2 without caring about order", () => {
@@ -154,6 +171,17 @@ describe("prode scoring", () => {
 
     expect(result.groupPoints).toBe(3);
     expect(result.groupHits).toBe(1);
+  });
+
+  it("gives zero group points when only one qualified team is correct", () => {
+    const result = scoreSubmission(submissionFromPayload(), {
+      ...emptyResults,
+      groupResults: [{ groupId: "A", first: groups[0].teams[0], second: groups[0].teams[2] }],
+    });
+
+    expect(result.groupPoints).toBe(0);
+    expect(result.groupHits).toBe(0);
+    expect(result.pointAudit[0]).toMatchObject({ category: "group", points: 0, verdict: "miss" });
   });
 
   it("scores knockout winner without exact result by stage", () => {
@@ -373,5 +401,33 @@ describe("prode scoring", () => {
     );
 
     expect(rows[0].name).toBe("Nahuel");
+  });
+
+  it("uses reverse alphabetical order even when the other tied player has more exact scores", () => {
+    const nahuel = submissionFromPayload("Nahuel");
+    const ana = submissionFromPayload("Ana");
+    nahuel.predictions = nahuel.predictions.map((prediction) =>
+      prediction.matchId === "m-04" && prediction.type === "score"
+        ? { ...prediction, homeGoals: 1, awayGoals: 0, outcome: "home" as const }
+        : prediction,
+    );
+    ana.predictions = ana.predictions.map((prediction) =>
+      prediction.matchId === "m-01" && prediction.type === "choice"
+        ? { ...prediction, choice: "away" as const }
+        : prediction,
+    );
+
+    const rows = buildStandings([ana, nahuel], {
+      ...emptyResults,
+      matchResults: [
+        { matchId: "m-04", homeGoals: 2, awayGoals: 1, outcome: "home" },
+        { matchId: "m-01", homeGoals: 1, awayGoals: 0, outcome: "home" },
+      ],
+    });
+
+    expect(rows.map((row) => ({ name: row.name, points: row.totalPoints, exacts: row.exactHits }))).toEqual([
+      { name: "Nahuel", points: 2, exacts: 0 },
+      { name: "Ana", points: 2, exacts: 1 },
+    ]);
   });
 });

@@ -78,6 +78,16 @@ type StandingsResponse = {
   decidedGroups: number;
   knockoutFixtures: number;
   playedKnockoutMatches: number;
+  tieBreakRules: readonly string[];
+  dailyRecap: {
+    dateLabel: string;
+    matchesPlayed: number;
+    matches: Array<{ matchId: string; label: string; score: string; source: "api" | "manual" }>;
+    leader: { submissionId: string; name: string; points: number; hits: number; exacts: number } | null;
+    correctPredictions: number;
+    exactPredictions: number;
+    biggestRise: { name: string; positions: number } | null;
+  } | null;
   updatedAt: string;
   error?: string;
 };
@@ -104,6 +114,8 @@ export default function TablaPage() {
     decidedGroups: 0,
     knockoutFixtures: 0,
     playedKnockoutMatches: 0,
+    tieBreakRules: [],
+    dailyRecap: null,
     updatedAt: "",
   });
   const [status, setStatus] = useState<"loading" | "ready">("loading");
@@ -540,7 +552,7 @@ export default function TablaPage() {
           <div>
             <span>
               Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
-              de eliminatorias. Ganados/perdidos son aciertos y errores del prode. {movementBaseLabel}.
+              de eliminatorias. Ganados/perdidos son aciertos y errores del prode. Desempate: {(data.tieBreakRules ?? []).join(" y ").toLowerCase()}. {movementBaseLabel}.
             </span>
             {fullGraphHistory.length > 1 ? (
               <div className="movementCutSelector" role="group" aria-label="Elegir tramo de cambios de posiciones">
@@ -632,6 +644,22 @@ export default function TablaPage() {
                               </article>
                             ))}
                           </div>
+                          {row.pointAudit.length > 0 ? (
+                            <details className="pointAuditDisclosure">
+                              <summary>Ver jugada por jugada ({row.pointAudit.length})</summary>
+                              <div className="pointAuditList">
+                                {row.pointAudit.map((entry) => (
+                                  <article className={`pointAuditEntry ${entry.verdict}`} key={`${row.submissionId}-${entry.id}`}>
+                                    <div>
+                                      <strong>{entry.label}</strong>
+                                      <span>{entry.prediction} / oficial {entry.official}</span>
+                                    </div>
+                                    <b>{entry.points > 0 ? `+${entry.points}` : "0"}</b>
+                                  </article>
+                                ))}
+                              </div>
+                            </details>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -647,6 +675,49 @@ export default function TablaPage() {
           </tbody>
         </table>
       </section>
+
+      {data.dailyRecap ? (
+        <section className="dailyRecap" aria-label={`Resumen de ${data.dailyRecap.dateLabel}`}>
+          <div className="tableNote">
+            <div>
+              <strong>Resumen del {data.dailyRecap.dateLabel}</strong>
+              <span>{data.dailyRecap.matchesPlayed} partidos con resultado en la jornada.</span>
+            </div>
+            <Trophy size={24} aria-hidden="true" />
+          </div>
+          <div className="dailyResultStrip">
+            {data.dailyRecap.matches.map((match) => (
+              <article key={match.matchId}>
+                <span>{match.label}</span>
+                <strong>{match.score}</strong>
+                <small>{match.source === "manual" ? "Confirmado por admin" : "Fuente automatica"}</small>
+              </article>
+            ))}
+          </div>
+          <div className="dailyRecapGrid">
+            <article>
+              <span>Figura de la jornada</span>
+              <strong>{data.dailyRecap.leader?.name ?? "Sin datos"}</strong>
+              <small>{data.dailyRecap.leader ? `${data.dailyRecap.leader.points} pts · ${data.dailyRecap.leader.hits} aciertos` : "-"}</small>
+            </article>
+            <article>
+              <span>Aciertos totales</span>
+              <strong>{data.dailyRecap.correctPredictions}</strong>
+              <small>Entre todos los participantes</small>
+            </article>
+            <article>
+              <span>Exactos del dia</span>
+              <strong>{data.dailyRecap.exactPredictions}</strong>
+              <small>Marcadores clavados</small>
+            </article>
+            <article>
+              <span>Mayor subida</span>
+              <strong>{data.dailyRecap.biggestRise?.name ?? "Sin cambios"}</strong>
+              <small>{data.dailyRecap.biggestRise ? `+${data.dailyRecap.biggestRise.positions} puestos` : "="}</small>
+            </article>
+          </div>
+        </section>
+      ) : null}
 
       <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">
         <div className="tableNote">
