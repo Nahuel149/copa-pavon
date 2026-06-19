@@ -35,6 +35,12 @@ type EditWindow = {
   deadline: string | null;
   rounds: Record<MatchRound, { open: boolean; deadline: string }>;
 };
+type EditSubmissionResponse = {
+  submission?: Submission;
+  editWindow?: EditWindow;
+  excludedMatchIds?: string[];
+  errors?: string[];
+};
 
 const defaultEditWindow: EditWindow = {
   open: true,
@@ -128,6 +134,7 @@ export default function EditarPage() {
   const [originalPredictions, setOriginalPredictions] = useState<DraftState>(initialDraft);
   const [originalGroupPredictions, setOriginalGroupPredictions] = useState<GroupDraftState>(initialGroupDraft);
   const [editWindow, setEditWindow] = useState<EditWindow>(defaultEditWindow);
+  const [excludedMatchIds, setExcludedMatchIds] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "done">("idle");
   const [errors, setErrors] = useState<string[]>([]);
@@ -135,13 +142,15 @@ export default function EditarPage() {
   const [myProde, setMyProde] = useState<MyProdeResponse | null>(null);
 
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
-  const completedMatches = countCompletePredictions(predictions);
+  const excludedMatchSet = useMemo(() => new Set(excludedMatchIds), [excludedMatchIds]);
+  const requiredMatchCount = matches.length - excludedMatchSet.size;
+  const completedMatches = countCompletePredictions(predictions, { excludedMatchIds });
   const completedGroups = countCompleteGroupPredictions(groupPredictions);
   const completedTotal = completedMatches + completedGroups;
-  const totalItems = matches.length + groups.length;
+  const totalItems = requiredMatchCount + groups.length;
   const missingName = name.trim().length < 2;
   const missingPin = !/^\d{4,10}$/.test(pin.trim());
-  const missingMatches = matches.length - completedMatches;
+  const missingMatches = requiredMatchCount - completedMatches;
   const missingGroups = groups.length - completedGroups;
   const changedGroups = groups.filter((group) => changedGroupTeamCount(originalGroupPredictions[group.id], groupPredictions[group.id]) > 0).length;
   const invalidGroupChanges = groups.filter((group) => changedGroupTeamCount(originalGroupPredictions[group.id], groupPredictions[group.id]) > 1);
@@ -193,7 +202,7 @@ export default function EditarPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, pin }),
     });
-    const body = await readJsonResponse<{ submission?: Submission; editWindow?: EditWindow; errors?: string[] }>(response);
+    const body = await readJsonResponse<EditSubmissionResponse>(response);
     if (!response.ok || body.errors?.length || !body.submission) {
       setErrors(body.errors ?? ["No se pudo abrir el pronostico."]);
       setStatus("idle");
@@ -207,6 +216,7 @@ export default function EditarPage() {
     setOriginalPredictions(loadedPredictions);
     setOriginalGroupPredictions(loadedGroupPredictions);
     setEditWindow(body.editWindow ?? defaultEditWindow);
+    setExcludedMatchIds(body.excludedMatchIds ?? []);
     setLoaded(true);
     await loadMyProde(body.submission.name, pin);
     setStatus("idle");
@@ -222,14 +232,16 @@ export default function EditarPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(toPayload(name, pin, predictions, groupPredictions)),
     });
-    const body = await readJsonResponse<{ updatedAt?: string; editWindow?: EditWindow; errors?: string[] }>(response);
+    const body = await readJsonResponse<{ updatedAt?: string; editWindow?: EditWindow; excludedMatchIds?: string[]; errors?: string[] }>(response);
     if (!response.ok || body.errors?.length) {
       setErrors(body.errors ?? ["No se pudo guardar la edicion."]);
       if (body.editWindow) setEditWindow(body.editWindow);
+      if (body.excludedMatchIds) setExcludedMatchIds(body.excludedMatchIds);
       setStatus("idle");
       return;
     }
     setUpdatedAt(body.updatedAt ?? new Date().toISOString());
+    if (body.excludedMatchIds) setExcludedMatchIds(body.excludedMatchIds);
     setOriginalPredictions(predictions);
     setOriginalGroupPredictions(groupPredictions);
     await loadMyProde(name, pin);
@@ -409,14 +421,19 @@ export default function EditarPage() {
             {roundMatches.map((match) => {
               const value = predictions[match.id];
               const originalValue = originalPredictions[match.id];
-              const matchOpen = editWindow.rounds[match.round]?.open ?? true;
+              const skippedByLateEntry = excludedMatchSet.has(match.id);
+              const matchOpen = !skippedByLateEntry && (editWindow.rounds[match.round]?.open ?? true);
               const changed = !samePrediction(value, originalValue);
               return (
                 <article className={`${match.exactScore ? "matchCard exact" : "matchCard choice"}${changed ? " changed" : ""}`} key={match.id}>
                   <div className="matchHeader"><span>#{match.order}</span><strong>{matchOpen ? (match.exactScore ? "Marcador exacto" : "1X2") : "Cerrado"} - Grupo {match.groupId}</strong></div>
                   <h2><TeamBadge team={match.home} /><span>vs.</span><TeamBadge team={match.away} /></h2>
                   <small className={matchOpen ? "editState open" : "editState closed"}>
-                    {matchOpen ? "Este partido todavia se puede editar." : "Este partido ya cerro."}
+                    {skippedByLateEntry
+                      ? "Validado por carga tardia: ya estaba cerrado cuando entraste."
+                      : matchOpen
+                        ? "Este partido todavia se puede editar."
+                        : "Este partido ya cerro."}
                   </small>
                   {changed ? <small className="previousPick">Anterior: {formatDraftPrediction(originalValue, match.home, match.away)}</small> : null}
                   {value.type === "score" ? (

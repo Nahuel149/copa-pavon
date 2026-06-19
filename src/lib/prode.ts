@@ -671,8 +671,13 @@ export function validateResultStore(payload: unknown): ResultStore {
   return { matchResults, groupResults, knockoutFixtures, knockoutResults, manualAdjustments };
 }
 
-export function countCompletePredictions(predictions: Record<string, unknown>) {
+export function countCompletePredictions(
+  predictions: Record<string, unknown>,
+  options: { excludedMatchIds?: Iterable<string> } = {},
+) {
+  const excludedMatchIds = new Set(options.excludedMatchIds ?? []);
   return matches.reduce((total, match) => {
+    if (excludedMatchIds.has(match.id)) return total;
     const value = predictions[match.id];
     if (!value || typeof value !== "object") return total;
     if (match.exactScore) {

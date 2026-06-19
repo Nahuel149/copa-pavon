@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getEditWindow } from "@/lib/edit-deadline";
+import { getLateEditExcludedMatchIds } from "@/lib/edit-validation";
 import { matchMap } from "@/lib/matches";
 import { validateParticipantPin, verifyPin } from "@/lib/pin";
 import { normalizeName, serializePrediction, validateSubmission, type GroupPrediction, type Prediction } from "@/lib/prode";
-import { findSubmissionByNormalizedName, publicSubmission, updateSubmissionPredictions } from "@/lib/storage";
+import { findSubmissionByNormalizedName, publicSubmission, readResultStore, updateSubmissionPredictions } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -88,7 +89,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ errors: auth.errors }, { status: auth.status });
   }
 
-  return NextResponse.json({ submission: publicSubmission(auth.submission), editWindow: getEditWindow() });
+  const editWindow = getEditWindow();
+  const results = await readResultStore();
+  const excludedMatchIds = getLateEditExcludedMatchIds(auth.submission, results, editWindow);
+
+  return NextResponse.json({ submission: publicSubmission(auth.submission), editWindow, excludedMatchIds });
 }
 
 export async function PUT(request: Request) {
@@ -107,13 +112,15 @@ export async function PUT(request: Request) {
     return NextResponse.json({ errors: auth.errors }, { status: auth.status });
   }
 
-  const result = validateSubmission(payload as Parameters<typeof validateSubmission>[0]);
+  const results = await readResultStore();
+  const excludedMatchIds = getLateEditExcludedMatchIds(auth.submission, results, editWindow);
+  const result = validateSubmission(payload as Parameters<typeof validateSubmission>[0], { excludedMatchIds });
   if (!result.ok) {
-    return NextResponse.json({ errors: result.errors.slice(0, 12) }, { status: 400 });
+    return NextResponse.json({ errors: result.errors.slice(0, 12), excludedMatchIds }, { status: 400 });
   }
 
   if (!editWindow.open && !hasAnyGroupChange(auth.submission.groupPredictions ?? [], result.groupPredictions)) {
-    return NextResponse.json({ errors: ["Ya cerraron todas las fechas de edicion disponibles."], editWindow }, { status: 403 });
+    return NextResponse.json({ errors: ["Ya cerraron todas las fechas de edicion disponibles."], editWindow, excludedMatchIds }, { status: 403 });
   }
 
   const lockedErrors = changedLockedPredictions(
@@ -124,7 +131,7 @@ export async function PUT(request: Request) {
     editWindow,
   );
   if (lockedErrors.length > 0) {
-    return NextResponse.json({ errors: lockedErrors, editWindow }, { status: 403 });
+    return NextResponse.json({ errors: lockedErrors, editWindow, excludedMatchIds }, { status: 403 });
   }
 
   const payloadHasClan = Object.prototype.hasOwnProperty.call(payload as object, "clan");
@@ -140,5 +147,5 @@ export async function PUT(request: Request) {
     return NextResponse.json({ errors: ["No se pudo actualizar el pronostico."] }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, updatedAt: saved.updatedAt, editWindow });
+  return NextResponse.json({ ok: true, updatedAt: saved.updatedAt, editWindow, excludedMatchIds });
 }

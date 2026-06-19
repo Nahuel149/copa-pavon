@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { getKnockoutEditDeadline, isKnockoutFixtureEditable } from "./knockout-deadlines";
 import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knockout-visibility";
+import { getLateEditExcludedMatchIds } from "./edit-validation";
 import { groups, matches, type KnockoutFixture } from "./matches";
 import {
   buildStandings,
+  countCompletePredictions,
   countCompleteKnockoutPredictions,
   defaultClan,
   getOutcome,
@@ -91,6 +93,47 @@ describe("prode validation", () => {
       expect(result.predictions).toHaveLength(71);
       expect(result.predictions.some((prediction) => prediction.matchId === "m-01")).toBe(false);
     }
+  });
+
+  it("treats closed matches missing from late entries as already validated for editing", () => {
+    const payload = validPayload("Ale..");
+    const lateSubmission = submissionFromPayload("Ale..");
+    lateSubmission.predictions = lateSubmission.predictions.filter(
+      (prediction) => prediction.matchId !== "m-01" && prediction.matchId !== "m-25" && prediction.matchId !== "m-26",
+    );
+    payload.predictions = payload.predictions.filter(
+      (prediction) => prediction.matchId !== "m-01" && prediction.matchId !== "m-25" && prediction.matchId !== "m-26",
+    );
+    const editWindow = {
+      deadline: null,
+      open: true,
+      rounds: {
+        1: { open: false, deadline: "2026-06-11T19:00:00.000Z" },
+        2: { open: true, deadline: "2026-06-18T16:00:00.000Z" },
+        3: { open: true, deadline: "2026-06-24T19:00:00.000Z" },
+      },
+    };
+    const excludedMatchIds = getLateEditExcludedMatchIds(
+      lateSubmission,
+      { ...emptyResults, matchResults: [{ matchId: "m-25", homeGoals: 1, awayGoals: 0, outcome: "home" }] },
+      editWindow,
+    );
+
+    expect(excludedMatchIds).toEqual(["m-01", "m-25"]);
+    expect(validateSubmission(payload, { excludedMatchIds }).ok).toBe(false);
+
+    payload.predictions.push({ matchId: "m-26", type: "choice", choice: "home" });
+    const result = validateSubmission(payload, { excludedMatchIds });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.predictions.some((prediction) => prediction.matchId === "m-01")).toBe(false);
+      expect(result.predictions.some((prediction) => prediction.matchId === "m-25")).toBe(false);
+      expect(result.predictions.some((prediction) => prediction.matchId === "m-26")).toBe(true);
+    }
+    expect(countCompletePredictions(Object.fromEntries(payload.predictions.map((prediction) => [prediction.matchId, prediction])), { excludedMatchIds })).toBe(
+      matches.length - excludedMatchIds.length,
+    );
   });
 
   it("requires exact scores only for important marked matches", () => {
