@@ -2916,10 +2916,27 @@ tbody tr.relegationRow:hover {
 }
 
 .awardGrid,
+.summaryAwardGrid,
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   border-top: 3px solid var(--ink);
+}
+
+.summaryAwardGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summaryAwardGrid .awardPill {
+  border-bottom: 2px solid rgba(5, 5, 5, 0.18);
+}
+
+.summaryAwardGrid .awardPill:nth-child(3n) {
+  border-right: 0;
+}
+
+.summaryAwardGrid .awardPill:nth-last-child(-n + 3) {
+  border-bottom: 0;
 }
 
 .statsGrid {
@@ -3709,6 +3726,7 @@ tbody tr.relegationRow:hover {
   }
 
   .awardGrid,
+  .summaryAwardGrid,
   .statsGrid {
     grid-template-columns: 1fr;
   }
@@ -3719,7 +3737,12 @@ tbody tr.relegationRow:hover {
     border-bottom: 2px solid rgba(5, 5, 5, 0.18);
   }
 
+  .summaryAwardGrid .awardPill:nth-last-child(-n + 3) {
+    border-bottom: 2px solid rgba(5, 5, 5, 0.18);
+  }
+
   .awardPill:last-child,
+  .summaryAwardGrid .awardPill:last-child,
   .statsGrid article:last-child {
     border-bottom: 0;
   }

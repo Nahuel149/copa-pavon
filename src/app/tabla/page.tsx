@@ -377,68 +377,55 @@ export default function TablaPage() {
     }
   }
 
-  const awards = useMemo(() => {
+  const dateHighlights = useMemo(() => {
     if (rows.length === 0) return [];
-    const usedAwardIds = new Set<string>();
-    const remember = (row?: StandingRow) => {
-      if (row) usedAwardIds.add(row.submissionId);
-      return row;
-    };
-    const topRow = remember(rows[0]);
-    const historicHitsCandidates = rows
+    const topRow = rows[0];
+    const historicHitsLeader = rows
       .map((row) => ({
         row,
-        hits: row.exactHits + row.winnerHits + row.knockoutExactHits,
+        hits: row.exactHits + row.winnerHits + row.knockoutExactHits + row.knockoutWinnerHits,
       }))
       .sort(
         (a, b) =>
           b.hits - a.hits ||
           b.row.totalPoints - a.row.totalPoints ||
           a.row.name.localeCompare(b.row.name, "es"),
-      );
-    const historicHitsLeader = historicHitsCandidates[0];
-    const historicHitsAward =
-      !usedAwardIds.has(historicHitsLeader.row.submissionId) || historicHitsLeader.hits === 0
-        ? historicHitsLeader
-        : historicHitsCandidates.find((candidate) => candidate.hits > 0 && !usedAwardIds.has(candidate.row.submissionId));
-    if (historicHitsAward) remember(historicHitsAward.row);
-
-    const movementCandidates = rows
-      .map((row) => ({ row, movement: movementById.get(row.submissionId) ?? 0 }))
-      .sort((a, b) => b.movement - a.movement || a.row.name.localeCompare(b.row.name, "es"));
-    const riseAward = movementCandidates.find((candidate) => candidate.movement > 0 && !usedAwardIds.has(candidate.row.submissionId));
-    if (riseAward) remember(riseAward.row);
-
+      )[0];
     const last = rows.at(-1);
-    if (last) remember(last);
-
-    const batacazoAward = movementCandidates.find((candidate) => candidate.movement >= 3 && !usedAwardIds.has(candidate.row.submissionId));
-    if (batacazoAward) remember(batacazoAward.row);
-
-    const historicLabel =
-      historicHitsAward && historicHitsAward.row.submissionId !== historicHitsLeader.row.submissionId
-        ? "Otro con aciertos historicos"
-        : "Mas aciertos historicos";
+    const daily = data.dailyRecap;
     return [
+      ...(daily
+        ? [
+            {
+              label: "Figura de la jornada",
+              value: daily.leader?.name ?? "Sin datos",
+              detail: daily.leader ? `${daily.leader.points} pts · ${daily.leader.hits} aciertos` : "-",
+            },
+          ]
+        : []),
       { label: "Puntero", value: topRow?.name ?? "-", detail: `${topRow?.totalPoints ?? 0} pts` },
+      ...(daily
+        ? [
+            {
+              label: "Aciertos y exactos del dia",
+              value: `${daily.correctPredictions} / ${daily.exactPredictions}`,
+              detail: "Aciertos totales / marcadores exactos",
+            },
+            {
+              label: "Mayor subida",
+              value: daily.biggestRise?.name ?? "Sin cambios",
+              detail: daily.biggestRise ? `+${daily.biggestRise.positions} puestos` : "=",
+            },
+          ]
+        : []),
       {
-        label: historicLabel,
-        value: historicHitsAward ? historicHitsAward.row.name : "Sin datos",
-        detail: historicHitsAward ? `${historicHitsAward.hits} resultados` : "Sin otro jugador",
-      },
-      {
-        label: "Racha positiva",
-        value: riseAward ? riseAward.row.name : "Sin cambios",
-        detail: riseAward ? `Subio ${riseAward.movement}` : "=",
+        label: "Mas aciertos historicos",
+        value: historicHitsLeader?.row.name ?? "Sin datos",
+        detail: historicHitsLeader ? `${historicHitsLeader.hits} resultados` : "-",
       },
       { label: "Ultimo de la B", value: last?.name ?? "-", detail: `${last?.totalPoints ?? 0} pts` },
-      {
-        label: "Pego el batacazo",
-        value: batacazoAward ? batacazoAward.row.name : "Sin batacazo",
-        detail: batacazoAward ? `+${batacazoAward.movement} puestos` : "Sin otro salto fuerte",
-      },
     ];
-  }, [movementById, rows]);
+  }, [data.dailyRecap, rows]);
 
   async function loadStandings() {
     setStatus("loading");
@@ -676,45 +663,38 @@ export default function TablaPage() {
         </table>
       </section>
 
-      {data.dailyRecap ? (
-        <section className="dailyRecap" aria-label={`Resumen de ${data.dailyRecap.dateLabel}`}>
+      {data.dailyRecap || dateHighlights.length > 0 ? (
+        <section className="dailyRecap" aria-label="Resumen y premios de la fecha">
           <div className="tableNote">
             <div>
-              <strong>Resumen del {data.dailyRecap.dateLabel}</strong>
-              <span>{data.dailyRecap.matchesPlayed} partidos con resultado en la jornada.</span>
+              <strong>Resumen y premios de la fecha</strong>
+              <span>
+                {data.dailyRecap
+                  ? `${data.dailyRecap.dateLabel} · ${data.dailyRecap.matchesPlayed} partidos con resultado.`
+                  : "Se completa cuando haya resultados oficiales."}
+              </span>
             </div>
             <Trophy size={24} aria-hidden="true" />
           </div>
-          <div className="dailyResultStrip">
-            {data.dailyRecap.matches.map((match) => (
-              <article key={match.matchId}>
-                <span>{match.label}</span>
-                <strong>{match.score}</strong>
-                <small>{match.source === "manual" ? "Confirmado por admin" : "Fuente automatica"}</small>
+          {data.dailyRecap ? (
+            <div className="dailyResultStrip">
+              {data.dailyRecap.matches.map((match) => (
+                <article key={match.matchId}>
+                  <span>{match.label}</span>
+                  <strong>{match.score}</strong>
+                  <small>{match.source === "manual" ? "Confirmado por admin" : "Fuente automatica"}</small>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          <div className="summaryAwardGrid">
+            {dateHighlights.map((highlight) => (
+              <article className="awardPill" key={highlight.label}>
+                <span>{highlight.label}</span>
+                <strong>{highlight.value}</strong>
+                <small>{highlight.detail}</small>
               </article>
             ))}
-          </div>
-          <div className="dailyRecapGrid">
-            <article>
-              <span>Figura de la jornada</span>
-              <strong>{data.dailyRecap.leader?.name ?? "Sin datos"}</strong>
-              <small>{data.dailyRecap.leader ? `${data.dailyRecap.leader.points} pts · ${data.dailyRecap.leader.hits} aciertos` : "-"}</small>
-            </article>
-            <article>
-              <span>Aciertos totales</span>
-              <strong>{data.dailyRecap.correctPredictions}</strong>
-              <small>Entre todos los participantes</small>
-            </article>
-            <article>
-              <span>Exactos del dia</span>
-              <strong>{data.dailyRecap.exactPredictions}</strong>
-              <small>Marcadores clavados</small>
-            </article>
-            <article>
-              <span>Mayor subida</span>
-              <strong>{data.dailyRecap.biggestRise?.name ?? "Sin cambios"}</strong>
-              <small>{data.dailyRecap.biggestRise ? `+${data.dailyRecap.biggestRise.positions} puestos` : "="}</small>
-            </article>
           </div>
         </section>
       ) : null}
@@ -843,24 +823,6 @@ export default function TablaPage() {
           <div className="emptyState">El grafico aparece cuando haya participantes guardados.</div>
         )}
       </section>
-
-      {awards.length > 0 ? (
-        <section className="awardsPanel" aria-label="Premios de la fecha">
-          <div className="tableNote">
-            <strong>Premios de la fecha</strong>
-            <span>Badges automaticos, sutiles y recalculados con la tabla actual.</span>
-          </div>
-          <div className="awardGrid">
-            {awards.map((award) => (
-              <article className="awardPill" key={award.label}>
-                <span>{award.label}</span>
-                <strong>{award.value}</strong>
-                <small>{award.detail}</small>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
 
       <section className="shareCardPanel standingsSharePanel" aria-label="Compartir tabla actual">
         <div className="shareCardPreview">
