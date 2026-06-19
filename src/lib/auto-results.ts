@@ -170,10 +170,118 @@ function normalizeTeamName(value: unknown) {
     .trim();
 }
 
+const teamAliases: Record<string, string> = {
+  mexico: "mexico",
+  "south africa": "south africa",
+  sudafrica: "south africa",
+  "south korea": "south korea",
+  "corea del sur": "south korea",
+  "czech republic": "czech republic",
+  "republica checa": "czech republic",
+  canada: "canada",
+  "bosnia and herzegovina": "bosnia and herzegovina",
+  qatar: "qatar",
+  switzerland: "switzerland",
+  suiza: "switzerland",
+  brazil: "brazil",
+  brasil: "brazil",
+  morocco: "morocco",
+  marruecos: "morocco",
+  haiti: "haiti",
+  scotland: "scotland",
+  escocia: "scotland",
+  "united states": "united states",
+  "estados unidos": "united states",
+  paraguay: "paraguay",
+  australia: "australia",
+  turkey: "turkey",
+  turkiye: "turkey",
+  turquia: "turkey",
+  germany: "germany",
+  alemania: "germany",
+  curacao: "curacao",
+  "ivory coast": "ivory coast",
+  "costa de marfil": "ivory coast",
+  ecuador: "ecuador",
+  netherlands: "netherlands",
+  "paises bajos": "netherlands",
+  japan: "japan",
+  japon: "japan",
+  sweden: "sweden",
+  suecia: "sweden",
+  tunisia: "tunisia",
+  tunez: "tunisia",
+  belgium: "belgium",
+  belgica: "belgium",
+  egypt: "egypt",
+  egipto: "egypt",
+  iran: "iran",
+  "new zealand": "new zealand",
+  "nueva zelanda": "new zealand",
+  "saudi arabia": "saudi arabia",
+  "arabia saudita": "saudi arabia",
+  uruguay: "uruguay",
+  spain: "spain",
+  espana: "spain",
+  "cape verde": "cape verde",
+  "cabo verde": "cape verde",
+  france: "france",
+  francia: "france",
+  senegal: "senegal",
+  iraq: "iraq",
+  irak: "iraq",
+  norway: "norway",
+  noruega: "norway",
+  argentina: "argentina",
+  algeria: "algeria",
+  argelia: "algeria",
+  austria: "austria",
+  jordan: "jordan",
+  jordania: "jordan",
+  portugal: "portugal",
+  "rd congo": "rd congo",
+  "dr congo": "rd congo",
+  "democratic republic of the congo": "rd congo",
+  "democratic republic congo": "rd congo",
+  uzbekistan: "uzbekistan",
+  colombia: "colombia",
+  england: "england",
+  inglaterra: "england",
+  croatia: "croatia",
+  croacia: "croatia",
+  ghana: "ghana",
+  panama: "panama",
+};
+
+function teamKey(value: unknown) {
+  const normalized = normalizeTeamName(value);
+  return teamAliases[normalized] ?? normalized;
+}
+
 function sameTeams(a: unknown, b: unknown) {
-  const left = normalizeTeamName(a);
-  const right = normalizeTeamName(b);
+  const left = teamKey(a);
+  const right = teamKey(b);
   return Boolean(left && right && (left === right || left.includes(right) || right.includes(left)));
+}
+
+function groupMatchForGame(game: WorldCup26Game) {
+  const byTeams = matches.find((match) => sameTeams(match.home, game.home_team_name_en) && sameTeams(match.away, game.away_team_name_en));
+  if (byTeams) return byTeams;
+
+  const sourceId = Number(game.id);
+  const byId = matches[sourceId - 1];
+  if (byId && sameTeams(byId.home, game.home_team_name_en) && sameTeams(byId.away, game.away_team_name_en)) {
+    return byId;
+  }
+
+  return null;
+}
+
+function buildGroupGoalScorers(game: WorldCup26Game, homeGoals: number, awayGoals: number) {
+  const scorers = [...parseScorerEvents(game.home_scorers, "home"), ...parseScorerEvents(game.away_scorers, "away")];
+  const totalGoals = homeGoals + awayGoals;
+  if (totalGoals === 0) return [];
+  return scorers.length === totalGoals ? scorers : [];
 }
 
 function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResult[]) {
@@ -255,8 +363,6 @@ export async function syncGroupMatchResults(current: ResultStore) {
     const games = extractGames(payload);
 
     for (const game of games) {
-      const sourceId = Number(game.id);
-      const match = matches[sourceId - 1];
       const gameType = String(game.type ?? "group").toLowerCase();
       if (!isFinishedGame(game)) {
         skipped += 1;
@@ -270,16 +376,31 @@ export async function syncGroupMatchResults(current: ResultStore) {
         continue;
       }
 
-      if (gameType === "group" && match) {
-        if (!importedByMatch.has(match.id)) {
-          importedByMatch.set(match.id, {
-            matchId: match.id,
-            homeGoals,
-            awayGoals,
-            outcome: getOutcome(homeGoals, awayGoals),
-            goalScorers: [...parseScorerEvents(game.home_scorers, "home"), ...parseScorerEvents(game.away_scorers, "away")],
-            source: "api",
-          });
+      if (gameType === "group") {
+        const match = groupMatchForGame(game);
+        if (!match) {
+          skipped += 1;
+          continue;
+        }
+        const goalScorers = buildGroupGoalScorers(game, homeGoals, awayGoals);
+        const importedResult: MatchResult = {
+          matchId: match.id,
+          homeGoals,
+          awayGoals,
+          outcome: getOutcome(homeGoals, awayGoals),
+          ...(goalScorers.length > 0 ? { goalScorers } : {}),
+          source: "api",
+        };
+        const previousImported = importedByMatch.get(match.id);
+        if (!previousImported) {
+          importedByMatch.set(match.id, importedResult);
+        } else if (
+          previousImported.homeGoals === importedResult.homeGoals &&
+          previousImported.awayGoals === importedResult.awayGoals &&
+          !previousImported.goalScorers?.length &&
+          importedResult.goalScorers?.length
+        ) {
+          importedByMatch.set(match.id, importedResult);
         }
         continue;
       }

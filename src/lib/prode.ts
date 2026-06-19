@@ -237,7 +237,7 @@ export function parseScorerNames(value: unknown) {
     .split(",")
     .map((item) =>
       item
-        .replace(/\d{1,3}'(?:\+\d{1,2}')?/g, "")
+        .replace(/\d{1,3}(?:'?\+\d{1,2})?'/g, "")
         .replace(/\((?:OG|P|Pen)\)/gi, "")
         .replace(/\s+/g, " ")
         .trim(),
@@ -251,12 +251,12 @@ export function parseScorerEvents(value: unknown, team: "home" | "away"): MatchG
   if (!raw || raw.toLowerCase() === "null") return [];
 
   return raw
-    .replace(/[{}"]/g, "")
+    .replace(/[{}"\u201c\u201d]/g, "")
     .split(",")
     .map((item) => {
-      const minuteMatch = item.match(/(\d{1,3}'(?:\+\d{1,2}')?)/);
+      const minuteMatch = item.match(/(\d{1,3}(?:'?\+\d{1,2})?')/);
       const name = item
-        .replace(/\d{1,3}'(?:\+\d{1,2}')?/g, "")
+        .replace(/\d{1,3}(?:'?\+\d{1,2})?'/g, "")
         .replace(/\((?:OG|P|Pen)\)/gi, "")
         .replace(/\s+/g, " ")
         .trim();

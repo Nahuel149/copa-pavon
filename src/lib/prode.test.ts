@@ -391,6 +391,14 @@ describe("prode scoring", () => {
 
   it("parses scorer names from the automatic result source", () => {
     expect(parseScorerNames("{\"F. Balogun 31'\",\"L. Messi 90'+2'\"}")).toEqual(["F. Balogun", "L. Messi"]);
+    expect(parseScorerEvents("{\u201cJ. Quinones 9'\u201d,\u201dR. Jimenez 67'\u201d}", "home")).toEqual([
+      { team: "home", name: "J. Quinones", minute: "9'" },
+      { team: "home", name: "R. Jimenez", minute: "67'" },
+    ]);
+    expect(parseScorerEvents("{\"K. Mbappe 90+6'\",\"I. Mbaye 90'+5'\"}", "home")).toEqual([
+      { team: "home", name: "K. Mbappe", minute: "90+6'" },
+      { team: "home", name: "I. Mbaye", minute: "90'+5'" },
+    ]);
     expect(parseScorerEvents("{\"F. Balogun 31'\",\"L. Messi 90'+2'\"}", "home")).toEqual([
       { team: "home", name: "F. Balogun", minute: "31'" },
       { team: "home", name: "L. Messi", minute: "90'+2'" },

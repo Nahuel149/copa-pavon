@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { syncGroupMatchResults } from "./auto-results";
+import { matches } from "./matches";
 import { type ResultStore } from "./prode";
 
 const emptyResults: ResultStore = {
@@ -10,9 +11,12 @@ const emptyResults: ResultStore = {
 };
 
 function game(id: number, homeScore: number, awayScore: number, extra: Record<string, unknown> = {}) {
+  const match = matches[id - 1];
   return {
     id,
     type: "group",
+    home_team_name_en: match?.home,
+    away_team_name_en: match?.away,
     home_score: homeScore,
     away_score: awayScore,
     finished: true,
@@ -127,5 +131,48 @@ describe("automatic result sync", () => {
       { team: "home", name: "H. Lozano", minute: "77'" },
       { team: "away", name: "P. Tau", minute: "44'" },
     ]);
+  });
+
+  it("matches group results by teams instead of trusting the source id order", async () => {
+    process.env.PRODE_RESULTS_SYNC_URL = "https://api-one.test/games";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse([
+          game(13, 2, 2, { home_team_name_en: "Iran", away_team_name_en: "New Zealand" }),
+          game(16, 1, 1, { home_team_name_en: "Saudi Arabia", away_team_name_en: "Uruguay" }),
+        ]),
+      ),
+    );
+
+    const { results } = await syncGroupMatchResults(emptyResults);
+
+    expect(results.matchResults).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ matchId: "m-15", homeGoals: 2, awayGoals: 2 }),
+        expect.objectContaining({ matchId: "m-13", homeGoals: 1, awayGoals: 1 }),
+      ]),
+    );
+    expect(results.matchResults.find((result) => result.matchId === "m-16")).toBeUndefined();
+  });
+
+  it("does not import incomplete scorer lists for a final score", async () => {
+    process.env.PRODE_RESULTS_SYNC_URL = "https://api-one.test/games";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse([
+          game(1, 3, 1, {
+            home_scorers: "{\"Jugador Uno 10'\",\"Jugador Dos 20'\"}",
+            away_scorers: "{\"Rival Uno 50'\"}",
+          }),
+        ]),
+      ),
+    );
+
+    const { results } = await syncGroupMatchResults(emptyResults);
+
+    expect(results.matchResults[0]).toMatchObject({ matchId: "m-01", homeGoals: 3, awayGoals: 1 });
+    expect(results.matchResults[0].goalScorers).toBeUndefined();
   });
 });
