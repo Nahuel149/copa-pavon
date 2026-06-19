@@ -11,9 +11,9 @@ export function getLateEditExcludedMatchIds(submission: Submission, results: Res
   return matches
     .filter((match) => {
       if (originalMatchIds.has(match.id)) return false;
-      const roundClosed = editWindow.rounds[match.round]?.open === false;
+      const editClosed = editWindow.matches[match.id]?.open === false || editWindow.rounds[match.round]?.open === false;
       const hasOfficialResult = resultedMatchIds.has(match.id);
-      return roundClosed || hasOfficialResult;
+      return editClosed || hasOfficialResult;
     })
     .map((match) => match.id);
 }

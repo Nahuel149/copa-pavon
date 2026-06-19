@@ -54,10 +54,15 @@ function changedLockedPredictions(
 
   for (const prediction of nextPredictions) {
     const match = matchMap.get(prediction.matchId);
-    if (!match || editWindow.rounds[match.round].open) continue;
+    const matchStatus = match ? editWindow.matches[match.id] : undefined;
+    if (!match || matchStatus?.open) continue;
     const original = originalByMatch.get(prediction.matchId);
     if (!original || serializePrediction(original) !== serializePrediction(prediction)) {
-      errors.push(`La Fecha ${match.round} ya cerro y no se puede modificar.`);
+      errors.push(
+        matchStatus?.mode === "match"
+          ? `${match.home} vs. ${match.away} ya cerro y no se puede modificar.`
+          : `La Fecha ${match.round} ya cerro y no se puede modificar.`,
+      );
       break;
     }
   }

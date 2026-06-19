@@ -16,6 +16,7 @@ export type Match = {
   home: string;
   away: string;
   exactScore: boolean;
+  kickoffAt?: string;
 };
 
 export type KnockoutFixture = {

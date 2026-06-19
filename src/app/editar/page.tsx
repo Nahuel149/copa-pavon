@@ -34,6 +34,7 @@ type EditWindow = {
   open: boolean;
   deadline: string | null;
   rounds: Record<MatchRound, { open: boolean; deadline: string }>;
+  matches: Record<string, { open: boolean; deadline: string; kickoffAt: string | null; mode: "match" | "round" }>;
 };
 type EditSubmissionResponse = {
   submission?: Submission;
@@ -50,6 +51,7 @@ const defaultEditWindow: EditWindow = {
     2: { open: true, deadline: "2026-06-18T16:00:00.000Z" },
     3: { open: true, deadline: "2026-06-24T19:00:00.000Z" },
   },
+  matches: {},
 };
 
 const initialDraft = matches.reduce<DraftState>((draft, match) => {
@@ -422,7 +424,9 @@ export default function EditarPage() {
               const value = predictions[match.id];
               const originalValue = originalPredictions[match.id];
               const skippedByLateEntry = excludedMatchSet.has(match.id);
-              const matchOpen = !skippedByLateEntry && (editWindow.rounds[match.round]?.open ?? true);
+              const matchStatus = editWindow.matches[match.id];
+              const matchOpen = !skippedByLateEntry && (matchStatus?.open ?? editWindow.rounds[match.round]?.open ?? true);
+              const matchDeadline = matchStatus?.deadline ?? editWindow.rounds[match.round]?.deadline;
               const changed = !samePrediction(value, originalValue);
               return (
                 <article className={`${match.exactScore ? "matchCard exact" : "matchCard choice"}${changed ? " changed" : ""}`} key={match.id}>
@@ -432,7 +436,7 @@ export default function EditarPage() {
                     {skippedByLateEntry
                       ? "Validado por carga tardia: ya estaba cerrado cuando entraste."
                       : matchOpen
-                        ? "Este partido todavia se puede editar."
+                        ? `Editable hasta ${formatDeadline(matchDeadline)}.`
                         : "Este partido ya cerro."}
                   </small>
                   {changed ? <small className="previousPick">Anterior: {formatDraftPrediction(originalValue, match.home, match.away)}</small> : null}

@@ -1,4 +1,6 @@
-import { type MatchRound } from "./matches";
+import { matches, type Match, type MatchRound } from "./matches";
+
+export const groupMatchEditCloseMinutes = 30;
 
 export const roundEditDeadlines: Record<MatchRound, string> = {
   1: "2026-06-11T19:00:00.000Z",
@@ -13,9 +15,32 @@ export function getEditDeadline() {
   return Number.isNaN(deadline.getTime()) ? null : deadline;
 }
 
-export function getEditWindow() {
+function isValidDate(value: string | undefined): value is string {
+  if (!value) return false;
+  return !Number.isNaN(new Date(value).getTime());
+}
+
+export function getMatchEditDeadline(match: Match) {
+  const kickoffAt = match.kickoffAt;
+  if (isValidDate(kickoffAt)) {
+    return new Date(new Date(kickoffAt).getTime() - groupMatchEditCloseMinutes * 60_000).toISOString();
+  }
+  return new Date(roundEditDeadlines[match.round]).toISOString();
+}
+
+export function getMatchEditStatus(match: Match, now = new Date(), globalOpen = true) {
+  const kickoffAt = match.kickoffAt;
+  const deadline = getMatchEditDeadline(match);
+  return {
+    deadline,
+    kickoffAt: isValidDate(kickoffAt) ? kickoffAt : null,
+    open: globalOpen && now.getTime() <= new Date(deadline).getTime(),
+    mode: isValidDate(kickoffAt) ? ("match" as const) : ("round" as const),
+  };
+}
+
+export function getEditWindow(now = new Date()) {
   const deadline = getEditDeadline();
-  const now = new Date();
   const globalOpen = !deadline || now <= deadline;
   const rounds = Object.fromEntries(
     Object.entries(roundEditDeadlines).map(([round, roundDeadline]) => {
@@ -29,10 +54,12 @@ export function getEditWindow() {
       ];
     }),
   ) as Record<MatchRound, { deadline: string; open: boolean }>;
+  const matchStatuses = Object.fromEntries(matches.map((match) => [match.id, getMatchEditStatus(match, now, globalOpen)]));
 
   return {
     deadline: deadline?.toISOString() ?? null,
-    open: globalOpen && Object.values(rounds).some((round) => round.open),
+    open: globalOpen && Object.values(matchStatuses).some((match) => match.open),
     rounds,
+    matches: matchStatuses,
   };
 }

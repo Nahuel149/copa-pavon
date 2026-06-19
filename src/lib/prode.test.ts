@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { getKnockoutEditDeadline, isKnockoutFixtureEditable } from "./knockout-deadlines";
 import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knockout-visibility";
+import { getMatchEditDeadline, getMatchEditStatus } from "./edit-deadline";
 import { getLateEditExcludedMatchIds } from "./edit-validation";
-import { groups, matches, type KnockoutFixture } from "./matches";
+import { groups, matches, type KnockoutFixture, type Match } from "./matches";
 import {
   buildStandings,
   countCompletePredictions,
@@ -112,6 +113,7 @@ describe("prode validation", () => {
         2: { open: true, deadline: "2026-06-18T16:00:00.000Z" },
         3: { open: true, deadline: "2026-06-24T19:00:00.000Z" },
       },
+      matches: {},
     };
     const excludedMatchIds = getLateEditExcludedMatchIds(
       lateSubmission,
@@ -134,6 +136,15 @@ describe("prode validation", () => {
     expect(countCompletePredictions(Object.fromEntries(payload.predictions.map((prediction) => [prediction.matchId, prediction])), { excludedMatchIds })).toBe(
       matches.length - excludedMatchIds.length,
     );
+  });
+
+  it("supports match-level edit deadlines thirty minutes before kickoff", () => {
+    const match: Match = { ...matches[0], kickoffAt: "2026-06-11T20:00:00.000Z" };
+
+    expect(getMatchEditDeadline(match)).toBe("2026-06-11T19:30:00.000Z");
+    expect(getMatchEditStatus(match, new Date("2026-06-11T19:29:59.000Z")).open).toBe(true);
+    expect(getMatchEditStatus(match, new Date("2026-06-11T19:30:00.000Z")).open).toBe(true);
+    expect(getMatchEditStatus(match, new Date("2026-06-11T19:30:01.000Z")).open).toBe(false);
   });
 
   it("requires exact scores only for important marked matches", () => {
