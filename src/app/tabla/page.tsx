@@ -519,32 +519,6 @@ export default function TablaPage() {
       {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
       <section className="tableShell">
-        <div className="tableNote">
-          <strong>Tabla</strong>
-          <div>
-            <span>
-              Los puntos se suman cada vez que existen resultados oficiales: partidos de grupo, top 2 por grupo y cruces
-              de eliminatorias. Ganados/perdidos son aciertos y errores del prode. Desempate: {(data.tieBreakRules ?? []).join(" y ").toLowerCase()}. {movementBaseLabel}.
-            </span>
-            {fullGraphHistory.length > 1 ? (
-              <div className="movementCutSelector" role="group" aria-label="Elegir tramo de cambios de posiciones">
-                {fullGraphHistory.slice(1).map((entry, index) => {
-                  const limit = index + 2;
-                  return (
-                    <button
-                      className={movementHistoryLimit === limit ? "active" : ""}
-                      key={entry.label}
-                      onClick={() => setMovementLimit(limit)}
-                      type="button"
-                    >
-                      {fullGraphHistory[index].label} {"->"} {entry.label}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-          </div>
-        </div>
         <table className="standingsTable publicStandingsTable">
           <colgroup>
             <col className="standingPositionCol" />
@@ -646,6 +620,38 @@ export default function TablaPage() {
             ) : null}
           </tbody>
         </table>
+        <details className="tableMoreDetails">
+          <summary>
+            <strong>Ver cambios y reglas</strong>
+            <span>{movementBaseLabel}.</span>
+          </summary>
+          <div className="tableNote compact">
+            <strong>Tabla</strong>
+            <div>
+              <span>
+                Los puntos se suman cuando hay resultados oficiales. Ganados/perdidos son aciertos y errores del prode.
+                Desempate: {(data.tieBreakRules ?? []).join(" y ").toLowerCase()}.
+              </span>
+              {fullGraphHistory.length > 1 ? (
+                <div className="movementCutSelector" role="group" aria-label="Elegir tramo de cambios de posiciones">
+                  {fullGraphHistory.slice(1).map((entry, index) => {
+                    const limit = index + 2;
+                    return (
+                      <button
+                        className={movementHistoryLimit === limit ? "active" : ""}
+                        key={entry.label}
+                        onClick={() => setMovementLimit(limit)}
+                        type="button"
+                      >
+                        {fullGraphHistory[index].label} {"->"} {entry.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </details>
       </section>
 
       {data.dailyRecap || dateHighlights.length > 0 ? (

@@ -742,6 +742,40 @@ a {
   line-height: 1.45;
 }
 
+.tableNote.compact {
+  border-top: 3px solid var(--ink);
+}
+
+.tableMoreDetails {
+  border-top: 3px solid var(--ink);
+  background: rgba(255, 253, 247, 0.96);
+}
+
+.tableMoreDetails summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.tableMoreDetails summary::-webkit-details-marker {
+  display: none;
+}
+
+.tableMoreDetails summary strong {
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-weight: 950;
+}
+
+.tableMoreDetails summary span {
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.95rem;
+}
+
 .rulesFlow,
 .scoreRuleGrid,
 .rulesDetailGrid {
