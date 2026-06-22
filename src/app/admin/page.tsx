@@ -2,7 +2,6 @@
 
 import { Fragment, FormEvent, useMemo, useState, type ChangeEvent } from "react";
 import { AlertTriangle, Download, Eye, FileUp, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, ShieldCheck, Trash2, Users } from "lucide-react";
-import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { argentinaInputToIso, formatArgentinaDate, formatArgentinaDateTime, isoToArgentinaInput } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -1131,8 +1130,6 @@ export default function AdminPage() {
             ))}
         </section>
       ) : null}
-
-      <KahlImageScatter page="admin" count={4} variant="compact" />
         </>
       )}
     </div>

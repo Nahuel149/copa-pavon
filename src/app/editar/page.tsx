@@ -276,11 +276,11 @@ export default function EditarPage() {
 
   return (
     <form className="pageStack" onSubmit={loaded ? saveEdition : loadSubmission}>
-      <section className="heroBand tableHero">
+      <section className="compactHero">
         <div>
           <p className="eyebrow">Editar mi prode</p>
           <h1>Tu prode completo.</h1>
-          <p className="heroCopy">Ingresa con tu nombre y PIN para ver tus puntos, revisar lo cargado y editar lo que siga abierto. La edicion cierra {deadlineText}.</p>
+          <span>Edicion abierta {deadlineText}.</span>
         </div>
         <div className="heroControl">
           <label htmlFor="editName">Nombre</label>

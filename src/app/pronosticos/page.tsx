@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Download, ExternalLink, Eye, Loader2, PlayCircle, Share2 } from "lucide-react";
+import { BarChart3, Download, ExternalLink, Loader2, PlayCircle, Share2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -481,21 +481,11 @@ export default function PronosticosPage() {
 
   return (
     <div className="pageStack">
-      <section className="heroBand tableHero">
+      <section className="compactHero">
         <div>
           <p className="eyebrow">Pronosticos</p>
           <h1>Mapa del torneo.</h1>
-          <p className="heroCopy">
-            Mira que eligio cada participante, compara tendencias por partido y segui como se mueve el prode con los
-            resultados reales.
-          </p>
-        </div>
-        <div className="tableRefresh">
           <span>{data?.updatedAt ? `Actualizada ${formatArgentinaTime(data.updatedAt)}` : "Cargando..."}</span>
-          <button className="primaryAction light" onClick={loadData} type="button">
-            {status === "loading" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-            Actualizar
-          </button>
         </div>
       </section>
 
@@ -713,10 +703,10 @@ export default function PronosticosPage() {
       </section>
 
 
-      <section className="shareCardPanel">
+      <section className="shareInlinePanel">
         <div className="tableNote">
           <strong>Tarjeta para compartir</strong>
-          <span>Elegis un dia y se arma una imagen con los participantes y sus pronosticos de esos partidos.</span>
+          <span>Imagen por dia con los participantes y sus pronosticos.</span>
         </div>
         <div className="shareDaySelector" role="group" aria-label="Elegir dia para compartir">
           {dayLabels.map((day) => (

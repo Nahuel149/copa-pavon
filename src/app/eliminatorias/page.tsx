@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "lucide-react";
-import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -172,7 +171,7 @@ export default function EliminatoriasPage() {
 
   if (status === "loading") {
     return (
-      <section className="heroBand tableHero">
+      <section className="compactHero">
         <div>
           <p className="eyebrow">Eliminatorias</p>
           <h1>Cargando cruces.</h1>
@@ -184,11 +183,11 @@ export default function EliminatoriasPage() {
   if (status === "done") {
     return (
       <div className="pageStack">
-        <section className="heroBand successHero">
+        <section className="compactHero">
           <div>
             <p className="eyebrow">Enviado</p>
             <h1>Eliminatorias guardadas.</h1>
-            <p className="heroCopy">Marcadores exactos guardados para {name.trim()}. Los cruces abiertos se pueden volver a editar hasta su cierre.</p>
+            <span>{name.trim()} ya tiene los cruces guardados.</span>
           </div>
           <div className="scoreSeal">
             <CheckCircle2 size={34} aria-hidden="true" />
@@ -202,15 +201,11 @@ export default function EliminatoriasPage() {
 
   return (
     <form className="pageStack" onSubmit={handleSubmit}>
-      <section className="heroBand tableHero">
+      <section className="compactHero">
         <div>
           <p className="eyebrow">Eliminatorias</p>
           <h1>Marcador exacto.</h1>
-          <p className="heroCopy">
-            Los 16avos empiezan el 28 de junio. En eliminatorias se carga marcador exacto: si acertás exacto sumás el
-            premio grande, si acertás ganador/clasificado sumás parcial y podés sumar +1 con un goleador. Si lo dejás
-            vacío, apostás a 0-0 sin goleadores. Cada cruce se puede editar hasta 10 minutos antes de empezar.
-          </p>
+          <span>Exactos, clasificados y goleador. Cada cruce cierra 10 minutos antes de empezar.</span>
         </div>
         <div className="heroControl">
           <label htmlFor="knockoutName">Nombre</label>
@@ -379,7 +374,6 @@ export default function EliminatoriasPage() {
         </button>
       </div>
 
-      <KahlImageScatter page="eliminatorias" count={4} variant="compact" />
     </form>
   );
 }

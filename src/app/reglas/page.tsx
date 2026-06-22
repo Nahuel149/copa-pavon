@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Brackets, ClipboardList, Medal, RefreshCw, ShieldCheck, Target } from "lucide-react";
-import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { choiceMatches, exactScoreMatches, groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, matches } from "@/lib/matches";
 
 const ruleSteps = [
@@ -42,14 +41,11 @@ const scoringRules = [
 export default function ReglasPage() {
   return (
     <div className="pageStack">
-      <section className="heroBand rulesHero">
+      <section className="compactHero">
         <div>
           <p className="eyebrow">Reglas</p>
           <h1>Cómo se juega.</h1>
-          <p className="heroCopy">
-            El prode mezcla marcadores exactos, 1X2 y clasificados por grupo. Los puntos se acumulan solos cuando se
-            cargan los resultados oficiales.
-          </p>
+          <span>Puntos, grupos y eliminatorias en una sola pagina.</span>
         </div>
         <Link className="primaryAction light" href="/">
           <ClipboardList size={18} aria-hidden="true" />
@@ -180,7 +176,6 @@ export default function ReglasPage() {
         </Link>
       </section>
 
-      <KahlImageScatter page="reglas" count={5} />
     </div>
   );
 }

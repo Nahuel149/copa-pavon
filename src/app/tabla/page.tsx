@@ -392,29 +392,14 @@ export default function TablaPage() {
           a.row.name.localeCompare(b.row.name, "es"),
       )[0];
     const last = rows.at(-1);
-    const daily = data.dailyRecap;
     return [
-      ...(daily
+      { label: "Puntero", value: topRow?.name ?? "-", detail: `${topRow?.totalPoints ?? 0} pts` },
+      ...(data.dailyRecap
         ? [
             {
               label: "Figura de la jornada",
-              value: daily.leader?.name ?? "Sin datos",
-              detail: daily.leader ? `${daily.leader.points} pts · ${daily.leader.hits} aciertos` : "-",
-            },
-          ]
-        : []),
-      { label: "Puntero", value: topRow?.name ?? "-", detail: `${topRow?.totalPoints ?? 0} pts` },
-      ...(daily
-        ? [
-            {
-              label: "Aciertos y exactos del dia",
-              value: `${daily.correctPredictions} / ${daily.exactPredictions}`,
-              detail: "Aciertos totales / marcadores exactos",
-            },
-            {
-              label: "Mayor subida",
-              value: daily.biggestRise?.name ?? "Sin cambios",
-              detail: daily.biggestRise ? `+${daily.biggestRise.positions} puestos` : "=",
+              value: data.dailyRecap.leader?.name ?? "Sin datos",
+              detail: data.dailyRecap.leader ? `${data.dailyRecap.leader.points} pts · ${data.dailyRecap.leader.hits} aciertos` : "-",
             },
           ]
         : []),
@@ -699,7 +684,18 @@ export default function TablaPage() {
         </section>
       ) : null}
 
-      <section className="raceGraph" aria-label="Evolucion de posiciones por fecha">
+      <details className="raceGraph raceGraphDisclosure" aria-label="Evolucion de posiciones por fecha">
+        <summary>
+          <div>
+            <strong>Carrera por la punta</strong>
+            <span>
+              {selectedGraphSnapshot
+                ? `Hasta ${selectedGraphSnapshot.label}: ${selectedGraphSnapshot.title}.`
+                : "Cada corte suma una fecha con resultados oficiales cargados."}
+            </span>
+          </div>
+          <b>Ver grafico</b>
+        </summary>
         <div className="tableNote">
           <div>
             <strong>Carrera por la punta</strong>
@@ -822,12 +818,12 @@ export default function TablaPage() {
         ) : (
           <div className="emptyState">El grafico aparece cuando haya participantes guardados.</div>
         )}
-      </section>
+      </details>
 
-      <section className="shareCardPanel standingsSharePanel" aria-label="Compartir tabla actual">
+      <section className="shareInlinePanel standingsSharePanel" aria-label="Compartir tabla actual">
         <div className="shareCardPreview">
           <div>
-            <strong>Imagen para compartir la tabla</strong>
+            <strong>Compartir tabla</strong>
             <p>{rows.length} participantes · {data.playedMatches}/72 partidos con resultado.</p>
           </div>
           <Trophy size={28} aria-hidden="true" />
