@@ -451,7 +451,7 @@ describe("prode scoring", () => {
     expect(row.knockoutScorerHits).toBe(1);
   });
 
-  it("sorts tied standings by reverse alphabetical name", () => {
+  it("sorts tied standings by alphabetical name after points, exacts and wins", () => {
     const first = submissionFromPayload("Nahuel");
     const second = submissionFromPayload("Ana");
     const rows = buildStandings(
@@ -462,10 +462,10 @@ describe("prode scoring", () => {
       },
     );
 
-    expect(rows[0].name).toBe("Nahuel");
+    expect(rows[0].name).toBe("Ana");
   });
 
-  it("uses reverse alphabetical order even when the other tied player has more exact scores", () => {
+  it("sorts tied standings by more exact scores before wins and name", () => {
     const nahuel = submissionFromPayload("Nahuel");
     const ana = submissionFromPayload("Ana");
     nahuel.predictions = nahuel.predictions.map((prediction) =>
@@ -488,8 +488,32 @@ describe("prode scoring", () => {
     });
 
     expect(rows.map((row) => ({ name: row.name, points: row.totalPoints, exacts: row.exactHits }))).toEqual([
-      { name: "Nahuel", points: 2, exacts: 0 },
       { name: "Ana", points: 2, exacts: 1 },
+      { name: "Nahuel", points: 2, exacts: 0 },
+    ]);
+  });
+
+  it("sorts tied standings by more winning predictions after exact scores", () => {
+    const twoWins = submissionFromPayload("Ana");
+    const oneWin = submissionFromPayload("Nahuel");
+    oneWin.predictions = oneWin.predictions.map((prediction) =>
+      prediction.matchId === "m-01" && prediction.type === "choice"
+        ? { ...prediction, choice: "away" as const }
+        : prediction,
+    );
+
+    const rows = buildStandings([oneWin, twoWins], {
+      ...emptyResults,
+      matchResults: [
+        { matchId: "m-01", homeGoals: 1, awayGoals: 0, outcome: "home" },
+        { matchId: "m-02", homeGoals: 1, awayGoals: 0, outcome: "home" },
+      ],
+      manualAdjustments: [{ normalizedName: "nahuel", name: "Nahuel", points: 1, reason: "Ajuste de test" }],
+    });
+
+    expect(rows.map((row) => ({ name: row.name, points: row.totalPoints, exacts: row.exactHits, wins: row.predictionWins }))).toEqual([
+      { name: "Ana", points: 2, exacts: 0, wins: 2 },
+      { name: "Nahuel", points: 2, exacts: 0, wins: 1 },
     ]);
   });
 });

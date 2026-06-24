@@ -159,7 +159,7 @@ export type StandingRow = {
   pointAudit: PointAuditEntry[];
 };
 
-export const standingsTieBreakRules = ["Puntos totales", "Nombre en orden alfabetico inverso"] as const;
+export const standingsTieBreakRules = ["Puntos totales", "Resultados exactos", "Ganados", "Nombre en orden alfabetico"] as const;
 
 type RawPrediction = {
   matchId?: unknown;
@@ -875,8 +875,12 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
 
 export function compareStandingRows(a: StandingRow, b: StandingRow) {
   if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-  const byReverseName = b.name.localeCompare(a.name, "es", { sensitivity: "base" });
-  return byReverseName || b.submissionId.localeCompare(a.submissionId);
+  const bExactHits = b.exactHits + b.knockoutExactHits;
+  const aExactHits = a.exactHits + a.knockoutExactHits;
+  if (bExactHits !== aExactHits) return bExactHits - aExactHits;
+  if (b.predictionWins !== a.predictionWins) return b.predictionWins - a.predictionWins;
+  const byName = a.name.localeCompare(b.name, "es", { sensitivity: "base" });
+  return byName || a.submissionId.localeCompare(b.submissionId);
 }
 
 export function buildStandings(submissions: Submission[], results: ResultStore) {
