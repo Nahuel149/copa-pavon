@@ -312,7 +312,7 @@ export default function TablaPage() {
       { label: "Gan", x: left + col.rank + col.name + col.points + col.played, width: col.wins, anchor: "middle" },
       { label: "Per", x: left + col.rank + col.name + col.points + col.played + col.wins, width: col.losses, anchor: "middle" },
       { label: "Exa", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses, width: col.exacts, anchor: "middle" },
-      { label: "Gru", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts, width: col.groups, anchor: "middle" },
+      { label: "Grupos", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts, width: col.groups, anchor: "middle" },
     ];
     const tableWidth = usable;
     const updated = data.updatedAt ? formatArgentinaDateTime(data.updatedAt) : "Actualizando";
