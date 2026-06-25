@@ -3609,6 +3609,10 @@ tbody tr.relegationRow:hover {
     width: 29px;
   }
 
+  .standingsTable col.standingGroupExactCol {
+    width: 31px;
+  }
+
   .adminStandingsTable col.standingHiddenMobileCol {
     display: none;
   }

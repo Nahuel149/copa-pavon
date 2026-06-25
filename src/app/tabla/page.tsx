@@ -296,12 +296,13 @@ export default function TablaPage() {
     const usable = width - left * 2;
     const col = {
       rank: 68,
-      name: 298,
-      points: 120,
-      played: 120,
-      wins: 120,
-      losses: 120,
-      exacts: 120,
+      name: 330,
+      points: 110,
+      played: 100,
+      wins: 100,
+      losses: 100,
+      exacts: 100,
+      groups: 100,
     };
     const headers = [
       { label: "#", x: left, width: col.rank, anchor: "middle" },
@@ -311,6 +312,7 @@ export default function TablaPage() {
       { label: "Gan", x: left + col.rank + col.name + col.points + col.played, width: col.wins, anchor: "middle" },
       { label: "Per", x: left + col.rank + col.name + col.points + col.played + col.wins, width: col.losses, anchor: "middle" },
       { label: "Exa", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses, width: col.exacts, anchor: "middle" },
+      { label: "Gru", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts, width: col.groups, anchor: "middle" },
     ];
     const tableWidth = usable;
     const updated = data.updatedAt ? formatArgentinaDateTime(data.updatedAt) : "Actualizando";
@@ -327,6 +329,7 @@ export default function TablaPage() {
         svgText(String(row.predictionWins), left + col.rank + col.name + col.points + col.played + col.wins / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
         svgText(String(row.predictionLosses), left + col.rank + col.name + col.points + col.played + col.wins + col.losses / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
         svgText(String(row.exactHits + row.knockoutExactHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.groupHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.groups / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
       ].join("");
     }).join("");
     const headersSvg = headers.map((header) => {
@@ -348,7 +351,7 @@ export default function TablaPage() {
       ${headersSvg}
       ${rowsSvg || svgText("La tabla aparece cuando haya envios.", left + 20, tableTop + 98, { size: 28, weight: 900 })}
       <rect x="${left}" y="${height - 46}" width="${tableWidth}" height="2" fill="${ink}"/>
-      ${svgText("Puntos, jugados, ganados, perdidos y exactos del prode.", left, height - 18, { size: 18, weight: 900, fill: muted })}
+      ${svgText("Puntos, jugados, ganados, perdidos, exactos y grupos acertados.", left, height - 18, { size: 18, weight: 900, fill: muted })}
     </svg>`;
   }
 
@@ -528,6 +531,7 @@ export default function TablaPage() {
             <col className="standingMetricCol" />
             <col className="standingMetricCol" />
             <col className="standingExactCol" />
+            <col className="standingGroupExactCol" />
           </colgroup>
           <thead>
             <tr>
@@ -538,6 +542,7 @@ export default function TablaPage() {
               <th>Ganados</th>
               <th>Perdidos</th>
               <th>Exactos</th>
+              <th>Grupos</th>
             </tr>
           </thead>
           <tbody>
@@ -563,10 +568,11 @@ export default function TablaPage() {
                     <td data-label="Ganados">{row.predictionWins}</td>
                     <td data-label="Perdidos">{row.predictionLosses}</td>
                     <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
+                    <td data-label="Grupos exactos">{row.groupHits}</td>
                   </tr>
                   {expandedPlayerId === row.submissionId ? (
                     <tr className="detailRow">
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <div className="playerPointPanel">
                           <div className="playerPointSummary">
                             <div>
@@ -615,7 +621,7 @@ export default function TablaPage() {
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7}>La tabla aparece cuando haya envios guardados.</td>
+                <td colSpan={8}>La tabla aparece cuando haya envios guardados.</td>
               </tr>
             ) : null}
           </tbody>
