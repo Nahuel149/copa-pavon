@@ -329,7 +329,7 @@ export default function TablaPage() {
         svgText(String(row.predictionWins), left + col.rank + col.name + col.points + col.played + col.wins / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
         svgText(String(row.predictionLosses), left + col.rank + col.name + col.points + col.played + col.wins + col.losses / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
         svgText(String(row.exactHits + row.knockoutExactHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
-        svgText(String(row.groupHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.groups / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(`${row.groupHits}/${data.decidedGroups}`, left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.groups / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
       ].join("");
     }).join("");
     const headersSvg = headers.map((header) => {
@@ -568,7 +568,7 @@ export default function TablaPage() {
                     <td data-label="Ganados">{row.predictionWins}</td>
                     <td data-label="Perdidos">{row.predictionLosses}</td>
                     <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
-                    <td data-label="Grupos exactos">{row.groupHits}</td>
+                    <td data-label="Grupos exactos">{row.groupHits}/{data.decidedGroups}</td>
                   </tr>
                   {expandedPlayerId === row.submissionId ? (
                     <tr className="detailRow">
