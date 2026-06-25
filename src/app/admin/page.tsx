@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, FormEvent, useMemo, useState, type ChangeEvent } from "react";
-import { AlertTriangle, Download, Eye, FileUp, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, ShieldCheck, Trash2, Users } from "lucide-react";
+import { AlertTriangle, Download, Eye, FileUp, KeyRound, Loader2, LockKeyhole, Plus, Power, RefreshCw, Save, Search, ShieldCheck, Trash2, Users } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { argentinaInputToIso, formatArgentinaDate, formatArgentinaDateTime, isoToArgentinaInput } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -65,6 +65,12 @@ type SettingsResponse = AppSettings & {
 
 type AuditResponse = {
   events?: AuditEvent[];
+  error?: string;
+};
+
+type ResetPinResponse = {
+  ok?: boolean;
+  submission?: Submission;
   error?: string;
 };
 
@@ -277,6 +283,10 @@ export default function AdminPage() {
   const [expandedPointsId, setExpandedPointsId] = useState<string | null>(null);
   const [restoreStatus, setRestoreStatus] = useState<"idle" | "restoring">("idle");
   const [restoreMessage, setRestoreMessage] = useState("");
+  const [resetPinSubmission, setResetPinSubmission] = useState("");
+  const [resetParticipantPin, setResetParticipantPin] = useState("");
+  const [resetPinStatus, setResetPinStatus] = useState<"idle" | "saving">("idle");
+  const [resetPinMessage, setResetPinMessage] = useState("");
 
   const results = useMemo(
     () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft, manualAdjustments),
@@ -487,6 +497,51 @@ export default function AdminPage() {
     }
   }
 
+  async function resetParticipantAccess(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setResetPinMessage("");
+    setError("");
+
+    const nextPin = resetParticipantPin.trim();
+    if (!resetPinSubmission) {
+      setResetPinMessage("Elegí un participante.");
+      return;
+    }
+    if (!/^\d{4,10}$/.test(nextPin)) {
+      setResetPinMessage("El PIN nuevo tiene que tener entre 4 y 10 números.");
+      return;
+    }
+
+    setResetPinStatus("saving");
+    try {
+      const response = await fetch("/api/admin-reset-pin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(pin ? { "x-prode-admin-pin": pin } : {}),
+        },
+        body: JSON.stringify({ normalizedName: resetPinSubmission, pin: nextPin }),
+      });
+      const body = await readJsonResponse<ResetPinResponse>(response);
+      if (!response.ok || body.error || !body.submission) {
+        throw new Error(body.error ?? "No se pudo resetear el PIN.");
+      }
+
+      setSubmissions((current) =>
+        current.map((submission) =>
+          submission.normalizedName === body.submission?.normalizedName ? body.submission : submission,
+        ),
+      );
+      setResetParticipantPin("");
+      setResetPinMessage(`PIN actualizado para ${body.submission.name}. Pasáselo por WhatsApp.`);
+      void loadAdminData();
+    } catch (resetError) {
+      setResetPinMessage(resetError instanceof Error ? resetError.message : "No se pudo resetear el PIN.");
+    } finally {
+      setResetPinStatus("idle");
+    }
+  }
+
   function setResultScore(matchId: string, side: "homeGoals" | "awayGoals", value: string) {
     const cleanValue = value.replace(/\D/g, "").slice(0, 2);
     setMatchDraft((current) => ({
@@ -681,6 +736,51 @@ export default function AdminPage() {
           {showAllSubmissions ? "Ocultar todos" : "Ver todos los envíos"}
         </button>
       </section>
+
+      <details className="adminFold">
+        <summary>Resetear PIN</summary>
+        <section className="pinResetPanel">
+          <div>
+            <p className="eyebrow">Acceso participantes</p>
+            <h2>Reset manual de PIN.</h2>
+            <p>Elegí un participante, escribí un PIN nuevo y pasáselo por WhatsApp. No cambia ningún pronóstico.</p>
+          </div>
+          <form className="pinResetForm" onSubmit={resetParticipantAccess}>
+            <label>
+              Participante
+              <select value={resetPinSubmission} onChange={(event) => setResetPinSubmission(event.target.value)}>
+                <option value="">Elegir participante</option>
+                {submissions
+                  .slice()
+                  .sort((first, second) => first.name.localeCompare(second.name))
+                  .map((submission) => (
+                    <option key={submission.id} value={submission.normalizedName}>
+                      {submission.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label>
+              PIN nuevo
+              <input
+                inputMode="numeric"
+                maxLength={10}
+                minLength={4}
+                onChange={(event) => setResetParticipantPin(event.target.value.replace(/\D/g, "").slice(0, 10))}
+                pattern="[0-9]*"
+                placeholder="Ej: 123456"
+                type="password"
+                value={resetParticipantPin}
+              />
+            </label>
+            <button className="primaryAction" disabled={resetPinStatus === "saving" || !resetPinSubmission || !resetParticipantPin} type="submit">
+              {resetPinStatus === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <KeyRound size={18} aria-hidden="true" />}
+              Resetear PIN
+            </button>
+          </form>
+          {resetPinMessage ? <p className="pinResetMessage">{resetPinMessage}</p> : null}
+        </section>
+      </details>
 
       {syncSummary ? <section className="validationPanel">{syncSummary}</section> : null}
       {restoreMessage ? <section className="validationPanel successPanel">{restoreMessage}</section> : null}

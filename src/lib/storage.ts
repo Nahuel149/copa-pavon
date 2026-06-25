@@ -279,6 +279,26 @@ export async function updateSubmissionPredictions(submission: Submission) {
   return { ok: true as const, updatedAt: updates.updatedAt };
 }
 
+export async function updateSubmissionPinHash(normalizedName: string, pinHash: string) {
+  const updatedAt = new Date().toISOString();
+  const collections = await getMongoCollections();
+  if (collections) {
+    const result = await collections.submissions.updateOne({ normalizedName }, { $set: { pinHash, updatedAt } });
+    if (result.matchedCount === 0) return null;
+    const updatedSubmission = await collections.submissions.findOne({ normalizedName });
+    return updatedSubmission ? cleanSubmission(updatedSubmission) : null;
+  }
+
+  const store = await readSubmissionStore();
+  const index = store.submissions.findIndex((submission) => submission.normalizedName === normalizedName);
+  if (index === -1) return null;
+  store.submissions[index] = { ...store.submissions[index], pinHash, updatedAt };
+  const tempPath = `${storePath}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify(store, null, 2), "utf8");
+  await fs.rename(tempPath, storePath);
+  return store.submissions[index];
+}
+
 async function ensureResultsFile() {
   await fs.mkdir(dataDir, { recursive: true });
   try {

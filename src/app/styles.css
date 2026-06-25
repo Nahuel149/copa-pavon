@@ -1124,6 +1124,71 @@ a {
   text-transform: uppercase;
 }
 
+.pinResetPanel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.pinResetPanel h2 {
+  margin: 0 0 6px;
+  font-size: clamp(1.35rem, 2.3vw, 2rem);
+  line-height: 1;
+}
+
+.pinResetPanel p {
+  margin: 0;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.45;
+}
+
+.pinResetForm {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.5fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.pinResetForm label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.pinResetForm select,
+.pinResetForm input {
+  min-height: 46px;
+  padding: 0 12px;
+  border: 3px solid var(--ink);
+  border-radius: 0;
+  background: #fffdf7;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 900;
+  outline: none;
+}
+
+.pinResetForm select:focus,
+.pinResetForm input:focus {
+  box-shadow: 0 0 0 3px rgba(246, 62, 38, 0.22);
+}
+
+.pinResetMessage {
+  display: inline-flex;
+  justify-self: start;
+  padding: 9px 12px;
+  border: 2px solid rgba(5, 5, 5, 0.22);
+  background: #f4fff1;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-weight: 900;
+}
+
 .roundStrip {
   padding: 16px 0 2px;
   border-top: 3px solid var(--ink);
@@ -3933,6 +3998,7 @@ tbody tr.relegationRow:hover {
   .clanPanel,
   .pinPanel,
   .adminSwitchPanel,
+  .pinResetForm,
   .draftPanel,
   .tableNote,
   .receiptPanel {
@@ -4012,6 +4078,15 @@ tbody tr.relegationRow:hover {
   .adminToolbar .adminFileAction {
     flex: 0 0 auto;
     min-width: max-content;
+  }
+
+  .pinResetForm {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  .pinResetForm .primaryAction {
+    justify-content: center;
   }
 
   .sourceConflictPanel li {
