@@ -719,9 +719,77 @@ export function serializeKnockoutPrediction(prediction: KnockoutPrediction) {
   return `${prediction.homeGoals}-${prediction.awayGoals}${prediction.goalScorer ? ` · ${prediction.goalScorer}` : ""}`;
 }
 
+type GroupTableRow = {
+  team: string;
+  points: number;
+  goalDifference: number;
+  goalsFor: number;
+  originalOrder: number;
+};
+
+export function getAutomaticGroupResults(matchResults: MatchResult[]) {
+  const resultByMatch = new Map(matchResults.map((result) => [result.matchId, result]));
+  const automaticResults: GroupResult[] = [];
+
+  for (const group of groups) {
+    const groupMatches = matches.filter((match) => match.groupId === group.id);
+    if (groupMatches.length === 0 || groupMatches.some((match) => !resultByMatch.has(match.id))) continue;
+
+    const table = new Map<string, GroupTableRow>(
+      group.teams.map((team, index) => [
+        team,
+        { team, points: 0, goalDifference: 0, goalsFor: 0, originalOrder: index },
+      ]),
+    );
+
+    for (const match of groupMatches) {
+      const result = resultByMatch.get(match.id);
+      if (!result) continue;
+      const home = table.get(match.home);
+      const away = table.get(match.away);
+      if (!home || !away) continue;
+
+      home.goalsFor += result.homeGoals;
+      away.goalsFor += result.awayGoals;
+      home.goalDifference += result.homeGoals - result.awayGoals;
+      away.goalDifference += result.awayGoals - result.homeGoals;
+
+      if (result.homeGoals > result.awayGoals) {
+        home.points += 3;
+      } else if (result.awayGoals > result.homeGoals) {
+        away.points += 3;
+      } else {
+        home.points += 1;
+        away.points += 1;
+      }
+    }
+
+    const [first, second] = [...table.values()].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.goalDifference - a.goalDifference ||
+        b.goalsFor - a.goalsFor ||
+        a.originalOrder - b.originalOrder,
+    );
+
+    if (first && second) {
+      automaticResults.push({ groupId: group.id, first: first.team, second: second.team });
+    }
+  }
+
+  return automaticResults;
+}
+
+export function getEffectiveGroupResults(results: ResultStore) {
+  const manualByGroup = new Map(results.groupResults.map((result) => [result.groupId, result]));
+  const automatic = getAutomaticGroupResults(results.matchResults).filter((result) => !manualByGroup.has(result.groupId));
+  return [...results.groupResults, ...automatic];
+}
+
 export function scoreSubmission(submission: Submission, results: ResultStore): StandingRow {
   const resultByMatch = new Map(results.matchResults.map((result) => [result.matchId, result]));
-  const resultByGroup = new Map(results.groupResults.map((result) => [result.groupId, result]));
+  const effectiveGroupResults = getEffectiveGroupResults(results);
+  const resultByGroup = new Map(effectiveGroupResults.map((result) => [result.groupId, result]));
   const knockoutResultByFixture = new Map(results.knockoutResults.map((result) => [result.fixtureId, result]));
   const knockoutFixtureById = new Map(results.knockoutFixtures.map((fixture) => [fixture.id, fixture]));
   let matchPoints = 0;
@@ -864,7 +932,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     knockoutScorerHits,
     manualAdjustmentPoints,
     playedMatches: results.matchResults.length,
-    decidedGroups: results.groupResults.length,
+    decidedGroups: effectiveGroupResults.length,
     playedKnockoutMatches: results.knockoutResults.length,
     predictionMatchesPlayed,
     predictionWins,

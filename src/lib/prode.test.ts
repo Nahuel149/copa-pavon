@@ -238,6 +238,59 @@ describe("prode scoring", () => {
     expect(result.pointAudit[0]).toMatchObject({ category: "group", points: 0, verdict: "miss" });
   });
 
+  it("does not score automatic group top 2 until all group matches are played", () => {
+    const result = scoreSubmission(submissionFromPayload(), {
+      ...emptyResults,
+      matchResults: [
+        { matchId: "m-01", homeGoals: 2, awayGoals: 0, outcome: "home" },
+        { matchId: "m-02", homeGoals: 0, awayGoals: 0, outcome: "draw" },
+        { matchId: "m-25", homeGoals: 0, awayGoals: 1, outcome: "away" },
+        { matchId: "m-28", homeGoals: 1, awayGoals: 0, outcome: "home" },
+        { matchId: "m-53", homeGoals: 0, awayGoals: 2, outcome: "away" },
+      ],
+    });
+
+    expect(result.groupPoints).toBe(0);
+    expect(result.decidedGroups).toBe(0);
+  });
+
+  it("scores automatic group top 2 when all six group matches are played", () => {
+    const result = scoreSubmission(submissionFromPayload(), {
+      ...emptyResults,
+      matchResults: [
+        { matchId: "m-01", homeGoals: 2, awayGoals: 0, outcome: "home" },
+        { matchId: "m-02", homeGoals: 0, awayGoals: 0, outcome: "draw" },
+        { matchId: "m-25", homeGoals: 0, awayGoals: 1, outcome: "away" },
+        { matchId: "m-28", homeGoals: 1, awayGoals: 0, outcome: "home" },
+        { matchId: "m-53", homeGoals: 0, awayGoals: 2, outcome: "away" },
+        { matchId: "m-54", homeGoals: 2, awayGoals: 1, outcome: "home" },
+      ],
+    });
+
+    expect(result.groupPoints).toBe(3);
+    expect(result.groupHits).toBe(1);
+    expect(result.decidedGroups).toBe(1);
+  });
+
+  it("keeps manual group results as the trusted source over automatic tables", () => {
+    const result = scoreSubmission(submissionFromPayload(), {
+      ...emptyResults,
+      matchResults: [
+        { matchId: "m-01", homeGoals: 2, awayGoals: 0, outcome: "home" },
+        { matchId: "m-02", homeGoals: 0, awayGoals: 0, outcome: "draw" },
+        { matchId: "m-25", homeGoals: 0, awayGoals: 1, outcome: "away" },
+        { matchId: "m-28", homeGoals: 1, awayGoals: 0, outcome: "home" },
+        { matchId: "m-53", homeGoals: 0, awayGoals: 2, outcome: "away" },
+        { matchId: "m-54", homeGoals: 2, awayGoals: 1, outcome: "home" },
+      ],
+      groupResults: [{ groupId: "A", first: groups[0].teams[2], second: groups[0].teams[3] }],
+    });
+
+    expect(result.groupPoints).toBe(0);
+    expect(result.groupHits).toBe(0);
+    expect(result.decidedGroups).toBe(1);
+  });
+
   it("scores knockout winner without exact result by stage", () => {
     const fixture: KnockoutFixture = { id: "k-1", order: 1, stage: "QF", home: "Argentina", away: "Francia" };
     const submission = {

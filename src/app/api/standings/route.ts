@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { autoSyncGroupMatchResults } from "@/lib/auto-results";
 import { matches } from "@/lib/matches";
-import { buildStandings, clans, standingsTieBreakRules, type ResultStore, type Submission } from "@/lib/prode";
+import { buildStandings, clans, getEffectiveGroupResults, standingsTieBreakRules, type ResultStore, type Submission } from "@/lib/prode";
 import { readResultStore, readSubmissionStore, writeResultStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -52,11 +52,12 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
     });
   });
 
-  if (results.groupResults.length > 0) {
+  const effectiveGroupResults = getEffectiveGroupResults(results);
+  if (effectiveGroupResults.length > 0) {
     snapshots.push(
       buildHistorySnapshot("Grupos", "Top 2 de grupos", submissions, {
         matchResults: results.matchResults,
-        groupResults: results.groupResults,
+        groupResults: effectiveGroupResults,
         knockoutFixtures: [],
         knockoutResults: [],
         manualAdjustments: results.manualAdjustments ?? [],
@@ -137,6 +138,7 @@ export async function GET() {
     }
 
     const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
+    const effectiveGroupResults = getEffectiveGroupResults(results);
     const standings = buildStandings(submissionStore.submissions, results);
     const history = buildStandingsHistory(submissionStore.submissions, results);
     return NextResponse.json({
@@ -148,7 +150,7 @@ export async function GET() {
       dailyRecap: buildDailyRecap(submissionStore.submissions, results, history),
       tieBreakRules: standingsTieBreakRules,
       playedMatches: results.matchResults.length,
-      decidedGroups: results.groupResults.length,
+      decidedGroups: effectiveGroupResults.length,
       knockoutFixtures: results.knockoutFixtures.length,
       playedKnockoutMatches: results.knockoutResults.length,
       autoSync: syncReport,
