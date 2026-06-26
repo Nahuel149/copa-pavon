@@ -301,19 +301,24 @@ function mergeKnockoutResults(current: KnockoutResult[], imported: KnockoutResul
       previous &&
       previous.homeGoals === result.homeGoals &&
       previous.awayGoals === result.awayGoals &&
+      previous.qualifiedTeam === result.qualifiedTeam &&
       previousScorers === nextScorers
     ) {
       unchanged += 1;
       continue;
     }
     if (previous?.source === "manual") {
-      if (previous.homeGoals !== result.homeGoals || previous.awayGoals !== result.awayGoals) {
+      if (
+        previous.homeGoals !== result.homeGoals ||
+        previous.awayGoals !== result.awayGoals ||
+        previous.qualifiedTeam !== result.qualifiedTeam
+      ) {
         conflicts.push({
           kind: "knockout",
           id: result.fixtureId,
           label: result.fixtureId,
-          manualScore: `${previous.homeGoals}-${previous.awayGoals}`,
-          apiScore: `${result.homeGoals}-${result.awayGoals}`,
+          manualScore: `${previous.homeGoals}-${previous.awayGoals}${previous.qualifiedTeam ? ` ${previous.qualifiedTeam}` : ""}`,
+          apiScore: `${result.homeGoals}-${result.awayGoals}${result.qualifiedTeam ? ` ${result.qualifiedTeam}` : ""}`,
         });
         protectedCount += 1;
       } else {

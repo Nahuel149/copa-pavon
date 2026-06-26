@@ -84,6 +84,7 @@ type ResultDraft = Record<string, {
   highlightUrl?: string;
   goalScorers?: MatchResult["goalScorers"];
   scorerNames?: string;
+  qualifiedTeam?: "home" | "away" | "";
   source?: "api" | "manual";
 }>;
 type GroupResultDraft = Record<GroupId, { first: string; second: string }>;
@@ -138,13 +139,17 @@ function buildResultsPayload(
         fixtureId: fixture.id,
         homeGoals: Number(value.homeGoals),
         awayGoals: Number(value.awayGoals),
+        ...(value.homeGoals === value.awayGoals && value.qualifiedTeam ? { qualifiedTeam: value.qualifiedTeam } : {}),
         scorerNames: (value.scorerNames ?? "")
           .split(",")
           .map((scorer) => scorer.trim())
           .filter(Boolean),
       };
     })
-    .filter((result): result is { fixtureId: string; homeGoals: number; awayGoals: number; scorerNames: string[] } => Boolean(result));
+    .filter(
+      (result): result is { fixtureId: string; homeGoals: number; awayGoals: number; qualifiedTeam?: "home" | "away"; scorerNames: string[] } =>
+        Boolean(result),
+    );
 
   return {
     matchResults: matchResults.map((result) => ({
@@ -183,6 +188,7 @@ function draftFromResults(results: ResultStore) {
     draft[fixture.id] = {
       homeGoals: result ? String(result.homeGoals) : "",
       awayGoals: result ? String(result.awayGoals) : "",
+      qualifiedTeam: result?.qualifiedTeam ?? "",
       scorerNames: result?.scorerNames?.join(", ") ?? "",
       source: result?.source,
     };
@@ -569,6 +575,13 @@ export default function AdminPage() {
     setKnockoutDraft((current) => ({
       ...current,
       [fixtureId]: { ...current[fixtureId], [side]: cleanValue },
+    }));
+  }
+
+  function setKnockoutQualified(fixtureId: string, value: "home" | "away" | "") {
+    setKnockoutDraft((current) => ({
+      ...current,
+      [fixtureId]: { ...current[fixtureId], qualifiedTeam: value },
     }));
   }
 
@@ -1082,6 +1095,19 @@ export default function AdminPage() {
                   <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
                 </label>
               </div>
+              {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
+                <label className="adminTextInput">
+                  <span>Clasificado por penales</span>
+                  <select
+                    value={value.qualifiedTeam ?? ""}
+                    onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
+                  >
+                    <option value="">Elegir</option>
+                    <option value="home">{fixture.home}</option>
+                    <option value="away">{fixture.away}</option>
+                  </select>
+                </label>
+              ) : null}
               <label className="adminTextInput">
                 <span>Goleadores oficiales</span>
                 <input

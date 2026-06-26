@@ -123,7 +123,9 @@ export default function ReglasPage() {
             Cuando admin cargue los cruces, cada participante completa marcadores exactos. Si no pega exacto pero acierta
             el ganador/clasificado, tambien suma puntos. Desde 16avos tambien puede elegir un goleador del partido:
             si ese jugador convierte, suma 1 punto extra. Si deja el goleador vacio, se toma como apuesta a 0-0
-            sin goleadores; si el partido termina asi, tambien suma ese punto.
+            sin goleadores; si el partido termina asi, tambien suma ese punto. El marcador de eliminatorias cuenta al
+            final de los 120 minutos: si sale empatado y acertaste el marcador exacto pero erraste el clasificado por
+            penales, suma 2 puntos.
           </p>
         </article>
         <article>
@@ -142,7 +144,7 @@ export default function ReglasPage() {
         <p>
           Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto. El goleador
           acertado suma 1 punto extra en cualquier cruce. Dejarlo vacio equivale a elegir sin goleador, y suma si el
-          partido termina 0-0.
+          partido termina 0-0. En empates tras 120 minutos tambien se elige quien clasifica por penales.
         </p>
       </section>
 
@@ -155,6 +157,7 @@ export default function ReglasPage() {
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
+                Empate exacto con clasificado errado: 2 pts.
               </p>
             </article>
           );

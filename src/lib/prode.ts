@@ -38,6 +38,7 @@ export type KnockoutPrediction = {
   fixtureId: string;
   homeGoals: number;
   awayGoals: number;
+  qualifiedTeam?: "home" | "away";
   goalScorer?: string;
 };
 
@@ -106,6 +107,7 @@ export type KnockoutResult = {
   fixtureId: string;
   homeGoals: number;
   awayGoals: number;
+  qualifiedTeam?: "home" | "away";
   scorerNames?: string[];
   source?: "api" | "manual";
 };
@@ -179,6 +181,7 @@ type RawKnockoutPrediction = {
   fixtureId?: unknown;
   homeGoals?: unknown;
   awayGoals?: unknown;
+  qualifiedTeam?: unknown;
   goalScorer?: unknown;
 };
 
@@ -328,6 +331,12 @@ export function getOutcome(homeGoals: number, awayGoals: number): PredictionChoi
   if (homeGoals > awayGoals) return "home";
   if (awayGoals > homeGoals) return "away";
   return "draw";
+}
+
+function getKnockoutQualifiedTeam(homeGoals: number, awayGoals: number, qualifiedTeam?: "home" | "away") {
+  if (homeGoals > awayGoals) return "home";
+  if (awayGoals > homeGoals) return "away";
+  return qualifiedTeam;
 }
 
 export function choiceLabel(choice: PredictionChoice, home: string, away: string) {
@@ -561,8 +570,19 @@ export function validateKnockoutSubmission(
       errors.push(`El resultado de ${fixture.home} vs. ${fixture.away} tiene que estar entre 0 y 30.`);
       continue;
     }
+    const qualifiedTeam = raw.qualifiedTeam === "home" || raw.qualifiedTeam === "away" ? raw.qualifiedTeam : undefined;
+    if (homeGoals === awayGoals && !qualifiedTeam) {
+      errors.push(`Elegí quien clasifica por penales en ${fixture.home} vs. ${fixture.away}.`);
+      continue;
+    }
     const goalScorer = typeof raw.goalScorer === "string" ? raw.goalScorer.trim().replace(/\s+/g, " ") : "";
-    predictions.push({ fixtureId: fixture.id, homeGoals, awayGoals, ...(goalScorer ? { goalScorer } : {}) });
+    predictions.push({
+      fixtureId: fixture.id,
+      homeGoals,
+      awayGoals,
+      ...(qualifiedTeam ? { qualifiedTeam } : {}),
+      ...(goalScorer ? { goalScorer } : {}),
+    });
   }
 
   if (errors.length > 0) return { ok: false, errors };
@@ -641,6 +661,7 @@ export function validateResultStore(payload: unknown): ResultStore {
     if (homeGoals === null || awayGoals === null || homeGoals < 0 || awayGoals < 0 || homeGoals > 30 || awayGoals > 30) {
       continue;
     }
+    const qualifiedTeam = item.qualifiedTeam === "home" || item.qualifiedTeam === "away" ? item.qualifiedTeam : undefined;
     const scorerNames = Array.isArray(item.scorerNames)
       ? item.scorerNames.filter((scorer): scorer is string => typeof scorer === "string" && scorer.trim().length > 0)
       : parseScorerNames((item as Partial<KnockoutResult> & { scorers?: unknown }).scorers);
@@ -648,6 +669,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       fixtureId: item.fixtureId,
       homeGoals,
       awayGoals,
+      ...(homeGoals === awayGoals && qualifiedTeam ? { qualifiedTeam } : {}),
       ...(scorerNames.length > 0 ? { scorerNames } : {}),
       ...(item.source === "manual" || item.source === "api" ? { source: item.source } : {}),
     });
@@ -697,12 +719,14 @@ export function countCompleteGroupPredictions(groupPredictions: Record<string, {
 }
 
 export function countCompleteKnockoutPredictions(
-  predictions: Record<string, { homeGoals: string; awayGoals: string }>,
+  predictions: Record<string, { homeGoals: string; awayGoals: string; qualifiedTeam?: string }>,
   fixtures: KnockoutFixture[],
 ) {
   return fixtures.reduce((total, fixture) => {
     const value = predictions[fixture.id];
-    return value && value.homeGoals !== "" && value.awayGoals !== "" ? total + 1 : total;
+    if (!value || value.homeGoals === "" || value.awayGoals === "") return total;
+    if (value.homeGoals === value.awayGoals && value.qualifiedTeam !== "home" && value.qualifiedTeam !== "away") return total;
+    return total + 1;
   }, 0);
 }
 
@@ -716,7 +740,11 @@ export function serializePrediction(prediction: Prediction) {
 }
 
 export function serializeKnockoutPrediction(prediction: KnockoutPrediction) {
-  return `${prediction.homeGoals}-${prediction.awayGoals}${prediction.goalScorer ? ` · ${prediction.goalScorer}` : ""}`;
+  const qualifiedLabel =
+    prediction.homeGoals === prediction.awayGoals && prediction.qualifiedTeam
+      ? ` · clasifica ${prediction.qualifiedTeam === "home" ? "local" : "visitante"}`
+      : "";
+  return `${prediction.homeGoals}-${prediction.awayGoals}${qualifiedLabel}${prediction.goalScorer ? ` · ${prediction.goalScorer}` : ""}`;
 }
 
 type GroupTableRow = {
@@ -875,13 +903,26 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     if (!result) continue;
     playedKnockoutPredictions += 1;
     const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
+    const predictionQualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
+    const resultQualified = getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
+    const exactScore = prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals;
+    const exactDrawWrongQualifier =
+      exactScore &&
+      result.homeGoals === result.awayGoals &&
+      Boolean(resultQualified) &&
+      Boolean(predictionQualified) &&
+      predictionQualified !== resultQualified;
     let basePoints = 0;
     let baseVerdict: PointAuditEntry["verdict"] = "miss";
-    if (prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals) {
+    if (exactDrawWrongQualifier) {
+      basePoints = 2;
+      baseVerdict = "correct";
+      knockoutExactHits += 1;
+    } else if (exactScore) {
       basePoints = scoring.exact;
       baseVerdict = "exact";
       knockoutExactHits += 1;
-    } else if (getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals)) {
+    } else if (predictionQualified && resultQualified && predictionQualified === resultQualified) {
       basePoints = scoring.winner;
       baseVerdict = "correct";
       knockoutWinnerHits += 1;
@@ -891,8 +932,16 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
       id: prediction.fixtureId,
       category: "knockout",
       label: fixture ? `${fixture.home} vs. ${fixture.away}` : prediction.fixtureId,
-      prediction: `${prediction.homeGoals}-${prediction.awayGoals}`,
-      official: `${result.homeGoals}-${result.awayGoals}`,
+      prediction: `${prediction.homeGoals}-${prediction.awayGoals}${
+        predictionQualified && fixture && prediction.homeGoals === prediction.awayGoals
+          ? `, clasifica ${predictionQualified === "home" ? fixture.home : fixture.away}`
+          : ""
+      }`,
+      official: `${result.homeGoals}-${result.awayGoals}${
+        resultQualified && fixture && result.homeGoals === result.awayGoals
+          ? `, clasificó ${resultQualified === "home" ? fixture.home : fixture.away}`
+          : ""
+      }`,
       points: basePoints,
       verdict: baseVerdict,
     });

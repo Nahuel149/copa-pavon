@@ -331,6 +331,36 @@ describe("prode scoring", () => {
     expect(row.predictionWins).toBe(1);
   });
 
+  it("scores only two points for exact knockout draw with wrong penalty qualifier", () => {
+    const fixture: KnockoutFixture = { id: "k-pens", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-pens", homeGoals: 1, awayGoals: 1, qualifiedTeam: "away" as const }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-pens", homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" }],
+    });
+
+    expect(row.knockoutPoints).toBe(2);
+    expect(row.knockoutExactHits).toBe(1);
+    expect(row.knockoutWinnerHits).toBe(0);
+    expect(row.pointAudit.find((entry) => entry.id === "k-pens")?.points).toBe(2);
+  });
+
+  it("requires a penalty qualifier when a knockout prediction is tied", () => {
+    const fixture: KnockoutFixture = { id: "k-draw", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const result = validateKnockoutSubmission(
+      { name: "Nahuel", predictions: [{ fixtureId: "k-draw", homeGoals: 1, awayGoals: 1 }] },
+      [fixture],
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join(" ")).toContain("clasifica por penales");
+  });
+
   it("tracks played, won and lost predictions and keeps point totals consistent", () => {
     const row = scoreSubmission(submissionFromPayload("Nahuel"), {
       ...emptyResults,

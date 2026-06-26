@@ -6,14 +6,13 @@ import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
-import { countCompleteKnockoutPredictions } from "@/lib/prode";
 
 type FixtureResponse = {
   fixtures: KnockoutFixture[];
   fixtureStatus?: Record<string, { kickoffAt: string; editDeadline: string; open: boolean }>;
 };
 
-type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string; goalScorer: string }>;
+type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string; qualifiedTeam: "home" | "away" | ""; goalScorer: string }>;
 type SavedKnockoutDraft = {
   name: string;
   predictions: KnockoutDraft;
@@ -24,9 +23,14 @@ const knockoutDraftStorageKey = "copa-kahl-knockout-draft-v1";
 
 function draftFromFixtures(fixtures: KnockoutFixture[]) {
   return fixtures.reduce<KnockoutDraft>((draft, fixture) => {
-    draft[fixture.id] = { homeGoals: "", awayGoals: "", goalScorer: "" };
+    draft[fixture.id] = { homeGoals: "", awayGoals: "", qualifiedTeam: "", goalScorer: "" };
     return draft;
   }, {});
+}
+
+function isKnockoutPredictionComplete(value: KnockoutDraft[string] | undefined) {
+  if (!value || value.homeGoals === "" || value.awayGoals === "") return false;
+  return value.homeGoals !== value.awayGoals || value.qualifiedTeam === "home" || value.qualifiedTeam === "away";
 }
 
 function readSavedKnockoutDraft(fixtures: KnockoutFixture[]): SavedKnockoutDraft | null {
@@ -61,7 +65,7 @@ export default function EliminatoriasPage() {
   const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
 
   const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
-  const completed = countCompleteKnockoutPredictions(predictions, openFixtures);
+  const completed = openFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
   const missingName = name.trim().length < 2;
   const missingFixtures = openFixtures.length - completed;
   const canSubmit = !missingName && openFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
@@ -128,6 +132,13 @@ export default function EliminatoriasPage() {
     }));
   }
 
+  function setQualifiedTeam(fixtureId: string, value: "home" | "away" | "") {
+    setPredictions((current) => ({
+      ...current,
+      [fixtureId]: { ...current[fixtureId], qualifiedTeam: value },
+    }));
+  }
+
   function setGoalScorer(fixtureId: string, value: string) {
     setPredictions((current) => ({
       ...current,
@@ -153,6 +164,7 @@ export default function EliminatoriasPage() {
           fixtureId: fixture.id,
           homeGoals: predictions[fixture.id]?.homeGoals ?? "",
           awayGoals: predictions[fixture.id]?.awayGoals ?? "",
+          qualifiedTeam: predictions[fixture.id]?.qualifiedTeam ?? "",
           goalScorer: predictions[fixture.id]?.goalScorer ?? "",
         })),
       }),
@@ -278,6 +290,7 @@ export default function EliminatoriasPage() {
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
+                Si el marcador queda empatado tras 120' y errás el clasificado por penales, el exacto vale 2 pts.
                 Goleador acertado: +1. Vacio suma si sale 0-0.
               </p>
             </article>
@@ -296,7 +309,7 @@ export default function EliminatoriasPage() {
             </div>
             <div className="matchGrid">
               {stageFixtures.map((fixture) => {
-                const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "", goalScorer: "" };
+                const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "", qualifiedTeam: "", goalScorer: "" };
                 const lock = fixtureStatus[fixture.id];
                 const fixtureOpen = lock?.open ?? true;
                 const deadline = lock?.editDeadline ? formatArgentinaDateTime(lock.editDeadline) : "10 min antes";
@@ -335,6 +348,20 @@ export default function EliminatoriasPage() {
                         />
                       </label>
                     </div>
+                    {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
+                      <label className="scorerInput">
+                        <span>Clasifica por penales</span>
+                        <select
+                          value={value.qualifiedTeam ?? ""}
+                          onChange={(event) => setQualifiedTeam(fixture.id, event.target.value as "home" | "away" | "")}
+                          disabled={!fixtureOpen || status === "saving"}
+                        >
+                          <option value="">Elegir clasificado</option>
+                          <option value="home">{fixture.home}</option>
+                          <option value="away">{fixture.away}</option>
+                        </select>
+                      </label>
+                    ) : null}
                     <label className="scorerInput">
                       <span>Goleador del partido (+1)</span>
                       <input

@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { groupMap, matchMap, type GroupId } from "@/lib/matches";
-import { getOutcome, normalizeName, parseClan, validateResultStore, type AppSettings, type PredictionChoice, type Submission } from "@/lib/prode";
+import {
+  getOutcome,
+  normalizeName,
+  parseClan,
+  validateResultStore,
+  type AppSettings,
+  type KnockoutPrediction,
+  type PredictionChoice,
+  type Submission,
+} from "@/lib/prode";
 import {
   appendAuditEvent,
   readAppSettings,
@@ -113,10 +122,13 @@ function parseBackupSubmission(value: unknown, index: number): Submission {
     ) {
       throw new Error(`Pronostico eliminatorio invalido para ${name}.`);
     }
+    const qualifiedTeam: KnockoutPrediction["qualifiedTeam"] =
+      raw.qualifiedTeam === "home" || raw.qualifiedTeam === "away" ? raw.qualifiedTeam : undefined;
     return {
       fixtureId: raw.fixtureId,
       homeGoals: Number(raw.homeGoals),
       awayGoals: Number(raw.awayGoals),
+      ...(qualifiedTeam ? { qualifiedTeam } : {}),
       ...(typeof raw.goalScorer === "string" && raw.goalScorer.trim() ? { goalScorer: raw.goalScorer.trim() } : {}),
     };
   });

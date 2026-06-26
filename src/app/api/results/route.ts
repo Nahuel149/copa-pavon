@@ -30,6 +30,7 @@ function markAdminResultsAsManual(results: ResultStore, current: ResultStore): R
         previous &&
         previous.homeGoals === result.homeGoals &&
         previous.awayGoals === result.awayGoals &&
+        previous.qualifiedTeam === result.qualifiedTeam &&
         JSON.stringify(previous.scorerNames ?? []) === JSON.stringify(result.scorerNames ?? []);
       return { ...result, source: unchanged ? previous.source ?? "manual" : "manual" };
     }),

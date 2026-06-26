@@ -2099,8 +2099,11 @@ a {
 }
 
 .scorerInput input,
+.scorerInput select,
 .highlightUrlInput input,
-.adminTextInput input {
+.highlightUrlInput select,
+.adminTextInput input,
+.adminTextInput select {
   width: 100%;
   min-height: 46px;
   padding: 0 12px;
