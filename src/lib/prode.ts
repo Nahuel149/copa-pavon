@@ -662,6 +662,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       continue;
     }
     const qualifiedTeam = item.qualifiedTeam === "home" || item.qualifiedTeam === "away" ? item.qualifiedTeam : undefined;
+    if (homeGoals === awayGoals && !qualifiedTeam) continue;
     const scorerNames = Array.isArray(item.scorerNames)
       ? item.scorerNames.filter((scorer): scorer is string => typeof scorer === "string" && scorer.trim().length > 0)
       : parseScorerNames((item as Partial<KnockoutResult> & { scorers?: unknown }).scorers);

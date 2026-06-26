@@ -15,6 +15,7 @@ import {
   parseScorerNames,
   scoreSubmission,
   validateKnockoutSubmission,
+  validateResultStore,
   validateSubmission,
   type ResultStore,
 } from "./prode";
@@ -348,6 +349,71 @@ describe("prode scoring", () => {
     expect(row.knockoutExactHits).toBe(1);
     expect(row.knockoutWinnerHits).toBe(0);
     expect(row.pointAudit.find((entry) => entry.id === "k-pens")?.points).toBe(2);
+  });
+
+  it("scores full knockout exact points when tied score and penalty qualifier are both correct", () => {
+    const fixture: KnockoutFixture = { id: "k-pens-full", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-pens-full", homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" as const }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-pens-full", homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" }],
+    });
+
+    expect(row.knockoutPoints).toBe(4);
+    expect(row.knockoutExactHits).toBe(1);
+    expect(row.knockoutWinnerHits).toBe(0);
+  });
+
+  it("scores knockout qualifier points when only the qualifier is correct", () => {
+    const fixture: KnockoutFixture = { id: "k-qualifier", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-qualifier", homeGoals: 1, awayGoals: 0 }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-qualifier", homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" }],
+    });
+
+    expect(row.knockoutPoints).toBe(2);
+    expect(row.knockoutExactHits).toBe(0);
+    expect(row.knockoutWinnerHits).toBe(1);
+  });
+
+  it("scores zero knockout points when the predicted qualifier is wrong", () => {
+    const fixture: KnockoutFixture = { id: "k-wrong-qualifier", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: "k-wrong-qualifier", homeGoals: 0, awayGoals: 1 }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-wrong-qualifier", homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" }],
+    });
+
+    expect(row.knockoutPoints).toBe(0);
+    expect(row.knockoutExactHits).toBe(0);
+    expect(row.knockoutWinnerHits).toBe(0);
+  });
+
+  it("does not accept a tied knockout result without a penalty qualifier", () => {
+    const fixture: KnockoutFixture = { id: "k-missing-qualifier", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const results = validateResultStore({
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: "k-missing-qualifier", homeGoals: 1, awayGoals: 1 }],
+    });
+
+    expect(results.knockoutResults).toHaveLength(0);
   });
 
   it("requires a penalty qualifier when a knockout prediction is tied", () => {
