@@ -463,7 +463,7 @@ export default function EliminatoriasPage() {
                         value={value.goalScorer ?? ""}
                         onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
                         disabled={!isUnlocked || !fixtureOpen || status === "saving"}
-                        placeholder="Ej: Balogun"
+                        placeholder="Ej: Messi, Haaland, Mbappe"
                       />
                     </label>
                   </article>
