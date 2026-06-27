@@ -789,6 +789,49 @@ a {
   font-size: 0.95rem;
 }
 
+.groupPhaseFold {
+  width: min(92vw, 1500px);
+  margin: 52px auto 0;
+  border: 3px solid var(--ink);
+  background: rgba(255, 253, 247, 0.94);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.18);
+}
+
+.groupPhaseFold > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 22px;
+  cursor: pointer;
+  list-style: none;
+  border-bottom: 3px solid var(--ink);
+}
+
+.groupPhaseFold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.groupPhaseFold > summary span {
+  font-size: 1.15rem;
+  font-weight: 950;
+}
+
+.groupPhaseFold > summary strong {
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.18);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.groupPhaseFold > .pageStack {
+  width: 100%;
+  margin: 0;
+  padding: clamp(18px, 3vw, 32px);
+}
+
 .rulesFlow,
 .scoreRuleGrid,
 .rulesDetailGrid {

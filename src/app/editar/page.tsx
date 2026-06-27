@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { CheckCircle2, KeyRound, Loader2, Save, Search, Target, Trophy } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import EliminatoriasPage from "@/app/eliminatorias/page";
 import { formatArgentinaDateTime, formatArgentinaShortDeadline } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { choiceMatches, exactScoreMatches, groups, matches, roundLabels, type GroupId, type MatchRound } from "@/lib/matches";
@@ -274,13 +275,13 @@ export default function EditarPage() {
     });
   }
 
-  return (
+  const groupPhaseEditor = (
     <form className="pageStack" onSubmit={loaded ? saveEdition : loadSubmission}>
       <section className="compactHero">
         <div>
           <p className="eyebrow">Editar mi prode</p>
-          <h1>Tu prode completo.</h1>
-          <span>Edicion abierta {deadlineText}.</span>
+          <h1>Fase de grupos.</h1>
+          <span>Edicion de grupos abierta {deadlineText}.</span>
         </div>
         <div className="heroControl">
           <label htmlFor="editName">Nombre</label>
@@ -498,5 +499,18 @@ export default function EditarPage() {
         </>
       ) : null}
     </form>
+  );
+
+  return (
+    <>
+      <EliminatoriasPage />
+      <details className="groupPhaseFold">
+        <summary>
+          <span>Fase de grupos</span>
+          <strong>Ver editor anterior</strong>
+        </summary>
+        {groupPhaseEditor}
+      </details>
+    </>
   );
 }
