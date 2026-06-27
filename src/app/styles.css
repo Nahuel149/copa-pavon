@@ -518,6 +518,7 @@ a {
 
 .heroControl > label,
 .heroControl > input,
+.heroControl > div,
 .heroControl > span {
   position: relative;
   z-index: 1;
@@ -557,6 +558,18 @@ a {
 .heroControl span {
   color: var(--muted);
   font-family: Georgia, "Times New Roman", serif;
+}
+
+.pinLoginRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pinLoginRow .iconSubmit {
+  min-width: 52px;
+  min-height: 52px;
 }
 
 .metricGrid {

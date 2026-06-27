@@ -1,15 +1,21 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Brackets, CheckCircle2, Loader2, Save, Send, Target, Trash2 } from "lucide-react";
+import { Brackets, CheckCircle2, Loader2, LogIn, Save, Send, Target, Trash2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
+import type { KnockoutPrediction, Submission } from "@/lib/prode";
 
 type FixtureResponse = {
   fixtures: KnockoutFixture[];
   fixtureStatus?: Record<string, { kickoffAt: string; editDeadline: string; open: boolean }>;
+};
+
+type LoginResponse = {
+  submission?: Submission;
+  errors?: string[];
 };
 
 type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string; qualifiedTeam: "home" | "away" | ""; goalScorer: string }>;
@@ -31,6 +37,23 @@ function draftFromFixtures(fixtures: KnockoutFixture[]) {
 function isKnockoutPredictionComplete(value: KnockoutDraft[string] | undefined) {
   if (!value || value.homeGoals === "" || value.awayGoals === "") return false;
   return value.homeGoals !== value.awayGoals || value.qualifiedTeam === "home" || value.qualifiedTeam === "away";
+}
+
+function mergeKnockoutPredictions(fixtures: KnockoutFixture[], current: KnockoutDraft, savedPredictions: KnockoutPrediction[] = []) {
+  const byFixture = new Map(savedPredictions.map((prediction) => [prediction.fixtureId, prediction]));
+  return fixtures.reduce<KnockoutDraft>((draft, fixture) => {
+    const currentValue = current[fixture.id] ?? { homeGoals: "", awayGoals: "", qualifiedTeam: "", goalScorer: "" };
+    const saved = byFixture.get(fixture.id);
+    draft[fixture.id] = saved
+      ? {
+          homeGoals: String(saved.homeGoals),
+          awayGoals: String(saved.awayGoals),
+          qualifiedTeam: saved.qualifiedTeam ?? "",
+          goalScorer: saved.goalScorer ?? "",
+        }
+      : currentValue;
+    return draft;
+  }, {});
 }
 
 function readSavedKnockoutDraft(fixtures: KnockoutFixture[]): SavedKnockoutDraft | null {
@@ -59,6 +82,10 @@ export default function EliminatoriasPage() {
   const [fixtureStatus, setFixtureStatus] = useState<Record<string, { kickoffAt: string; editDeadline: string; open: boolean }>>({});
   const [predictions, setPredictions] = useState<KnockoutDraft>({});
   const [name, setName] = useState("");
+  const [pin, setPin] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<"idle" | "checking">("idle");
+  const [loginMessage, setLoginMessage] = useState("");
   const [status, setStatus] = useState<"loading" | "idle" | "saving" | "done">("loading");
   const [errors, setErrors] = useState<string[]>([]);
   const [draftReady, setDraftReady] = useState(false);
@@ -67,8 +94,9 @@ export default function EliminatoriasPage() {
   const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
   const completed = openFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
   const missingName = name.trim().length < 2;
+  const missingLogin = !isUnlocked;
   const missingFixtures = openFixtures.length - completed;
-  const canSubmit = !missingName && openFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
+  const canSubmit = !missingName && !missingLogin && openFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
   const validationMessages = [
     ...(missingName ? ["Poné el mismo nombre que usaste en fase de grupos."] : []),
     ...(fixtures.length === 0 ? ["Todavía no hay cruces eliminatorios cargados desde admin."] : []),
@@ -146,6 +174,37 @@ export default function EliminatoriasPage() {
     }));
   }
 
+  async function handleLogin() {
+    setLoginMessage("");
+    setErrors([]);
+    if (name.trim().length < 2 || !/^\d{4,10}$/.test(pin.trim())) {
+      setLoginMessage("Ingresa tu nombre y un PIN de 4 a 10 numeros.");
+      return;
+    }
+
+    setLoginStatus("checking");
+    try {
+      const response = await fetch("/api/my-prode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, pin }),
+      });
+      const body = await readJsonResponse<LoginResponse>(response);
+      if (!response.ok || body.errors?.length || !body.submission) {
+        throw new Error(body.errors?.[0] ?? "No se pudo validar el PIN.");
+      }
+      setName(body.submission.name);
+      setPredictions((current) => mergeKnockoutPredictions(fixtures, current, body.submission?.knockoutPredictions ?? []));
+      setIsUnlocked(true);
+      setLoginMessage("Acceso validado. Ya podes cargar eliminatorias.");
+    } catch (loginError) {
+      setIsUnlocked(false);
+      setLoginMessage(loginError instanceof Error ? loginError.message : "No se pudo validar el PIN.");
+    } finally {
+      setLoginStatus("idle");
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) {
@@ -160,6 +219,7 @@ export default function EliminatoriasPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
+        pin,
         predictions: fixtures.map((fixture) => ({
           fixtureId: fixture.id,
           homeGoals: predictions[fixture.id]?.homeGoals ?? "",
@@ -225,11 +285,36 @@ export default function EliminatoriasPage() {
             id="knockoutName"
             autoComplete="name"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              setName(event.target.value);
+              setIsUnlocked(false);
+              setLoginMessage("");
+            }}
             placeholder="Mismo nombre"
             disabled={status === "saving"}
           />
-          <span>{completed}/{openFixtures.length} cruces abiertos completos</span>
+          <label htmlFor="knockoutPin">PIN</label>
+          <div className="pinLoginRow">
+            <input
+              id="knockoutPin"
+              autoComplete="current-password"
+              inputMode="numeric"
+              maxLength={10}
+              onChange={(event) => {
+                setPin(event.target.value.replace(/\D/g, "").slice(0, 10));
+                setIsUnlocked(false);
+                setLoginMessage("");
+              }}
+              placeholder="PIN"
+              type="password"
+              value={pin}
+              disabled={status === "saving"}
+            />
+            <button className="iconSubmit" disabled={loginStatus === "checking" || status === "saving"} onClick={handleLogin} type="button" aria-label="Entrar">
+              {loginStatus === "checking" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <LogIn size={18} aria-hidden="true" />}
+            </button>
+          </div>
+          <span>{isUnlocked ? `${completed}/${openFixtures.length} cruces abiertos completos` : loginMessage || "Entra con nombre y PIN"}</span>
         </div>
       </section>
 
@@ -334,7 +419,7 @@ export default function EliminatoriasPage() {
                           inputMode="numeric"
                           value={value.homeGoals}
                           onChange={(event) => setScore(fixture.id, "homeGoals", event.target.value)}
-                          disabled={!fixtureOpen || status === "saving"}
+                          disabled={!isUnlocked || !fixtureOpen || status === "saving"}
                         />
                       </label>
                       <b>-</b>
@@ -344,7 +429,7 @@ export default function EliminatoriasPage() {
                           inputMode="numeric"
                           value={value.awayGoals}
                           onChange={(event) => setScore(fixture.id, "awayGoals", event.target.value)}
-                          disabled={!fixtureOpen || status === "saving"}
+                          disabled={!isUnlocked || !fixtureOpen || status === "saving"}
                         />
                       </label>
                     </div>
@@ -354,7 +439,7 @@ export default function EliminatoriasPage() {
                         <select
                           value={value.qualifiedTeam ?? ""}
                           onChange={(event) => setQualifiedTeam(fixture.id, event.target.value as "home" | "away" | "")}
-                          disabled={!fixtureOpen || status === "saving"}
+                          disabled={!isUnlocked || !fixtureOpen || status === "saving"}
                         >
                           <option value="">Elegir clasificado</option>
                           <option value="home">{fixture.home}</option>
@@ -367,7 +452,7 @@ export default function EliminatoriasPage() {
                       <input
                         value={value.goalScorer ?? ""}
                         onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
-                        disabled={!fixtureOpen || status === "saving"}
+                        disabled={!isUnlocked || !fixtureOpen || status === "saving"}
                         placeholder="Ej: Balogun"
                       />
                     </label>
