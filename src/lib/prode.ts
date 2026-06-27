@@ -339,6 +339,13 @@ function getKnockoutQualifiedTeam(homeGoals: number, awayGoals: number, qualifie
   return qualifiedTeam;
 }
 
+function knockoutWrongPenaltyExactPoints(stage = "R32") {
+  if (stage === "QF") return 3;
+  if (stage === "SF") return 4;
+  if (stage === "FINAL") return 5;
+  return 2;
+}
+
 export function choiceLabel(choice: PredictionChoice, home: string, away: string) {
   if (choice === "home") return home;
   if (choice === "away") return away;
@@ -916,7 +923,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
     let basePoints = 0;
     let baseVerdict: PointAuditEntry["verdict"] = "miss";
     if (exactDrawWrongQualifier) {
-      basePoints = 2;
+      basePoints = knockoutWrongPenaltyExactPoints(fixture?.stage);
       baseVerdict = "correct";
       knockoutExactHits += 1;
     } else if (exactScore) {

@@ -351,6 +351,32 @@ describe("prode scoring", () => {
     expect(row.pointAudit.find((entry) => entry.id === "k-pens")?.points).toBe(2);
   });
 
+  it("scales exact knockout draw points by stage when the penalty qualifier is wrong", () => {
+    const cases = [
+      { stage: "QF" as const, points: 3 },
+      { stage: "SF" as const, points: 4 },
+      { stage: "FINAL" as const, points: 5 },
+    ];
+
+    for (const item of cases) {
+      const fixture: KnockoutFixture = { id: `k-pens-${item.stage}`, order: 1, stage: item.stage, home: "Argentina", away: "Cabo Verde" };
+      const submission = {
+        ...submissionFromPayload(),
+        knockoutPredictions: [{ fixtureId: fixture.id, homeGoals: 1, awayGoals: 1, qualifiedTeam: "away" as const }],
+      };
+
+      const row = scoreSubmission(submission, {
+        ...emptyResults,
+        knockoutFixtures: [fixture],
+        knockoutResults: [{ fixtureId: fixture.id, homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" }],
+      });
+
+      expect(row.knockoutPoints).toBe(item.points);
+      expect(row.knockoutExactHits).toBe(1);
+      expect(row.pointAudit.find((entry) => entry.id === fixture.id)?.points).toBe(item.points);
+    }
+  });
+
   it("scores full knockout exact points when tied score and penalty qualifier are both correct", () => {
     const fixture: KnockoutFixture = { id: "k-pens-full", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
     const submission = {

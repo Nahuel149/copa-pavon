@@ -125,7 +125,7 @@ export default function ReglasPage() {
             si ese jugador convierte, suma 1 punto extra. Si deja el goleador vacio, se toma como apuesta a 0-0
             sin goleadores; si el partido termina asi, tambien suma ese punto. El marcador de eliminatorias cuenta al
             final de los 120 minutos: si sale empatado y acertaste el marcador exacto pero erraste el clasificado por
-            penales, suma 2 puntos. Cada etapa cierra completa antes del primer partido de esa etapa.
+            penales, suma parcial por etapa. Cada etapa cierra completa antes del primer partido de esa etapa.
           </p>
         </article>
         <article>
@@ -158,7 +158,7 @@ export default function ReglasPage() {
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
-                Empate exacto con clasificado errado: 2 pts.
+                Empate exacto con clasificado errado: 2 pts en 16avos/octavos/tercer puesto, 3 en cuartos, 4 en semis y 5 en final.
               </p>
             </article>
           );
