@@ -552,11 +552,46 @@ describe("prode scoring", () => {
     );
   });
 
+  it("uses the first fixture kickoff to unlock public knockout predictions", () => {
+    const fixtures: KnockoutFixture[] = [
+      {
+        id: "late-r32",
+        order: 1,
+        stage: "R32",
+        home: "Argentina",
+        away: "Francia",
+        kickoffAt: "2026-06-28T20:00:00.000Z",
+      },
+    ];
+    const predictions = [{ fixtureId: "late-r32", homeGoals: 2, awayGoals: 1 }];
+
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T19:59:00.000Z"))).toEqual([]);
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T20:00:00.000Z"))).toEqual(
+      predictions,
+    );
+  });
+
   it("reports knockout public visibility by stage", () => {
     const visibility = getKnockoutVisibility(new Date("2026-07-04T16:59:00.000Z"));
 
     expect(visibility.R32.public).toBe(true);
     expect(visibility.R16.public).toBe(false);
+  });
+
+  it("reports knockout public visibility from loaded fixtures", () => {
+    const visibility = getKnockoutVisibility(new Date("2026-06-28T19:59:00.000Z"), [
+      {
+        id: "late-r32",
+        order: 1,
+        stage: "R32",
+        home: "Argentina",
+        away: "Francia",
+        kickoffAt: "2026-06-28T20:00:00.000Z",
+      },
+    ]);
+
+    expect(visibility.R32.public).toBe(false);
+    expect(visibility.R32.unlockAt).toBe("2026-06-28T20:00:00.000Z");
   });
 
   it("parses scorer names from the automatic result source", () => {

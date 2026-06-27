@@ -27,7 +27,7 @@ export async function GET() {
       submissions,
       standings,
       results,
-      knockoutVisibility: getKnockoutVisibility(now),
+      knockoutVisibility: getKnockoutVisibility(now, results.knockoutFixtures),
       updatedAt: new Date().toISOString(),
     });
   } catch {

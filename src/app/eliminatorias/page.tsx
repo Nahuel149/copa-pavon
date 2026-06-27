@@ -18,6 +18,12 @@ type LoginResponse = {
   errors?: string[];
 };
 
+type SaveKnockoutResponse = {
+  ok?: boolean;
+  saved?: number;
+  errors?: string[];
+};
+
 type KnockoutDraft = Record<string, { homeGoals: string; awayGoals: string; qualifiedTeam: "home" | "away" | ""; goalScorer: string }>;
 type SavedKnockoutDraft = {
   name: string;
@@ -90,6 +96,7 @@ export default function EliminatoriasPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [draftReady, setDraftReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
+  const [savedCount, setSavedCount] = useState(0);
 
   const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
   const completed = openFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
@@ -230,13 +237,14 @@ export default function EliminatoriasPage() {
       }),
     });
 
-    const body = await readJsonResponse<{ errors?: string[] }>(response);
+    const body = await readJsonResponse<SaveKnockoutResponse>(response);
     if (!response.ok || body.errors?.length) {
       setErrors(body.errors ?? ["No se pudo guardar el pronóstico."]);
       setStatus("idle");
       return;
     }
 
+    setSavedCount(body.saved ?? openFixtures.length);
     window.localStorage.removeItem(knockoutDraftStorageKey);
     setStatus("done");
   }
@@ -259,12 +267,12 @@ export default function EliminatoriasPage() {
           <div>
             <p className="eyebrow">Enviado</p>
             <h1>Eliminatorias guardadas.</h1>
-            <span>{name.trim()} ya tiene los cruces guardados.</span>
+            <span>{name.trim()} ya tiene los cruces guardados en la base de datos.</span>
           </div>
           <div className="scoreSeal">
             <CheckCircle2 size={34} aria-hidden="true" />
-            <strong>{completed}</strong>
-            <span>cruces</span>
+            <strong>{savedCount || completed}</strong>
+            <span>guardados</span>
           </div>
         </section>
       </div>

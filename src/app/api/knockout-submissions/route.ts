@@ -61,5 +61,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  return NextResponse.json({ ok: true, saved: validation.predictions.length }, { status: 201 });
 }
