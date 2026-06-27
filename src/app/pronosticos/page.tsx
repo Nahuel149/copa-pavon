@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, ExternalLink, Loader2, PlayCircle, Share2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
-import { formatArgentinaTime } from "@/lib/argentina-time";
+import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
-import { groups, matches, roundLabels, type GroupId, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
+import { groups, knockoutStageLabels, matches, roundLabels, type GroupId, type KnockoutFixture, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
+  serializeKnockoutPrediction,
   serializePrediction,
   type MatchResult,
   type Prediction,
@@ -148,6 +149,7 @@ export default function PronosticosPage() {
   const [data, setData] = useState<PronosticosResponse | null>(null);
   const [activeRound, setActiveRound] = useState<MatchRound>(1);
   const [selectedMatchId, setSelectedMatchId] = useState(matches[0].id);
+  const [selectedKnockoutFixtureId, setSelectedKnockoutFixtureId] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<GroupId>(groups[0].id);
   const [shareDay, setShareDay] = useState(matches[0].dateLabel);
   const [shareStatus, setShareStatus] = useState<"idle" | "working">("idle");
@@ -179,8 +181,16 @@ export default function PronosticosPage() {
     setShowGoalVideo(false);
   }, [selectedMatchId]);
 
+  useEffect(() => {
+    const firstFixture = data?.results.knockoutFixtures[0];
+    if (!selectedKnockoutFixtureId && firstFixture) setSelectedKnockoutFixtureId(firstFixture.id);
+  }, [data?.results.knockoutFixtures, selectedKnockoutFixtureId]);
+
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? roundMatches[0] ?? matches[0];
+  const knockoutFixtures = data?.results.knockoutFixtures ?? [];
+  const selectedKnockoutFixture =
+    knockoutFixtures.find((fixture) => fixture.id === selectedKnockoutFixtureId) ?? knockoutFixtures[0];
   const shareDayMatches = useMemo(() => matches.filter((match) => match.dateLabel === shareDay), [shareDay]);
   const resultByMatch = useMemo(
     () => new Map((data?.results.matchResults ?? []).map((result) => [result.matchId, result])),
@@ -190,6 +200,27 @@ export default function PronosticosPage() {
     () => new Map((data?.standings ?? []).map((standing, index) => [standing.submissionId, index + 1])),
     [data?.standings],
   );
+  const knockoutResultByFixture = useMemo(
+    () => new Map((data?.results.knockoutResults ?? []).map((result) => [result.fixtureId, result])),
+    [data?.results.knockoutResults],
+  );
+  const selectedKnockoutVisibility = selectedKnockoutFixture ? data?.knockoutVisibility?.[selectedKnockoutFixture.stage] : undefined;
+  const selectedKnockoutIsPublic = Boolean(selectedKnockoutFixture && selectedKnockoutVisibility?.public);
+  const selectedKnockoutResult = selectedKnockoutFixture ? knockoutResultByFixture.get(selectedKnockoutFixture.id) : undefined;
+  const knockoutPredictionRows = useMemo(() => {
+    if (!selectedKnockoutFixture || !selectedKnockoutIsPublic) return [];
+    return (data?.submissions ?? [])
+      .map((submission) => {
+        const prediction = submission.knockoutPredictions?.find((item) => item.fixtureId === selectedKnockoutFixture.id);
+        return {
+          submission,
+          prediction,
+          position: standingPositionById.get(submission.id) ?? 0,
+          label: prediction ? serializeKnockoutPrediction(prediction) : "Sin cargar",
+        };
+      })
+      .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
+  }, [data?.submissions, selectedKnockoutFixture, selectedKnockoutIsPublic, standingPositionById]);
 
   const predictionRows = useMemo(() => {
     return (data?.submissions ?? [])
@@ -491,6 +522,81 @@ export default function PronosticosPage() {
 
       {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
+      <section className="predictionExplorer knockoutPredictionPanel">
+        <aside className="matchPicker" aria-label="Cruces de eliminatorias">
+          {knockoutFixtures.map((fixture) => (
+            <button
+              className={selectedKnockoutFixture?.id === fixture.id ? "matchPick active" : "matchPick"}
+              key={fixture.id}
+              onClick={() => setSelectedKnockoutFixtureId(fixture.id)}
+              type="button"
+            >
+              <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
+              <strong><TeamBadge compact team={fixture.home} /> vs <TeamBadge compact team={fixture.away} /></strong>
+            </button>
+          ))}
+          {knockoutFixtures.length === 0 ? <div className="emptyState">Todavia no hay cruces de eliminatorias cargados.</div> : null}
+        </aside>
+
+        <section className="predictionInsight">
+          {selectedKnockoutFixture ? (
+            <>
+              <div className="matchFocus">
+                <span>{knockoutStageLabels[selectedKnockoutFixture.stage]} · Marcador exacto</span>
+                <h2><TeamBadge team={selectedKnockoutFixture.home} /> <b>vs</b> <TeamBadge team={selectedKnockoutFixture.away} /></h2>
+                <p>
+                  Resultado oficial:{" "}
+                  <strong>
+                    {selectedKnockoutResult
+                      ? `${selectedKnockoutResult.homeGoals}-${selectedKnockoutResult.awayGoals}`
+                      : "Pendiente"}
+                  </strong>
+                </p>
+              </div>
+
+              {!selectedKnockoutIsPublic ? (
+                <section className="validationPanel knockoutPrivateNotice">
+                  <p className="eyebrow">Privado</p>
+                  <h2>Los pronosticos de esta etapa todavia estan ocultos.</h2>
+                  <p>
+                    Se hacen publicos cuando arranca el primer partido de {knockoutStageLabels[selectedKnockoutFixture.stage]}.
+                    {selectedKnockoutVisibility?.unlockAt ? ` Hora de apertura: ${formatArgentinaDateTime(selectedKnockoutVisibility.unlockAt)}.` : ""}
+                  </p>
+                </section>
+              ) : (
+                <section className="compactPredictionList knockoutCompactList">
+                  <div className="tableNote compactPredictionHeader">
+                    <strong>Detalle individual</strong>
+                    <div className="selectedMatchBar" aria-label="Cruce seleccionado">
+                      <span>#{selectedKnockoutFixture.order}</span>
+                      <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
+                    </div>
+                  </div>
+                  <div className="compactPredictionRows">
+                    {knockoutPredictionRows.map((row) => (
+                      <article className="compactPredictionRow" key={row.submission.id}>
+                        <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
+                        <strong>{row.submission.name}</strong>
+                        <span>{row.label}</span>
+                      </article>
+                    ))}
+                    {knockoutPredictionRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}
+                  </div>
+                </section>
+              )}
+            </>
+          ) : (
+            <div className="emptyState">Todavia no hay cruces de eliminatorias para mostrar.</div>
+          )}
+        </section>
+      </section>
+
+      <details className="groupPhaseFold pronosticosGroupFold">
+        <summary>
+          <span>Grupos</span>
+          <strong>Ver fase de grupos</strong>
+        </summary>
+
       <section className="roundStrip" aria-label="Fechas de pronosticos">
         {([1, 2, 3] as MatchRound[]).map((round) => (
           <button
@@ -734,6 +840,8 @@ export default function PronosticosPage() {
         </div>
         {shareMessage ? <p className="shareMessage" aria-live="polite">{shareMessage}</p> : null}
       </section>
+
+      </details>
 
     </div>
   );
