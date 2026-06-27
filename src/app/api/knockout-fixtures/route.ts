@@ -11,7 +11,7 @@ export async function GET() {
   return NextResponse.json({
     fixtures: results.knockoutFixtures.toSorted((a, b) => a.order - b.order),
     fixtureStatus: Object.fromEntries(
-      results.knockoutFixtures.map((fixture) => [fixture.id, knockoutFixtureStatus(fixture, now)]),
+      results.knockoutFixtures.map((fixture) => [fixture.id, knockoutFixtureStatus(fixture, now, results.knockoutFixtures)]),
     ),
   });
 }

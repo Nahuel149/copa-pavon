@@ -125,7 +125,7 @@ export default function ReglasPage() {
             si ese jugador convierte, suma 1 punto extra. Si deja el goleador vacio, se toma como apuesta a 0-0
             sin goleadores; si el partido termina asi, tambien suma ese punto. El marcador de eliminatorias cuenta al
             final de los 120 minutos: si sale empatado y acertaste el marcador exacto pero erraste el clasificado por
-            penales, suma 2 puntos.
+            penales, suma 2 puntos. Cada etapa cierra completa antes del primer partido de esa etapa.
           </p>
         </article>
         <article>
@@ -145,6 +145,7 @@ export default function ReglasPage() {
           Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto. El goleador
           acertado suma 1 punto extra en cualquier cruce. Dejarlo vacio equivale a elegir sin goleador, y suma si el
           partido termina 0-0. En empates tras 120 minutos tambien se elige quien clasifica por penales.
+          Los 16avos se bloquean completos antes del primer partido de 16avos.
         </p>
       </section>
 

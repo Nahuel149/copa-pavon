@@ -490,7 +490,7 @@ describe("prode scoring", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("closes each knockout fixture ten minutes before kickoff", () => {
+  it("closes each knockout stage ten minutes before the first kickoff", () => {
     const fixture: KnockoutFixture = {
       id: "k-deadline",
       order: 1,
@@ -499,10 +499,20 @@ describe("prode scoring", () => {
       away: "Francia",
       kickoffAt: "2026-06-28T19:00:00.000Z",
     };
+    const laterFixture: KnockoutFixture = {
+      id: "k-later-deadline",
+      order: 2,
+      stage: "R32",
+      home: "Brasil",
+      away: "Espana",
+      kickoffAt: "2026-06-29T19:00:00.000Z",
+    };
+    const fixtures = [fixture, laterFixture];
 
-    expect(getKnockoutEditDeadline(fixture)).toBe("2026-06-28T18:50:00.000Z");
-    expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:49:59.000Z"))).toBe(true);
-    expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:50:00.000Z"))).toBe(false);
+    expect(getKnockoutEditDeadline(fixture, fixtures)).toBe("2026-06-28T18:50:00.000Z");
+    expect(getKnockoutEditDeadline(laterFixture, fixtures)).toBe("2026-06-28T18:50:00.000Z");
+    expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:49:59.000Z"), fixtures)).toBe(true);
+    expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(false);
   });
 
   it("validates only knockout fixtures that are still open", () => {

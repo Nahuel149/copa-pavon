@@ -36,18 +36,28 @@ export function getKnockoutKickoffAt(fixture: KnockoutFixture) {
   return fallbackStageKickoffs[fixture.stage];
 }
 
-export function getKnockoutEditDeadline(fixture: KnockoutFixture) {
-  return new Date(new Date(getKnockoutKickoffAt(fixture)).getTime() - knockoutEditCloseMinutes * 60_000).toISOString();
+export function getKnockoutStageEditDeadline(stage: KnockoutStage, fixtures: KnockoutFixture[] = []) {
+  const stageFixtures = fixtures.filter((fixture) => fixture.stage === stage);
+  const firstKickoff =
+    stageFixtures
+      .map((fixture) => new Date(getKnockoutKickoffAt(fixture)).getTime())
+      .filter((time) => !Number.isNaN(time))
+      .sort((a, b) => a - b)[0] ?? new Date(fallbackStageKickoffs[stage]).getTime();
+  return new Date(firstKickoff - knockoutEditCloseMinutes * 60_000).toISOString();
 }
 
-export function isKnockoutFixtureEditable(fixture: KnockoutFixture, now = new Date()) {
-  return now.getTime() < new Date(getKnockoutEditDeadline(fixture)).getTime();
+export function getKnockoutEditDeadline(fixture: KnockoutFixture, fixtures: KnockoutFixture[] = []) {
+  return getKnockoutStageEditDeadline(fixture.stage, fixtures.length > 0 ? fixtures : [fixture]);
 }
 
-export function knockoutFixtureStatus(fixture: KnockoutFixture, now = new Date()) {
+export function isKnockoutFixtureEditable(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
+  return now.getTime() < new Date(getKnockoutEditDeadline(fixture, fixtures)).getTime();
+}
+
+export function knockoutFixtureStatus(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
   return {
     kickoffAt: getKnockoutKickoffAt(fixture),
-    editDeadline: getKnockoutEditDeadline(fixture),
-    open: isKnockoutFixtureEditable(fixture, now),
+    editDeadline: getKnockoutEditDeadline(fixture, fixtures),
+    open: isKnockoutFixtureEditable(fixture, now, fixtures),
   };
 }

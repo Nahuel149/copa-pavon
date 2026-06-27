@@ -277,7 +277,7 @@ export default function EliminatoriasPage() {
         <div>
           <p className="eyebrow">Eliminatorias</p>
           <h1>Marcador exacto.</h1>
-          <span>Exactos, clasificados y goleador. Cada cruce cierra 10 minutos antes de empezar.</span>
+          <span>Exactos, clasificados y goleador. Toda la ronda cierra antes del primer partido de esa etapa.</span>
         </div>
         <div className="heroControl">
           <label htmlFor="knockoutName">Nombre</label>
@@ -316,6 +316,15 @@ export default function EliminatoriasPage() {
           </div>
           <span>{isUnlocked ? `${completed}/${openFixtures.length} cruces abiertos completos` : loginMessage || "Entra con nombre y PIN"}</span>
         </div>
+      </section>
+
+      <section className="validationPanel dangerPanel" aria-live="polite">
+        <p className="eyebrow">Importante</p>
+        <h2>Completá todo el prode de eliminatorias.</h2>
+        <p>
+          Los 16avos se pueden editar solamente hasta antes del primer partido de 16avos. Si no completás el prode de
+          eliminatorias a tiempo, quedás eliminado de la tabla.
+        </p>
       </section>
 
       <section className="draftPanel" aria-live="polite">
@@ -410,7 +419,7 @@ export default function EliminatoriasPage() {
                       <TeamBadge team={fixture.away} />
                     </h2>
                     <small className={fixtureOpen ? "editState open" : "editState closed"}>
-                      {fixtureOpen ? `Editable hasta ${deadline}` : "Este cruce ya cerro."}
+                      {fixtureOpen ? `Ronda editable hasta ${deadline}` : "Esta ronda ya cerro."}
                     </small>
                     <div className="scoreInputs">
                       <label>

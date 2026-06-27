@@ -33,12 +33,12 @@ export async function POST(request: Request) {
   }
 
   const closedFixtureIds = results.knockoutFixtures
-    .filter((fixture) => !isKnockoutFixtureEditable(fixture))
+    .filter((fixture) => !isKnockoutFixtureEditable(fixture, new Date(), results.knockoutFixtures))
     .map((fixture) => fixture.id);
 
   if (results.knockoutFixtures.length > 0 && closedFixtureIds.length === results.knockoutFixtures.length) {
     return NextResponse.json(
-      { errors: ["No hay cruces abiertos para editar. Cada partido cierra 10 minutos antes de empezar."] },
+      { errors: ["No hay cruces abiertos para editar. Toda la ronda cierra antes del primer partido de esa etapa."] },
       { status: 403 },
     );
   }
