@@ -2123,6 +2123,60 @@ a {
   font-size: 1rem;
 }
 
+.penaltyQualifier {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.penaltyQualifier > span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.penaltyQualifier > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.penaltyOption {
+  display: inline-flex;
+  justify-content: center;
+  gap: 8px;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 10px;
+  border: 3px solid var(--ink);
+  background: #fffdf7;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.penaltyOption svg {
+  opacity: 0.18;
+}
+
+.penaltyOption.selected {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.penaltyOption.selected svg {
+  opacity: 1;
+}
+
+.penaltyOption:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .highlightUrlInput input {
   min-height: 42px;
   font-size: 0.82rem;

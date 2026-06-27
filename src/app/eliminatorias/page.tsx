@@ -434,18 +434,28 @@ export default function EliminatoriasPage() {
                       </label>
                     </div>
                     {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
-                      <label className="scorerInput">
+                      <div className="penaltyQualifier" role="radiogroup" aria-label="Clasifica por penales">
                         <span>Clasifica por penales</span>
-                        <select
-                          value={value.qualifiedTeam ?? ""}
-                          onChange={(event) => setQualifiedTeam(fixture.id, event.target.value as "home" | "away" | "")}
-                          disabled={!isUnlocked || !fixtureOpen || status === "saving"}
-                        >
-                          <option value="">Elegir clasificado</option>
-                          <option value="home">{fixture.home}</option>
-                          <option value="away">{fixture.away}</option>
-                        </select>
-                      </label>
+                        <div>
+                          {(["home", "away"] as const).map((side) => {
+                            const selected = value.qualifiedTeam === side;
+                            return (
+                              <button
+                                aria-checked={selected}
+                                className={selected ? "penaltyOption selected" : "penaltyOption"}
+                                disabled={!isUnlocked || !fixtureOpen || status === "saving"}
+                                key={side}
+                                onClick={() => setQualifiedTeam(fixture.id, side)}
+                                role="radio"
+                                type="button"
+                              >
+                                <CheckCircle2 size={18} aria-hidden="true" />
+                                {side === "home" ? fixture.home : fixture.away}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ) : null}
                     <label className="scorerInput">
                       <span>Goleador del partido (+1)</span>
