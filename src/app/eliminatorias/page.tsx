@@ -116,6 +116,98 @@ export default function EliminatoriasPage() {
     }, {});
   }, [fixtures]);
 
+  const importantPanel = (
+    <section className="validationPanel dangerPanel" aria-live="polite">
+      <p className="eyebrow">Importante</p>
+      <h2>Completá todo el prode de eliminatorias.</h2>
+      <p>
+        Cada partido se puede editar hasta 10 minutos antes de empezar. Si no completás un partido antes de que cierre,
+        ese partido suma 0 puntos. Si dejás 2 partidos de eliminatorias sin pronosticar cuando ya cerraron, quedás
+        eliminado del prode.
+      </p>
+    </section>
+  );
+
+  const draftPanel = (
+    <section className="draftPanel" aria-live="polite">
+      <div>
+        <p className="eyebrow">Provisorio</p>
+        <h2>No pierdas tus cruces.</h2>
+        <p>{draftStatus}</p>
+        <p>
+          El guardado provisorio queda solo en este navegador y no cuenta como envío oficial. Para que se cuente, tenés
+          que completar los cruces abiertos y apretar Enviar eliminatorias; después podés volver a entrar y editar los
+          partidos que todavía no cerraron.
+        </p>
+      </div>
+      <div className="draftActions">
+        <button className="primaryAction light" onClick={() => saveDraft()} type="button">
+          <Save size={18} aria-hidden="true" />
+          Guardar provisorio
+        </button>
+        <button className="primaryAction light" onClick={clearDraft} type="button">
+          <Trash2 size={18} aria-hidden="true" />
+          Borrar provisorio
+        </button>
+      </div>
+    </section>
+  );
+
+  const validationPanel =
+    validationMessages.length > 0 ? (
+      <section className="validationPanel" id="knockoutValidationSummary" aria-live="polite">
+        <p className="eyebrow">Antes de enviar</p>
+        <h2>Completá eliminatorias.</h2>
+        <ul>
+          {validationMessages.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
+      </section>
+    ) : null;
+
+  const knockoutStatsPanel = (
+    <section className="metricGrid" aria-label="Estado eliminatorias">
+      <article className="metric">
+        <Brackets size={20} aria-hidden="true" />
+        <span>Cruces cargados</span>
+        <strong>{fixtures.length}</strong>
+      </article>
+      <article className="metric">
+        <Target size={20} aria-hidden="true" />
+        <span>Exactos completos</span>
+        <strong>{completed}</strong>
+      </article>
+      <article className="metric alert">
+        <CheckCircle2 size={20} aria-hidden="true" />
+        <span>Inicio 16avos</span>
+        <strong>28 Jun</strong>
+      </article>
+    </section>
+  );
+
+  const knockoutRulesPanel = (
+    <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
+      {knockoutStages.map((stage) => {
+        const scoring = knockoutStageScoring[stage];
+        return (
+          <article key={stage}>
+            <span>{knockoutStageLabels[stage]}</span>
+            <strong>
+              {scoring.exact} / {scoring.winner}
+            </strong>
+            <p>
+              Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha:{" "}
+              {knockoutStageSchedule[stage]}. Si el marcador queda empatado tras 120&apos; y errás el clasificado por
+              penales, suma parcial: 2 pts en 16avos/octavos/tercer puesto, 3 en cuartos, 4 en semis y 5 en final.
+              Goleador acertado: +1. Vacio suma si sale 0-0.
+            </p>
+          </article>
+        );
+      })}
+    </section>
+  );
+
   useEffect(() => {
     async function loadFixtures() {
       const response = await fetch("/api/knockout-fixtures", { cache: "no-store" });
@@ -326,94 +418,19 @@ export default function EliminatoriasPage() {
         </div>
       </section>
 
-      <section className="validationPanel dangerPanel" aria-live="polite">
-        <p className="eyebrow">Importante</p>
-        <h2>Completá todo el prode de eliminatorias.</h2>
-        <p>
-          Cada partido se puede editar hasta 10 minutos antes de empezar. Si no completás un partido antes de que
-          cierre, ese partido suma 0 puntos. Si dejás 2 partidos de eliminatorias sin pronosticar cuando ya cerraron,
-          quedás eliminado del prode.
-        </p>
-      </section>
-
-      <section className="draftPanel" aria-live="polite">
-        <div>
-          <p className="eyebrow">Provisorio</p>
-          <h2>No pierdas tus cruces.</h2>
-          <p>{draftStatus}</p>
-          <p>
-            El guardado provisorio queda solo en este navegador y no cuenta como envío oficial. Para que se cuente,
-            tenés que completar los cruces abiertos y apretar Enviar eliminatorias; después podés volver a entrar y
-            editar los partidos que todavía no cerraron.
-          </p>
-        </div>
-        <div className="draftActions">
-          <button className="primaryAction light" onClick={() => saveDraft()} type="button">
-            <Save size={18} aria-hidden="true" />
-            Guardar provisorio
-          </button>
-          <button className="primaryAction light" onClick={clearDraft} type="button">
-            <Trash2 size={18} aria-hidden="true" />
-            Borrar provisorio
-          </button>
-        </div>
-      </section>
-
-      {validationMessages.length > 0 ? (
-        <section className="validationPanel" id="knockoutValidationSummary" aria-live="polite">
-          <p className="eyebrow">Antes de enviar</p>
-          <h2>Completá eliminatorias.</h2>
-          <ul>
-            {validationMessages.map((message) => (
-              <li key={message}>{message}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
       {!isUnlocked ? (
-        <section className="validationPanel">
-          <p className="eyebrow">Privado</p>
-          <h2>Ingresa para ver los cruces.</h2>
-          <p>Primero valida tu nombre y PIN. Despues de entrar vas a poder ver y cargar los partidos de eliminatorias.</p>
-        </section>
+        <>
+          {importantPanel}
+          {draftPanel}
+          {validationPanel}
+          <section className="validationPanel">
+            <p className="eyebrow">Privado</p>
+            <h2>Ingresa para ver los cruces.</h2>
+            <p>Primero valida tu nombre y PIN. Despues de entrar vas a poder ver y cargar los partidos de eliminatorias.</p>
+          </section>
+        </>
       ) : (
         <>
-      <section className="metricGrid" aria-label="Estado eliminatorias">
-        <article className="metric">
-          <Brackets size={20} aria-hidden="true" />
-          <span>Cruces cargados</span>
-          <strong>{fixtures.length}</strong>
-        </article>
-        <article className="metric">
-          <Target size={20} aria-hidden="true" />
-          <span>Exactos completos</span>
-          <strong>{completed}</strong>
-        </article>
-        <article className="metric alert">
-          <CheckCircle2 size={20} aria-hidden="true" />
-          <span>Inicio 16avos</span>
-          <strong>28 Jun</strong>
-        </article>
-      </section>
-
-      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
-        {knockoutStages.map((stage) => {
-          const scoring = knockoutStageScoring[stage];
-          return (
-            <article key={stage}>
-              <span>{knockoutStageLabels[stage]}</span>
-              <strong>{scoring.exact} / {scoring.winner}</strong>
-              <p>
-                Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
-                Si el marcador queda empatado tras 120' y errás el clasificado por penales, suma parcial: 2 pts en 16avos/octavos/tercer puesto, 3 en cuartos, 4 en semis y 5 en final.
-                Goleador acertado: +1. Vacio suma si sale 0-0.
-              </p>
-            </article>
-          );
-        })}
-      </section>
-
       {fixtures.length === 0 ? (
         <section className="emptyState">Todavía no hay cruces cargados desde admin.</section>
       ) : (
@@ -515,6 +532,12 @@ export default function EliminatoriasPage() {
           </ul>
         </section>
       ) : null}
+
+      {validationPanel}
+      {importantPanel}
+      {draftPanel}
+      {knockoutStatsPanel}
+      {knockoutRulesPanel}
 
       <div className="submitDock">
         <div>
