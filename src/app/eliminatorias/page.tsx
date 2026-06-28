@@ -330,8 +330,9 @@ export default function EliminatoriasPage() {
         <p className="eyebrow">Importante</p>
         <h2>Completá todo el prode de eliminatorias.</h2>
         <p>
-          Cada partido se puede editar hasta 10 minutos antes de empezar. Si dejás 2 partidos de eliminatorias sin
-          pronosticar cuando ya cerraron, quedás eliminado de la tabla.
+          Cada partido se puede editar hasta 10 minutos antes de empezar. Si no completás un partido antes de que
+          cierre, ese partido suma 0 puntos. Si dejás 2 partidos de eliminatorias sin pronosticar cuando ya cerraron,
+          quedás eliminado del prode.
         </p>
       </section>
 
@@ -340,6 +341,11 @@ export default function EliminatoriasPage() {
           <p className="eyebrow">Provisorio</p>
           <h2>No pierdas tus cruces.</h2>
           <p>{draftStatus}</p>
+          <p>
+            El guardado provisorio queda solo en este navegador y no cuenta como envío oficial. Para que se cuente,
+            tenés que completar los cruces abiertos y apretar Enviar eliminatorias; después podés volver a entrar y
+            editar los partidos que todavía no cerraron.
+          </p>
         </div>
         <div className="draftActions">
           <button className="primaryAction light" onClick={() => saveDraft()} type="button">
