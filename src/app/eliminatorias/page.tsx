@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Brackets, CheckCircle2, Loader2, LogIn, Save, Send, Target, Trash2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
@@ -97,6 +97,9 @@ export default function EliminatoriasPage() {
   const [draftReady, setDraftReady] = useState(false);
   const [draftStatus, setDraftStatus] = useState("Buscando guardado provisorio...");
   const [savedCount, setSavedCount] = useState(0);
+  const [submitReminder, setSubmitReminder] = useState("");
+  const [highlightSubmit, setHighlightSubmit] = useState(false);
+  const submitDockRef = useRef<HTMLDivElement | null>(null);
 
   const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
   const completed = openFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
@@ -104,6 +107,7 @@ export default function EliminatoriasPage() {
   const missingLogin = !isUnlocked;
   const missingFixtures = openFixtures.length - completed;
   const canSubmit = !missingName && !missingLogin && openFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
+  const shouldWarnBeforeLeaving = isUnlocked && status !== "done" && status !== "saving" && openFixtures.length > 0 && completed > 0;
   const validationMessages = [
     ...(missingName ? ["Poné el mismo nombre que usaste en fase de grupos."] : []),
     ...(fixtures.length === 0 ? ["Todavía no hay cruces eliminatorios cargados desde admin."] : []),
@@ -237,6 +241,48 @@ export default function EliminatoriasPage() {
     }, 450);
     return () => window.clearTimeout(timeoutId);
   }, [draftReady, name, predictions, status]);
+
+  useEffect(() => {
+    if (!shouldWarnBeforeLeaving) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [shouldWarnBeforeLeaving]);
+
+  useEffect(() => {
+    if (!shouldWarnBeforeLeaving) return;
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+      focusSubmitDock("Antes de salir, acordate de apretar Enviar eliminatorias para que cuente.");
+    };
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [shouldWarnBeforeLeaving]);
+
+  useEffect(() => {
+    if (!shouldWarnBeforeLeaving) return;
+    const handleDocumentClick = (event: globalThis.MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest("a[href]");
+      if (!link) return;
+      event.preventDefault();
+      focusSubmitDock("Primero revisá el botón Enviar eliminatorias. Si no lo apretás, no cuenta como envío oficial.");
+    };
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => document.removeEventListener("click", handleDocumentClick, true);
+  }, [shouldWarnBeforeLeaving]);
+
+  function focusSubmitDock(message = "Apretá Enviar eliminatorias para que el prode quede oficial.") {
+    setSubmitReminder(message);
+    setHighlightSubmit(true);
+    window.setTimeout(() => setHighlightSubmit(false), 2400);
+    submitDockRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   function saveDraft(message = "Guardado provisorio listo") {
     const savedAt = new Date().toISOString();
@@ -533,22 +579,23 @@ export default function EliminatoriasPage() {
         </section>
       ) : null}
 
-      {validationPanel}
-      {importantPanel}
-      {draftPanel}
-      {knockoutStatsPanel}
-      {knockoutRulesPanel}
-
-      <div className="submitDock">
+      <div className={highlightSubmit ? "submitDock attention" : "submitDock"} ref={submitDockRef}>
         <div>
           <span>{name.trim() || "Sin nombre"}</span>
           <strong>{completed}/{openFixtures.length}</strong>
+          {submitReminder ? <small>{submitReminder}</small> : null}
         </div>
         <button className="primaryAction" disabled={!canSubmit} type="submit">
           {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
           {canSubmit ? "Enviar eliminatorias" : "Completar para enviar"}
         </button>
       </div>
+
+      {validationPanel}
+      {importantPanel}
+      {draftPanel}
+      {knockoutStatsPanel}
+      {knockoutRulesPanel}
         </>
       )}
 
