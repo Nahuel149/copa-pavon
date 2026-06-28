@@ -53,12 +53,12 @@ const flagAliases: Record<string, string> = {
 
 function normalizeTeamFlagName(value: string) {
   return value
-    .replace(/Ã¡/g, "a")
-    .replace(/Ã©/g, "e")
-    .replace(/Ã­/g, "i")
-    .replace(/Ã³/g, "o")
-    .replace(/Ãº/g, "u")
-    .replace(/Ã±/g, "n")
+    .replace(new RegExp("\\u00c3\\u00a1", "g"), "a")
+    .replace(new RegExp("\\u00c3\\u00a9", "g"), "e")
+    .replace(new RegExp("\\u00c3\\u00ad", "g"), "i")
+    .replace(new RegExp("\\u00c3\\u00b3", "g"), "o")
+    .replace(new RegExp("\\u00c3\\u00ba", "g"), "u")
+    .replace(new RegExp("\\u00c3\\u00b1", "g"), "n")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " and ")
