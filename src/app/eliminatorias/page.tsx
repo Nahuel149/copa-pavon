@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Brackets, CheckCircle2, Loader2, LogIn, Save, Send, Target, Trash2 } from "lucide-react";
+import { CheckCircle2, Loader2, LogIn, Save, Send, Trash2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -169,26 +169,6 @@ export default function EliminatoriasPage() {
         </ul>
       </section>
     ) : null;
-
-  const knockoutStatsPanel = (
-    <section className="metricGrid" aria-label="Estado eliminatorias">
-      <article className="metric">
-        <Brackets size={20} aria-hidden="true" />
-        <span>Cruces cargados</span>
-        <strong>{fixtures.length}</strong>
-      </article>
-      <article className="metric">
-        <Target size={20} aria-hidden="true" />
-        <span>Exactos completos</span>
-        <strong>{completed}</strong>
-      </article>
-      <article className="metric alert">
-        <CheckCircle2 size={20} aria-hidden="true" />
-        <span>Inicio 16avos</span>
-        <strong>28 Jun</strong>
-      </article>
-    </section>
-  );
 
   const knockoutRulesPanel = (
     <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
@@ -594,7 +574,6 @@ export default function EliminatoriasPage() {
       {validationPanel}
       {importantPanel}
       {draftPanel}
-      {knockoutStatsPanel}
       {knockoutRulesPanel}
         </>
       )}
