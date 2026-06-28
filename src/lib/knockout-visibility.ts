@@ -1,5 +1,5 @@
 import { knockoutStageLabels, type KnockoutFixture, type KnockoutStage } from "./matches";
-import { getKnockoutKickoffAt } from "./knockout-deadlines";
+import { getKnockoutEditDeadline } from "./knockout-deadlines";
 import { type KnockoutPrediction, type Submission } from "./prode";
 
 export const knockoutPublicUnlocks: Record<KnockoutStage, string> = {
@@ -11,35 +11,46 @@ export const knockoutPublicUnlocks: Record<KnockoutStage, string> = {
   FINAL: "2026-07-19T19:00:00.000Z",
 };
 
-function getStagePublicUnlock(stage: KnockoutStage, fixtures: KnockoutFixture[] = []) {
-  const firstKickoff =
-    fixtures
-      .filter((fixture) => fixture.stage === stage)
-      .map((fixture) => new Date(getKnockoutKickoffAt(fixture)).getTime())
-      .filter((time) => !Number.isNaN(time))
-      .sort((a, b) => a - b)[0] ?? new Date(knockoutPublicUnlocks[stage]).getTime();
-  return new Date(firstKickoff).toISOString();
+export function getKnockoutFixturePublicUnlock(fixture: KnockoutFixture, fixtures: KnockoutFixture[] = []) {
+  return getKnockoutEditDeadline(fixture, fixtures);
 }
 
-export function isKnockoutStagePublic(stage: KnockoutStage, now = new Date(), fixtures: KnockoutFixture[] = []) {
-  return now.getTime() >= new Date(getStagePublicUnlock(stage, fixtures)).getTime();
+export function isKnockoutFixturePublic(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
+  return now.getTime() >= new Date(getKnockoutFixturePublicUnlock(fixture, fixtures)).getTime();
 }
 
 export function getKnockoutVisibility(now = new Date(), fixtures: KnockoutFixture[] = []) {
+  if (fixtures.length > 0) {
+    return Object.fromEntries(
+      fixtures.map((fixture) => {
+        const unlockAt = getKnockoutFixturePublicUnlock(fixture, fixtures);
+        return [
+          fixture.id,
+          {
+            label: knockoutStageLabels[fixture.stage],
+            public: isKnockoutFixturePublic(fixture, now, fixtures),
+            unlockAt,
+          },
+        ];
+      }),
+    ) as Record<string, { label: string; public: boolean; unlockAt: string }>;
+  }
+
   return Object.fromEntries(
     Object.keys(knockoutPublicUnlocks).map((stage) => {
       const knockoutStage = stage as KnockoutStage;
-      const unlockAt = getStagePublicUnlock(knockoutStage, fixtures);
+      const fallbackFixture: KnockoutFixture = { id: stage, order: 1, stage: knockoutStage, home: "Local", away: "Visitante" };
+      const unlockAt = getKnockoutFixturePublicUnlock(fallbackFixture);
       return [
         stage,
         {
           label: knockoutStageLabels[knockoutStage],
-          public: isKnockoutStagePublic(knockoutStage, now, fixtures),
+          public: now.getTime() >= new Date(unlockAt).getTime(),
           unlockAt,
         },
       ];
     }),
-  ) as Record<KnockoutStage, { label: string; public: boolean; unlockAt: string }>;
+  ) as Record<string, { label: string; public: boolean; unlockAt: string }>;
 }
 
 export function filterPublicKnockoutPredictions(
@@ -50,7 +61,7 @@ export function filterPublicKnockoutPredictions(
   const fixtureById = new Map(fixtures.map((fixture) => [fixture.id, fixture]));
   return predictions.filter((prediction) => {
     const fixture = fixtureById.get(prediction.fixtureId);
-    return fixture ? isKnockoutStagePublic(fixture.stage, now, fixtures) : false;
+    return fixture ? isKnockoutFixturePublic(fixture, now, fixtures) : false;
   });
 }
 

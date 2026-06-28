@@ -516,7 +516,7 @@ describe("prode scoring", () => {
     expect(result.ok).toBe(true);
   });
 
-  it("closes each knockout stage ten minutes before the first kickoff", () => {
+  it("closes each knockout fixture ten minutes before its own kickoff", () => {
     const fixture: KnockoutFixture = {
       id: "k-deadline",
       order: 1,
@@ -536,9 +536,10 @@ describe("prode scoring", () => {
     const fixtures = [fixture, laterFixture];
 
     expect(getKnockoutEditDeadline(fixture, fixtures)).toBe("2026-06-28T18:50:00.000Z");
-    expect(getKnockoutEditDeadline(laterFixture, fixtures)).toBe("2026-06-28T18:50:00.000Z");
-    expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:49:59.000Z"), fixtures)).toBe(true);
-    expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(false);
+    expect(getKnockoutEditDeadline(laterFixture, fixtures)).toBe("2026-06-29T18:50:00.000Z");
+    expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(false);
+    expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(true);
+    expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-29T18:50:00.000Z"), fixtures)).toBe(false);
   });
 
   it("validates only knockout fixtures that are still open", () => {
@@ -559,26 +560,53 @@ describe("prode scoring", () => {
     if (result.ok) expect(result.predictions).toEqual([{ fixtureId: "open", homeGoals: 2, awayGoals: 1 }]);
   });
 
-  it("hides public knockout predictions until each stage starts", () => {
+  it("removes participants from standings after two closed knockout matches without predictions", () => {
     const fixtures: KnockoutFixture[] = [
-      { id: "k-r32", order: 1, stage: "R32", home: "Argentina", away: "Francia" },
-      { id: "k-r16", order: 2, stage: "R16", home: "Brasil", away: "Espana" },
+      { id: "k-1", order: 1, stage: "R32", home: "Argentina", away: "Francia", kickoffAt: "2026-06-28T19:00:00.000Z" },
+      { id: "k-2", order: 2, stage: "R32", home: "Brasil", away: "Espana", kickoffAt: "2026-06-28T20:00:00.000Z" },
+    ];
+    const complete = {
+      ...submissionFromPayload("Completo"),
+      knockoutPredictions: [
+        { fixtureId: "k-1", homeGoals: 2, awayGoals: 1 },
+        { fixtureId: "k-2", homeGoals: 1, awayGoals: 0 },
+      ],
+    };
+    const oneMissing = {
+      ...submissionFromPayload("Falta uno"),
+      knockoutPredictions: [{ fixtureId: "k-1", homeGoals: 2, awayGoals: 1 }],
+    };
+    const twoMissing = submissionFromPayload("Falta dos");
+
+    const standings = buildStandings(
+      [complete, oneMissing, twoMissing],
+      { ...emptyResults, knockoutFixtures: fixtures },
+      new Date("2026-06-28T19:50:00.000Z"),
+    );
+
+    expect(standings.map((row) => row.name)).toEqual(["Completo", "Falta uno"]);
+  });
+
+  it("hides public knockout predictions until each fixture edit deadline", () => {
+    const fixtures: KnockoutFixture[] = [
+      { id: "k-r32-a", order: 1, stage: "R32", home: "Argentina", away: "Francia", kickoffAt: "2026-06-28T19:00:00.000Z" },
+      { id: "k-r32-b", order: 2, stage: "R32", home: "Brasil", away: "Espana", kickoffAt: "2026-06-29T19:00:00.000Z" },
     ];
     const predictions = [
-      { fixtureId: "k-r32", homeGoals: 2, awayGoals: 1 },
-      { fixtureId: "k-r16", homeGoals: 1, awayGoals: 0 },
+      { fixtureId: "k-r32-a", homeGoals: 2, awayGoals: 1 },
+      { fixtureId: "k-r32-b", homeGoals: 1, awayGoals: 0 },
     ];
 
-    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T18:59:00.000Z"))).toEqual([]);
-    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T19:00:00.000Z"))).toEqual([
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T18:49:59.000Z"))).toEqual([]);
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T18:50:00.000Z"))).toEqual([
       predictions[0],
     ]);
-    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-07-04T17:00:00.000Z"))).toEqual(
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-29T18:50:00.000Z"))).toEqual(
       predictions,
     );
   });
 
-  it("uses the first fixture kickoff to unlock public knockout predictions", () => {
+  it("uses the fixture edit deadline to unlock public knockout predictions", () => {
     const fixtures: KnockoutFixture[] = [
       {
         id: "late-r32",
@@ -591,21 +619,21 @@ describe("prode scoring", () => {
     ];
     const predictions = [{ fixtureId: "late-r32", homeGoals: 2, awayGoals: 1 }];
 
-    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T19:59:00.000Z"))).toEqual([]);
-    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T20:00:00.000Z"))).toEqual(
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T19:49:00.000Z"))).toEqual([]);
+    expect(filterPublicKnockoutPredictions(predictions, fixtures, new Date("2026-06-28T19:50:00.000Z"))).toEqual(
       predictions,
     );
   });
 
   it("reports knockout public visibility by stage", () => {
-    const visibility = getKnockoutVisibility(new Date("2026-07-04T16:59:00.000Z"));
+    const visibility = getKnockoutVisibility(new Date("2026-07-04T16:49:00.000Z"));
 
     expect(visibility.R32.public).toBe(true);
     expect(visibility.R16.public).toBe(false);
   });
 
   it("reports knockout public visibility from loaded fixtures", () => {
-    const visibility = getKnockoutVisibility(new Date("2026-06-28T19:59:00.000Z"), [
+    const visibility = getKnockoutVisibility(new Date("2026-06-28T19:49:00.000Z"), [
       {
         id: "late-r32",
         order: 1,
@@ -616,8 +644,8 @@ describe("prode scoring", () => {
       },
     ]);
 
-    expect(visibility.R32.public).toBe(false);
-    expect(visibility.R32.unlockAt).toBe("2026-06-28T20:00:00.000Z");
+    expect(visibility["late-r32"].public).toBe(false);
+    expect(visibility["late-r32"].unlockAt).toBe("2026-06-28T19:50:00.000Z");
   });
 
   it("parses scorer names from the automatic result source", () => {

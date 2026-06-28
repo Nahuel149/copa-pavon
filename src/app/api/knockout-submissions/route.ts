@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
   if (results.knockoutFixtures.length > 0 && closedFixtureIds.length === results.knockoutFixtures.length) {
     return NextResponse.json(
-      { errors: ["No hay cruces abiertos para editar. Toda la ronda cierra antes del primer partido de esa etapa."] },
+      { errors: ["No hay cruces abiertos para editar. Cada partido cierra 10 minutos antes de empezar."] },
       { status: 403 },
     );
   }

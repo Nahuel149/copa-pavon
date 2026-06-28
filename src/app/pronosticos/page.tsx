@@ -5,7 +5,7 @@ import { BarChart3, Download, ExternalLink, Loader2, PlayCircle, Share2 } from "
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
-import { groups, knockoutStageLabels, matches, roundLabels, type GroupId, type KnockoutFixture, type KnockoutStage, type Match, type MatchRound } from "@/lib/matches";
+import { groups, knockoutStageLabels, matches, roundLabels, type GroupId, type KnockoutFixture, type Match, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
   serializeKnockoutPrediction,
@@ -24,7 +24,7 @@ type PronosticosResponse = {
   submissions: PublicSubmission[];
   standings: StandingRow[];
   results: ResultStore;
-  knockoutVisibility?: Record<KnockoutStage, { label: string; public: boolean; unlockAt: string }>;
+  knockoutVisibility?: Record<string, { label: string; public: boolean; unlockAt: string }>;
   updatedAt: string;
 };
 
@@ -204,7 +204,7 @@ export default function PronosticosPage() {
     () => new Map((data?.results.knockoutResults ?? []).map((result) => [result.fixtureId, result])),
     [data?.results.knockoutResults],
   );
-  const selectedKnockoutVisibility = selectedKnockoutFixture ? data?.knockoutVisibility?.[selectedKnockoutFixture.stage] : undefined;
+  const selectedKnockoutVisibility = selectedKnockoutFixture ? data?.knockoutVisibility?.[selectedKnockoutFixture.id] : undefined;
   const selectedKnockoutIsPublic = Boolean(selectedKnockoutFixture && selectedKnockoutVisibility?.public);
   const selectedKnockoutResult = selectedKnockoutFixture ? knockoutResultByFixture.get(selectedKnockoutFixture.id) : undefined;
   const knockoutPredictionRows = useMemo(() => {
@@ -557,9 +557,9 @@ export default function PronosticosPage() {
               {!selectedKnockoutIsPublic ? (
                 <section className="validationPanel knockoutPrivateNotice">
                   <p className="eyebrow">Privado</p>
-                  <h2>Los pronosticos de esta etapa todavia estan ocultos.</h2>
+                  <h2>Los pronosticos de este partido todavia estan ocultos.</h2>
                   <p>
-                    Se hacen publicos cuando arranca el primer partido de {knockoutStageLabels[selectedKnockoutFixture.stage]}.
+                    Se hacen publicos cuando se cierra la edicion de este partido.
                     {selectedKnockoutVisibility?.unlockAt ? ` Hora de apertura: ${formatArgentinaDateTime(selectedKnockoutVisibility.unlockAt)}.` : ""}
                   </p>
                 </section>

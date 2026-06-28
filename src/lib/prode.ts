@@ -9,6 +9,7 @@ import {
   type KnockoutFixture,
   type KnockoutStage,
 } from "./matches";
+import { isKnockoutFixtureEditable } from "./knockout-deadlines";
 
 export type PredictionChoice = "home" | "draw" | "away";
 
@@ -738,6 +739,25 @@ export function countCompleteKnockoutPredictions(
   }, 0);
 }
 
+function hasValidKnockoutPrediction(prediction: KnockoutPrediction | undefined) {
+  if (!prediction) return false;
+  if (!Number.isFinite(prediction.homeGoals) || !Number.isFinite(prediction.awayGoals)) return false;
+  if (prediction.homeGoals === prediction.awayGoals && prediction.qualifiedTeam !== "home" && prediction.qualifiedTeam !== "away") return false;
+  return true;
+}
+
+export function countMissedClosedKnockoutPredictions(submission: Submission, results: ResultStore, now = new Date()) {
+  const predictionByFixture = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
+  return results.knockoutFixtures.reduce((total, fixture) => {
+    if (isKnockoutFixtureEditable(fixture, now, results.knockoutFixtures)) return total;
+    return hasValidKnockoutPrediction(predictionByFixture.get(fixture.id)) ? total : total + 1;
+  }, 0);
+}
+
+export function isEliminatedFromKnockoutTable(submission: Submission, results: ResultStore, now = new Date()) {
+  return countMissedClosedKnockoutPredictions(submission, results, now) >= 2;
+}
+
 export function serializePrediction(prediction: Prediction) {
   const match = matchMap.get(prediction.matchId);
   if (!match) return "";
@@ -1008,6 +1028,9 @@ export function compareStandingRows(a: StandingRow, b: StandingRow) {
   return byName || a.submissionId.localeCompare(b.submissionId);
 }
 
-export function buildStandings(submissions: Submission[], results: ResultStore) {
-  return submissions.map((submission) => scoreSubmission(submission, results)).sort(compareStandingRows);
+export function buildStandings(submissions: Submission[], results: ResultStore, now = new Date()) {
+  return submissions
+    .filter((submission) => !isEliminatedFromKnockoutTable(submission, results, now))
+    .map((submission) => scoreSubmission(submission, results))
+    .sort(compareStandingRows);
 }

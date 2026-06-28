@@ -47,7 +47,10 @@ export function getKnockoutStageEditDeadline(stage: KnockoutStage, fixtures: Kno
 }
 
 export function getKnockoutEditDeadline(fixture: KnockoutFixture, fixtures: KnockoutFixture[] = []) {
-  return getKnockoutStageEditDeadline(fixture.stage, fixtures.length > 0 ? fixtures : [fixture]);
+  const kickoff = new Date(getKnockoutKickoffAt(fixture)).getTime();
+  const fallback = new Date(getKnockoutStageEditDeadline(fixture.stage, fixtures.length > 0 ? fixtures : [fixture])).getTime();
+  const baseTime = Number.isNaN(kickoff) ? fallback : kickoff;
+  return new Date(baseTime - knockoutEditCloseMinutes * 60_000).toISOString();
 }
 
 export function isKnockoutFixtureEditable(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {

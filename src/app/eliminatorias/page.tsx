@@ -285,7 +285,7 @@ export default function EliminatoriasPage() {
         <div>
           <p className="eyebrow">Eliminatorias</p>
           <h1>Marcador exacto.</h1>
-          <span>Exactos, clasificados y goleador. Toda la ronda cierra antes del primer partido de esa etapa.</span>
+          <span>Exactos, clasificados y goleador. Cada partido cierra 10 minutos antes de su horario.</span>
         </div>
         <div className="heroControl">
           <label htmlFor="knockoutName">Nombre</label>
@@ -330,8 +330,8 @@ export default function EliminatoriasPage() {
         <p className="eyebrow">Importante</p>
         <h2>Completá todo el prode de eliminatorias.</h2>
         <p>
-          Los 16avos se pueden editar solamente hasta antes del primer partido de 16avos. Si no completás el prode de
-          eliminatorias a tiempo, quedás eliminado de la tabla.
+          Cada partido se puede editar hasta 10 minutos antes de empezar. Si dejás 2 partidos de eliminatorias sin
+          pronosticar cuando ya cerraron, quedás eliminado de la tabla.
         </p>
       </section>
 
@@ -435,7 +435,7 @@ export default function EliminatoriasPage() {
                       <TeamBadge team={fixture.away} />
                     </h2>
                     <small className={fixtureOpen ? "editState open" : "editState closed"}>
-                      {fixtureOpen ? `Ronda editable hasta ${deadline}` : "Esta ronda ya cerro."}
+                      {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
                     </small>
                     <div className="scoreInputs">
                       <label>
