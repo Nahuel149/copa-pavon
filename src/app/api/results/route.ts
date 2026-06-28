@@ -77,7 +77,7 @@ export async function PUT(request: Request) {
 
 export async function POST(request: Request) {
   if (!adminAllowed(request)) {
-    return NextResponse.json({ error: "PIN invÃ¡lido." }, { status: 401 });
+    return NextResponse.json({ error: "PIN invalido." }, { status: 401 });
   }
 
   try {

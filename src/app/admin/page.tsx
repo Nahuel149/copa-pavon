@@ -779,7 +779,7 @@ export default function AdminPage() {
         <section className="sectionHeader">
           <p className="eyebrow">Resultados</p>
           <h2>Marcadores reales de eliminatorias.</h2>
-          <p>CargÃ¡ estos resultados manualmente si la API falla. Si el partido termina empatado tras 120 minutos, elegÃ­ el clasificado por penales.</p>
+          <p>Carga estos resultados manualmente si la API falla. Si el partido termina empatado tras 120 minutos, elegi el clasificado por penales.</p>
         </section>
 
         <section className="resultGrid" aria-label="Resultados eliminatorias">
@@ -787,7 +787,7 @@ export default function AdminPage() {
             const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
             return (
               <article className="resultCard knockoutResult" key={fixture.id}>
-                <span>#{fixture.order} Â· {knockoutStageLabels[fixture.stage]}</span>
+                <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
                 {value.source ? (
                   <small className={`resultSource ${value.source}`}>
                     {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
@@ -867,7 +867,7 @@ export default function AdminPage() {
         <section className="resultGrid" aria-label="Cruces eliminatorias">
           {knockoutFixtures.map((fixture) => (
             <article className="resultCard knockoutResult" key={fixture.id}>
-              <span>#{fixture.order} Â· {knockoutStageLabels[fixture.stage]}</span>
+              <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
               <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
               <label className="adminTextInput">
                 <span>Horario del partido</span>
