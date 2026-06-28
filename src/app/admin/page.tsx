@@ -234,6 +234,8 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
     "Exactos",
     "Ganadores",
     "Exactos eliminatorias",
+    "Clasificados eliminatorias",
+    "Goleadores",
     ...matches.map((match) => `${match.order}. ${match.home} vs ${match.away}`),
     ...groups.map((group) => `Grupo ${group.id} top 2`),
     ...knockoutFixtures.map((fixture) => `${knockoutStageLabels[fixture.stage]} ${fixture.home} vs ${fixture.away}`),
@@ -253,9 +255,11 @@ function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutF
       standing?.predictionLosses ?? 0,
       standing?.groupPoints ?? 0,
       standing?.knockoutPoints ?? 0,
-      standing?.exactHits ?? 0,
-      standing?.winnerHits ?? 0,
+      (standing?.exactHits ?? 0) + (standing?.knockoutExactHits ?? 0),
+      (standing?.winnerHits ?? 0) + (standing?.knockoutWinnerHits ?? 0),
       standing?.knockoutExactHits ?? 0,
+      standing?.knockoutWinnerHits ?? 0,
+      standing?.knockoutScorerHits ?? 0,
       ...matches.map((match) => {
         const prediction = byMatch.get(match.id);
         return prediction ? serializePrediction(prediction) : "";
@@ -971,6 +975,7 @@ export default function AdminPage() {
             <col className="standingHiddenMobileCol" />
             <col className="standingExactCol" />
             <col className="standingHiddenMobileCol" />
+            <col className="standingExactCol" />
           </colgroup>
           <thead>
             <tr>
@@ -985,6 +990,7 @@ export default function AdminPage() {
               <th>Elim.</th>
               <th>Exactos</th>
               <th>Ganadores</th>
+              <th>Goleadores</th>
             </tr>
           </thead>
           <tbody>
@@ -1006,11 +1012,12 @@ export default function AdminPage() {
                   <td data-label="Grupos">{row.groupPoints}</td>
                   <td data-label="Elim.">{row.knockoutPoints}</td>
                   <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
-                  <td data-label="Ganadores">{row.winnerHits}</td>
+                  <td data-label="Ganadores">{row.winnerHits + row.knockoutWinnerHits}</td>
+                  <td data-label="Goleadores">{row.knockoutScorerHits}</td>
                 </tr>
                 {expandedPointsId === row.submissionId ? (
                   <tr className="detailRow adminPointAuditRow">
-                    <td colSpan={11}>
+                    <td colSpan={12}>
                       <div className="pointAuditPanel">
                         <div className="pointAuditHeader">
                           <div><span>Auditoria de puntos</span><strong>{row.name}</strong></div>

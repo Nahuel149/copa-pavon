@@ -333,6 +333,26 @@ describe("prode scoring", () => {
     expect(row.predictionWins).toBe(1);
   });
 
+  it("counts knockout losses and scorer hits separately in standings", () => {
+    const fixture: KnockoutFixture = { id: "k-split", order: 1, stage: "R32", home: "Argentina", away: "Francia" };
+    const submission = {
+      ...submissionFromPayload(),
+      knockoutPredictions: [{ fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, goalScorer: "Messi" }],
+    };
+
+    const row = scoreSubmission(submission, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: fixture.id, homeGoals: 2, awayGoals: 0, scorerNames: ["L. Messi"] }],
+    });
+
+    expect(row.predictionMatchesPlayed).toBe(1);
+    expect(row.predictionWins).toBe(0);
+    expect(row.predictionLosses).toBe(1);
+    expect(row.knockoutScorerHits).toBe(1);
+    expect(row.knockoutPoints).toBe(1);
+  });
+
   it("scores only two points for exact knockout draw with wrong penalty qualifier", () => {
     const fixture: KnockoutFixture = { id: "k-pens", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
     const submission = {
