@@ -17,6 +17,10 @@ const flagCodesByGroup: Record<GroupId, string[]> = {
 
 const flagAliases: Record<string, string> = {
   "bosnia and herzegovina": "Bosnia & Herzegovina",
+  "bosnia herzegovina": "Bosnia & Herzegovina",
+  "bosnia herz": "Bosnia & Herzegovina",
+  "bosnia hercegovina": "Bosnia & Herzegovina",
+  "bosnia y herzegovina": "Bosnia & Herzegovina",
   bosnia: "Bosnia & Herzegovina",
   "cabo verde": "Cabo Verde",
   "cape verde": "Cabo Verde",
@@ -58,6 +62,7 @@ function normalizeTeamFlagName(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " and ")
+    .replace(/\+/g, " and ")
     .replace(/[^a-zA-Z0-9]+/g, " ")
     .trim()
     .toLowerCase()

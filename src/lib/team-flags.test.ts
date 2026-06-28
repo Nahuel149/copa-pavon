@@ -8,5 +8,7 @@ describe("team flags", () => {
     expect(getTeamFlagUrl("Canada")).toBe("https://flagcdn.com/w80/ca.png");
     expect(getTeamFlagUrl("Republica Checa")).toBe("https://flagcdn.com/w80/cz.png");
     expect(getTeamFlagUrl("New Zealand")).toBe("https://flagcdn.com/w80/nz.png");
+    expect(getTeamFlagUrl("Bosnia Herzegovina")).toBe("https://flagcdn.com/w80/ba.png");
+    expect(getTeamFlagUrl("Bosnia y Herzegovina")).toBe("https://flagcdn.com/w80/ba.png");
   });
 });
