@@ -36,6 +36,11 @@ export function getKnockoutKickoffAt(fixture: KnockoutFixture) {
   return fallbackStageKickoffs[fixture.stage];
 }
 
+export function compareKnockoutFixturesByKickoff(a: KnockoutFixture, b: KnockoutFixture) {
+  const byKickoff = new Date(getKnockoutKickoffAt(a)).getTime() - new Date(getKnockoutKickoffAt(b)).getTime();
+  return byKickoff || a.order - b.order || a.id.localeCompare(b.id);
+}
+
 export function getKnockoutStageEditDeadline(stage: KnockoutStage, fixtures: KnockoutFixture[] = []) {
   const stageFixtures = fixtures.filter((fixture) => fixture.stage === stage);
   const firstKickoff =

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getKnockoutEditDeadline, isKnockoutFixtureEditable } from "./knockout-deadlines";
+import { compareKnockoutFixturesByKickoff, getKnockoutEditDeadline, isKnockoutFixtureEditable } from "./knockout-deadlines";
 import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knockout-visibility";
 import { getMatchEditDeadline, getMatchEditStatus } from "./edit-deadline";
 import { getLateEditExcludedMatchIds } from "./edit-validation";
@@ -540,6 +540,20 @@ describe("prode scoring", () => {
     expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(false);
     expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(true);
     expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-29T18:50:00.000Z"), fixtures)).toBe(false);
+  });
+
+  it("sorts knockout fixtures by kickoff before order", () => {
+    const fixtures: KnockoutFixture[] = [
+      { id: "late", order: 1, stage: "R32", home: "Brasil", away: "Japon", kickoffAt: "2026-06-29T04:00:00.000Z" },
+      { id: "early", order: 3, stage: "R32", home: "Estados Unidos", away: "Bosnia", kickoffAt: "2026-06-28T23:00:00.000Z" },
+      { id: "same-time", order: 2, stage: "R32", home: "Australia", away: "Egipto", kickoffAt: "2026-06-29T04:00:00.000Z" },
+    ];
+
+    expect(fixtures.toSorted(compareKnockoutFixturesByKickoff).map((fixture) => fixture.id)).toEqual([
+      "early",
+      "late",
+      "same-time",
+    ]);
   });
 
   it("validates only knockout fixtures that are still open", () => {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { autoSyncGroupMatchResults } from "@/lib/auto-results";
+import { compareKnockoutFixturesByKickoff } from "@/lib/knockout-deadlines";
 import { getKnockoutVisibility, hideLockedKnockoutPredictions } from "@/lib/knockout-visibility";
 import { buildStandings } from "@/lib/prode";
 import { publicSubmission, readResultStore, readSubmissionStore, writeResultStore } from "@/lib/storage";
@@ -17,17 +18,19 @@ export async function GET() {
 
     const [submissionStore, results] = await Promise.all([readSubmissionStore(), readResultStore()]);
     const now = new Date();
+    const knockoutFixtures = results.knockoutFixtures.toSorted(compareKnockoutFixturesByKickoff);
+    const publicResults = { ...results, knockoutFixtures };
     const submissions = submissionStore.submissions
       .toSorted((a, b) => a.name.localeCompare(b.name, "es"))
       .map(publicSubmission)
-      .map((submission) => hideLockedKnockoutPredictions(submission, results.knockoutFixtures, now));
+      .map((submission) => hideLockedKnockoutPredictions(submission, knockoutFixtures, now));
     const standings = buildStandings(submissionStore.submissions, results);
 
     return NextResponse.json({
       submissions,
       standings,
-      results,
-      knockoutVisibility: getKnockoutVisibility(now, results.knockoutFixtures),
+      results: publicResults,
+      knockoutVisibility: getKnockoutVisibility(now, knockoutFixtures),
       updatedAt: new Date().toISOString(),
     });
   } catch {
