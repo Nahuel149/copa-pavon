@@ -1666,6 +1666,50 @@ a {
   background: #fff8ef;
 }
 
+.compactPredictionRow.knockoutVerdict.exact strong,
+.compactPredictionRow.knockoutVerdict.exact > span:last-child {
+  background: #dff3dc;
+}
+
+.compactPredictionRow.knockoutVerdict.partial strong,
+.compactPredictionRow.knockoutVerdict.partial > span:last-child {
+  background: #fff2c2;
+}
+
+.compactPredictionRow.knockoutVerdict.miss strong,
+.compactPredictionRow.knockoutVerdict.miss > span:last-child {
+  background: #ffe0d7;
+}
+
+.compactPredictionRow.knockoutVerdict.pending strong,
+.compactPredictionRow.knockoutVerdict.pending > span:last-child {
+  background: #fffdf7;
+}
+
+.compactPredictionRow.knockoutVerdict > span:last-child {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.compactPredictionRow.knockoutVerdict > span:last-child b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: inherit;
+}
+
+.compactPredictionRow.knockoutVerdict > span:last-child em {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
 .groupPredictionPanel {
   overflow: hidden;
   border: 3px solid var(--ink);

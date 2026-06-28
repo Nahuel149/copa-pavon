@@ -8,6 +8,7 @@ import { readJsonResponse } from "@/lib/client-json";
 import { groups, knockoutStageLabels, matches, roundLabels, type GroupId, type KnockoutFixture, type Match, type MatchRound } from "@/lib/matches";
 import {
   choiceLabel,
+  scoreKnockoutPredictionForFixture,
   serializeKnockoutPrediction,
   serializePrediction,
   type MatchResult,
@@ -212,15 +213,17 @@ export default function PronosticosPage() {
     return (data?.submissions ?? [])
       .map((submission) => {
         const prediction = submission.knockoutPredictions?.find((item) => item.fixtureId === selectedKnockoutFixture.id);
+        const score = scoreKnockoutPredictionForFixture(prediction, selectedKnockoutResult, selectedKnockoutFixture);
         return {
           submission,
           prediction,
+          score,
           position: standingPositionById.get(submission.id) ?? 0,
           label: prediction ? serializeKnockoutPrediction(prediction) : "Sin cargar",
         };
       })
       .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
-  }, [data?.submissions, selectedKnockoutFixture, selectedKnockoutIsPublic, standingPositionById]);
+  }, [data?.submissions, selectedKnockoutFixture, selectedKnockoutIsPublic, selectedKnockoutResult, standingPositionById]);
 
   const predictionRows = useMemo(() => {
     return (data?.submissions ?? [])
@@ -574,10 +577,13 @@ export default function PronosticosPage() {
                   </div>
                   <div className="compactPredictionRows">
                     {knockoutPredictionRows.map((row) => (
-                      <article className="compactPredictionRow" key={row.submission.id}>
+                      <article className={`compactPredictionRow knockoutVerdict ${row.score.verdict}`} key={row.submission.id}>
                         <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
                         <strong>{row.submission.name}</strong>
-                        <span>{row.label}</span>
+                        <span>
+                          <b>{row.label}</b>
+                          <em>{selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente"}</em>
+                        </span>
                       </article>
                     ))}
                     {knockoutPredictionRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}

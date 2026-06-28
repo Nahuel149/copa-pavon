@@ -347,6 +347,46 @@ function knockoutWrongPenaltyExactPoints(stage = "R32") {
   return 2;
 }
 
+export function scoreKnockoutPredictionForFixture(
+  prediction: KnockoutPrediction | undefined,
+  result: KnockoutResult | undefined,
+  fixture: KnockoutFixture | undefined,
+) {
+  if (!result) {
+    return { basePoints: 0, scorerPoints: 0, totalPoints: 0, verdict: "pending" as const };
+  }
+  if (!prediction) {
+    return { basePoints: 0, scorerPoints: 0, totalPoints: 0, verdict: "miss" as const };
+  }
+
+  const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
+  const predictionQualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
+  const resultQualified = getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
+  const exactScore = prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals;
+  const exactDrawWrongQualifier =
+    exactScore &&
+    result.homeGoals === result.awayGoals &&
+    Boolean(resultQualified) &&
+    Boolean(predictionQualified) &&
+    predictionQualified !== resultQualified;
+  let basePoints = 0;
+  let verdict: "exact" | "partial" | "miss" = "miss";
+  if (exactDrawWrongQualifier) {
+    basePoints = knockoutWrongPenaltyExactPoints(fixture?.stage);
+    verdict = "partial";
+  } else if (exactScore) {
+    basePoints = scoring.exact;
+    verdict = "exact";
+  } else if (predictionQualified && resultQualified && predictionQualified === resultQualified) {
+    basePoints = scoring.winner;
+    verdict = "partial";
+  }
+
+  const scorerPoints = knockoutScorerBonusMatches(prediction, result) ? 1 : 0;
+  if (verdict === "miss" && scorerPoints > 0) verdict = "partial";
+  return { basePoints, scorerPoints, totalPoints: basePoints + scorerPoints, verdict };
+}
+
 export function choiceLabel(choice: PredictionChoice, home: string, away: string) {
   if (choice === "home") return home;
   if (choice === "away") return away;

@@ -13,6 +13,7 @@ import {
   normalizeName,
   parseScorerEvents,
   parseScorerNames,
+  scoreKnockoutPredictionForFixture,
   scoreSubmission,
   validateKnockoutSubmission,
   validateResultStore,
@@ -375,6 +376,34 @@ describe("prode scoring", () => {
       expect(row.knockoutExactHits).toBe(1);
       expect(row.pointAudit.find((entry) => entry.id === fixture.id)?.points).toBe(item.points);
     }
+  });
+
+  it("scores a single knockout prediction for public row colors", () => {
+    const fixture: KnockoutFixture = { id: "k-row", order: 1, stage: "R32", home: "Argentina", away: "Cabo Verde" };
+    const result = { fixtureId: fixture.id, homeGoals: 1, awayGoals: 0, scorerNames: ["Messi"] };
+
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: fixture.id, homeGoals: 1, awayGoals: 0 }, result, fixture)).toMatchObject({
+      basePoints: 4,
+      totalPoints: 4,
+      verdict: "exact",
+    });
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: fixture.id, homeGoals: 2, awayGoals: 0 }, result, fixture)).toMatchObject({
+      basePoints: 2,
+      totalPoints: 2,
+      verdict: "partial",
+    });
+    expect(
+      scoreKnockoutPredictionForFixture({ fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, goalScorer: "Messi" }, result, fixture),
+    ).toMatchObject({
+      basePoints: 0,
+      scorerPoints: 1,
+      totalPoints: 1,
+      verdict: "partial",
+    });
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: fixture.id, homeGoals: 0, awayGoals: 1 }, result, fixture)).toMatchObject({
+      totalPoints: 0,
+      verdict: "miss",
+    });
   });
 
   it("scores full knockout exact points when tied score and penalty qualifier are both correct", () => {
