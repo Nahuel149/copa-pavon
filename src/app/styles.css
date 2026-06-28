@@ -3710,13 +3710,23 @@ tbody tr.relegationRow:hover {
 
   .mobileNavPrimary {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: 0.9fr 1.14fr 1.42fr 0.78fr;
   }
 
   .mobileNavPrimary .navItem {
-    gap: 6px;
-    padding-inline: 6px;
+    gap: 5px;
+    padding-inline: 4px;
     font-size: 0.78rem;
+  }
+
+  .mobileNavPrimary .moreNavButton {
+    gap: 4px;
+    font-size: 0.74rem;
+  }
+
+  .mobileNavPrimary .moreNavButton svg {
+    width: 15px;
+    height: 15px;
   }
 
   .mobileNavMore {
