@@ -133,6 +133,44 @@ describe("automatic result sync", () => {
     ]);
   });
 
+  it("does not import unplayed knockout fixtures returned as 0-0 by the API", async () => {
+    process.env.PRODE_RESULTS_SYNC_URL = "https://api-one.test/games";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse([
+          {
+            id: 73,
+            type: "r32",
+            home_team_name_en: "South Africa",
+            away_team_name_en: "Canada",
+            home_score: "0",
+            away_score: "0",
+            finished: "FALSE",
+            time_elapsed: "notstarted",
+          },
+        ]),
+      ),
+    );
+
+    const { results, report } = await syncGroupMatchResults({
+      ...emptyResults,
+      knockoutFixtures: [
+        {
+          id: "ko-1",
+          stage: "R32",
+          order: 1,
+          home: "Sudafrica",
+          away: "Canada",
+          kickoffAt: "2026-06-28T19:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(results.knockoutResults).toEqual([]);
+    expect(report.skipped).toBe(1);
+  });
+
   it("matches group results by teams instead of trusting the source id order", async () => {
     process.env.PRODE_RESULTS_SYNC_URL = "https://api-one.test/games";
     vi.stubGlobal(

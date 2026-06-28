@@ -750,6 +750,119 @@ export default function AdminPage() {
         </button>
       </section>
 
+      <details className="adminFold" open>
+        <summary>Resultados de eliminatorias</summary>
+        <section className="sectionHeader">
+          <p className="eyebrow">Resultados</p>
+          <h2>Marcadores reales de eliminatorias.</h2>
+          <p>CargÃ¡ estos resultados manualmente si la API falla. Si el partido termina empatado tras 120 minutos, elegÃ­ el clasificado por penales.</p>
+        </section>
+
+        <section className="resultGrid" aria-label="Resultados eliminatorias">
+          {knockoutFixtures.map((fixture) => {
+            const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
+            return (
+              <article className="resultCard knockoutResult" key={fixture.id}>
+                <span>#{fixture.order} Â· {knockoutStageLabels[fixture.stage]}</span>
+                {value.source ? (
+                  <small className={`resultSource ${value.source}`}>
+                    {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
+                    {value.source === "manual" ? "Admin" : "API"}
+                  </small>
+                ) : null}
+                <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+                <div className="scoreInputs compact">
+                  <label>
+                    <TeamBadge compact team={fixture.home} />
+                    <input inputMode="numeric" value={value.homeGoals} onChange={(event) => setKnockoutResult(fixture.id, "homeGoals", event.target.value)} />
+                  </label>
+                  <b>-</b>
+                  <label>
+                    <TeamBadge compact team={fixture.away} />
+                    <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
+                  </label>
+                </div>
+                {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
+                  <label className="adminTextInput">
+                    <span>Clasificado por penales</span>
+                    <select
+                      value={value.qualifiedTeam ?? ""}
+                      onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
+                    >
+                      <option value="">Elegir</option>
+                      <option value="home">{fixture.home}</option>
+                      <option value="away">{fixture.away}</option>
+                    </select>
+                  </label>
+                ) : null}
+                <label className="adminTextInput">
+                  <span>Goleadores oficiales</span>
+                  <input
+                    value={value.scorerNames ?? ""}
+                    onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
+                    placeholder="Balogun, Messi"
+                  />
+                </label>
+              </article>
+            );
+          })}
+          {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
+        </section>
+      </details>
+
+      <details className="adminFold" open>
+        <summary>Eliminatorias</summary>
+        <section className="sectionHeader">
+          <p className="eyebrow">Cruces</p>
+          <h2>Equipos y horarios estimados.</h2>
+          <p>Estos horarios se usan para mostrar apertura publica y cierre de carga. Son editables desde admin.</p>
+        </section>
+
+        <section className="knockoutComposer">
+          <select value={newFixture.stage} onChange={(event) => setNewFixture((current) => ({ ...current, stage: event.target.value as KnockoutStage }))}>
+            {knockoutStages.map((stage) => (
+              <option key={stage} value={stage}>
+                {knockoutStageLabels[stage]}
+              </option>
+            ))}
+          </select>
+          <input value={newFixture.home} onChange={(event) => setNewFixture((current) => ({ ...current, home: event.target.value }))} placeholder="Equipo A" />
+          <input value={newFixture.away} onChange={(event) => setNewFixture((current) => ({ ...current, away: event.target.value }))} placeholder="Equipo B" />
+          <input
+            type="datetime-local"
+            value={newFixture.kickoffAt}
+            onChange={(event) => setNewFixture((current) => ({ ...current, kickoffAt: event.target.value }))}
+            title="Horario del partido"
+          />
+          <button className="primaryAction light" onClick={addKnockoutFixture} type="button">
+            <Plus size={18} aria-hidden="true" />
+            Agregar cruce
+          </button>
+        </section>
+
+        <section className="resultGrid" aria-label="Cruces eliminatorias">
+          {knockoutFixtures.map((fixture) => (
+            <article className="resultCard knockoutResult" key={fixture.id}>
+              <span>#{fixture.order} Â· {knockoutStageLabels[fixture.stage]}</span>
+              <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+              <label className="adminTextInput">
+                <span>Horario del partido</span>
+                <input
+                  type="datetime-local"
+                  value={isoToArgentinaInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
+                  onChange={(event) => setKnockoutKickoff(fixture.id, event.target.value)}
+                />
+              </label>
+              <button className="tableButton dangerButton" onClick={() => removeKnockoutFixture(fixture.id)} type="button">
+                <Trash2 size={14} aria-hidden="true" />
+                Quitar
+              </button>
+            </article>
+          ))}
+          {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
+        </section>
+      </details>
+
       <details className="adminFold">
         <summary>Resetear PIN</summary>
         <section className="pinResetPanel">
@@ -818,7 +931,7 @@ export default function AdminPage() {
         </section>
       ) : null}
 
-      <details className="adminFold" open>
+      <details className="adminFold">
         <summary>Tabla y puntos</summary>
       <section className="tableShell">
         <table className="standingsTable adminStandingsTable">
@@ -910,7 +1023,7 @@ export default function AdminPage() {
       </section>
       </details>
 
-      <details className="adminFold" open>
+      <details className="adminFold">
         <summary>Resultados de grupos</summary>
       <section className="sectionHeader">
         <p className="eyebrow">Resultados</p>
@@ -1034,6 +1147,7 @@ export default function AdminPage() {
       </section>
       </details>
 
+      {false ? (
       <details className="adminFold">
         <summary>Eliminatorias</summary>
       <section className="sectionHeader">
@@ -1126,6 +1240,7 @@ export default function AdminPage() {
         {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
       </section>
       </details>
+      ) : null}
 
       <details className="adminFold">
         <summary>Envios y detalle</summary>
