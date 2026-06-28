@@ -365,6 +365,14 @@ export default function EliminatoriasPage() {
         </section>
       ) : null}
 
+      {!isUnlocked ? (
+        <section className="validationPanel">
+          <p className="eyebrow">Privado</p>
+          <h2>Ingresa para ver los cruces.</h2>
+          <p>Primero valida tu nombre y PIN. Despues de entrar vas a poder ver y cargar los partidos de eliminatorias.</p>
+        </section>
+      ) : (
+        <>
       <section className="metricGrid" aria-label="Estado eliminatorias">
         <article className="metric">
           <Brackets size={20} aria-hidden="true" />
@@ -512,6 +520,8 @@ export default function EliminatoriasPage() {
           {canSubmit ? "Enviar eliminatorias" : "Completar para enviar"}
         </button>
       </div>
+        </>
+      )}
 
     </form>
   );
