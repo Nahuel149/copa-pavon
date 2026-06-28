@@ -2386,6 +2386,128 @@ a {
   background: #edf6ff;
 }
 
+.knockoutAdminReview {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.knockoutStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.knockoutStatusCard {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  box-shadow: 5px 5px 0 rgba(5, 5, 5, 0.16);
+}
+
+.knockoutStatusCard.ok {
+  background: #edfae9;
+}
+
+.knockoutStatusCard.missing {
+  background: #ffe4dd;
+}
+
+.knockoutStatusCard span,
+.knockoutReviewMatch header span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.knockoutStatusCard strong {
+  font-size: 2.5rem;
+  line-height: 0.9;
+}
+
+.knockoutStatusCard div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.knockoutStatusCard b {
+  padding: 6px 8px;
+  border: 2px solid var(--ink);
+  background: rgba(255, 255, 255, 0.78);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.9rem;
+}
+
+.knockoutReviewList {
+  display: grid;
+  gap: 14px;
+}
+
+.knockoutReviewMatch {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  background: #fffdf7;
+  box-shadow: 5px 5px 0 rgba(5, 5, 5, 0.16);
+}
+
+.knockoutReviewMatch header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.knockoutReviewMatch header strong {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.knockoutReviewRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.knockoutReviewRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 2px solid rgba(5, 5, 5, 0.16);
+}
+
+.knockoutReviewRow.ok {
+  background: #edfae9;
+}
+
+.knockoutReviewRow.missing {
+  background: #ffe4dd;
+}
+
+.knockoutReviewRow span {
+  min-width: 0;
+  overflow: hidden;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knockoutReviewRow b {
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.9rem;
+}
+
 .dangerButton {
   display: inline-flex;
   gap: 6px;
@@ -4215,6 +4337,27 @@ tbody tr.relegationRow:hover {
   .pinResetForm {
     grid-template-columns: 1fr;
     justify-items: stretch;
+  }
+
+  .knockoutStatusGrid,
+  .knockoutReviewRows {
+    grid-template-columns: 1fr;
+  }
+
+  .knockoutAdminReview {
+    padding: 12px;
+  }
+
+  .knockoutReviewMatch {
+    padding: 10px;
+  }
+
+  .knockoutReviewRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .knockoutReviewRow b {
+    justify-self: start;
   }
 
   .pinResetForm .primaryAction {

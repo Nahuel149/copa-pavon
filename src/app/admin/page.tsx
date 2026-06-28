@@ -207,6 +207,18 @@ function groupPredictionLabel(prediction: GroupPrediction) {
   return `${prediction.first} / ${prediction.second}`;
 }
 
+function hasCompleteKnockoutProde(submission: Submission, fixtures: KnockoutFixture[]) {
+  if (fixtures.length === 0) return false;
+  const predictionByFixture = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
+  return fixtures.every((fixture) => {
+    const prediction = predictionByFixture.get(fixture.id);
+    if (!prediction) return false;
+    if (!Number.isFinite(prediction.homeGoals) || !Number.isFinite(prediction.awayGoals)) return false;
+    if (prediction.homeGoals === prediction.awayGoals && !prediction.qualifiedTeam) return false;
+    return true;
+  });
+}
+
 function buildCsv(submissions: Submission[], standings: StandingRow[], knockoutFixtures: KnockoutFixture[]) {
   const standingById = new Map(standings.map((standing) => [standing.submissionId, standing]));
   const header = [
@@ -309,6 +321,18 @@ export default function AdminPage() {
   const detailSubmissions = showAllSubmissions
     ? submissions
     : submissions.filter((submission) => submission.id === expandedId);
+  const knockoutControl = useMemo(() => {
+    const complete: Submission[] = [];
+    const missing: Submission[] = [];
+    for (const submission of submissions) {
+      if (hasCompleteKnockoutProde(submission, knockoutFixtures)) {
+        complete.push(submission);
+      } else {
+        missing.push(submission);
+      }
+    }
+    return { complete, missing };
+  }, [submissions, knockoutFixtures]);
   const isUnlocked = status === "ready" || status === "saving" || status === "syncing";
 
   async function loadAdminData(event?: FormEvent<HTMLFormElement>) {
@@ -1326,6 +1350,64 @@ export default function AdminPage() {
             </article>
           ))}
           {auditEvents.length === 0 ? <div className="emptyState">Todavia no hay eventos de auditoria.</div> : null}
+        </section>
+      </details>
+
+      <details className="adminFold">
+        <summary>Pronosticos eliminatorias</summary>
+        <section className="knockoutAdminReview">
+          <div className="sectionHeader">
+            <p className="eyebrow">Control</p>
+            <h2>Quien completo y quien falta.</h2>
+            <p>{knockoutFixtures.length} partidos configurados para revisar.</p>
+          </div>
+
+          <div className="knockoutStatusGrid">
+            <article className="knockoutStatusCard ok">
+              <span>OK</span>
+              <strong>{knockoutControl.complete.length}</strong>
+              <div>
+                {knockoutControl.complete.map((submission) => (
+                  <b key={submission.id}>{submission.name}</b>
+                ))}
+                {knockoutControl.complete.length === 0 ? <small>Nadie completo todavia.</small> : null}
+              </div>
+            </article>
+            <article className="knockoutStatusCard missing">
+              <span>Faltan</span>
+              <strong>{knockoutControl.missing.length}</strong>
+              <div>
+                {knockoutControl.missing.map((submission) => (
+                  <b key={submission.id}>{submission.name}</b>
+                ))}
+                {knockoutControl.missing.length === 0 ? <small>Todos estan completos.</small> : null}
+              </div>
+            </article>
+          </div>
+
+          <div className="knockoutReviewList">
+            {knockoutFixtures.map((fixture) => (
+              <article className="knockoutReviewMatch" key={fixture.id}>
+                <header>
+                  <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
+                  <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+                </header>
+                <div className="knockoutReviewRows">
+                  {submissions.map((submission) => {
+                    const prediction = (submission.knockoutPredictions ?? []).find((item) => item.fixtureId === fixture.id);
+                    const completePrediction = prediction ? prediction.homeGoals !== prediction.awayGoals || Boolean(prediction.qualifiedTeam) : false;
+                    return (
+                      <div className={completePrediction ? "knockoutReviewRow ok" : "knockoutReviewRow missing"} key={`${fixture.id}-${submission.id}`}>
+                        <span>{submission.name}</span>
+                        <b>{prediction ? serializeKnockoutPrediction(prediction) : "Falta"}</b>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+            ))}
+            {knockoutFixtures.length === 0 ? <div className="emptyState">No hay cruces de eliminatorias cargados.</div> : null}
+          </div>
         </section>
       </details>
 
