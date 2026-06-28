@@ -6,6 +6,8 @@ import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-ti
 import { readJsonResponse } from "@/lib/client-json";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
+const worldCupTotalMatches = 104;
+
 function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
 }
@@ -136,6 +138,7 @@ export default function TablaPage() {
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const visibleComments = showAllComments ? comments : comments.slice(0, 10);
   const hiddenCommentCount = Math.max(comments.length - visibleComments.length, 0);
+  const playedWorldCupMatches = data.playedMatches + data.playedKnockoutMatches;
   const relegationCount = rows.length > 10 ? 3 : 2;
   const fullGraphHistory = useMemo(
     () =>
@@ -347,7 +350,7 @@ export default function TablaPage() {
       ${svgText("Copa Kahl", 124, 70, { size: 48, weight: 900, fill: "#fff" })}
       ${svgText("Tabla actual", 124, 108, { size: 24, weight: 900, fill: "#fff1ec" })}
       <rect x="${left}" y="144" width="${tableWidth}" height="34" fill="#f4fff0" stroke="${ink}" stroke-width="2"/>
-      ${svgText(`${rows.length} participantes · ${data.playedMatches}/72 partidos · Actualizada ${updated}`, left + 16, 168, { size: 20, weight: 900, fill: muted })}
+      ${svgText(`${rows.length} participantes · ${playedWorldCupMatches}/${worldCupTotalMatches} partidos · Actualizada ${updated}`, left + 16, 168, { size: 20, weight: 900, fill: muted })}
       ${headersSvg}
       ${rowsSvg || svgText("La tabla aparece cuando haya envios.", left + 20, tableTop + 98, { size: 28, weight: 900 })}
       <rect x="${left}" y="${height - 46}" width="${tableWidth}" height="2" fill="${ink}"/>
@@ -802,7 +805,7 @@ export default function TablaPage() {
         <div className="shareCardPreview">
           <div>
             <strong>Compartir tabla</strong>
-            <p>{rows.length} participantes · {data.playedMatches}/72 partidos con resultado.</p>
+            <p>{rows.length} participantes · {playedWorldCupMatches}/{worldCupTotalMatches} partidos con resultado.</p>
           </div>
           <Trophy size={28} aria-hidden="true" />
         </div>
