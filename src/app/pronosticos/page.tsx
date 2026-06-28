@@ -155,6 +155,8 @@ export default function PronosticosPage() {
   const [shareDay, setShareDay] = useState(matches[0].dateLabel);
   const [shareStatus, setShareStatus] = useState<"idle" | "working">("idle");
   const [shareMessage, setShareMessage] = useState("");
+  const [knockoutShareStatus, setKnockoutShareStatus] = useState<"idle" | "working">("idle");
+  const [knockoutShareMessage, setKnockoutShareMessage] = useState("");
   const [showGoalVideo, setShowGoalVideo] = useState(false);
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
@@ -513,6 +515,130 @@ export default function PronosticosPage() {
     }
   }
 
+  function buildKnockoutShareSvg() {
+    if (!selectedKnockoutFixture) throw new Error("No hay cruce seleccionado.");
+    const width = 1080;
+    const rowHeight = 54;
+    const headerHeight = 250;
+    const footerHeight = 72;
+    const tableTop = headerHeight;
+    const height = tableTop + 58 + Math.max(knockoutPredictionRows.length, 1) * rowHeight + footerHeight;
+    const left = 36;
+    const rankWidth = 64;
+    const nameWidth = 360;
+    const predictionWidth = width - left * 2 - rankWidth - nameWidth;
+    const red = "#fa3b22";
+    const cream = "#fffdf7";
+    const pale = "#fff1ec";
+    const ink = "#050505";
+    const verdictFill = {
+      exact: "#dff3dc",
+      partial: "#fff2c2",
+      miss: "#ffe0d7",
+      pending: "#fffdf7",
+    } as const;
+
+    const rows = knockoutPredictionRows.map((row, index) => {
+      const y = tableTop + 58 + index * rowHeight;
+      const fill = verdictFill[row.score.verdict] ?? "#fffdf7";
+      const points = selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente";
+      return [
+        `<rect x="${left}" y="${y}" width="${rankWidth}" height="${rowHeight}" fill="${red}" stroke="${ink}" stroke-width="1"/>`,
+        svgText(`${row.position || index + 1}`, left + rankWidth / 2, y + 35, { size: 22, weight: 900, fill: "#fff", anchor: "middle" }),
+        `<rect x="${left + rankWidth}" y="${y}" width="${nameWidth}" height="${rowHeight}" fill="${fill}" stroke="#bdb7ae" stroke-width="1"/>`,
+        svgText(compactText(row.submission.name, 26), left + rankWidth + 14, y + 35, { size: 22, weight: 900 }),
+        `<rect x="${left + rankWidth + nameWidth}" y="${y}" width="${predictionWidth}" height="${rowHeight}" fill="${fill}" stroke="#bdb7ae" stroke-width="1"/>`,
+        svgText(compactText(row.label, 28), left + rankWidth + nameWidth + 18, y + 35, { size: 22, weight: 900 }),
+        svgText(points, width - left - 18, y + 35, { size: 20, weight: 900, anchor: "end", fill: "#5f5a54" }),
+      ].join("");
+    });
+
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <rect width="${width}" height="${height}" fill="${cream}"/>
+        <circle cx="870" cy="155" r="270" fill="#f7de8b" opacity="0.22"/>
+        <circle cx="150" cy="660" r="290" fill="#dff5dc" opacity="0.2"/>
+        <rect x="24" y="24" width="${width - 48}" height="${height - 48}" fill="none" stroke="${ink}" stroke-width="5"/>
+        <rect x="42" y="44" width="78" height="78" fill="${red}" stroke="${ink}" stroke-width="5" transform="rotate(-3 81 83)"/>
+        ${svgText("CK", 81, 93, { size: 30, weight: 900, fill: "#fff", anchor: "middle" })}
+        ${svgText("Copa Kahl", 140, 78, { size: 44, weight: 900 })}
+        ${svgText(`Pronosticos #${selectedKnockoutFixture.order} - ${knockoutStageLabels[selectedKnockoutFixture.stage]}`, 140, 116, { size: 24, weight: 900, fill: "#5f5a54" })}
+        ${svgText(`${selectedKnockoutFixture.home} vs ${selectedKnockoutFixture.away}`, 42, 180, { size: 42, weight: 900 })}
+        ${svgText(`Resultado oficial: ${selectedKnockoutResult ? `${selectedKnockoutResult.homeGoals}-${selectedKnockoutResult.awayGoals}` : "Pendiente"}`, 42, 218, { size: 24, weight: 900, fill: "#5f5a54" })}
+        <rect x="${left}" y="${tableTop}" width="${rankWidth}" height="58" fill="${red}" stroke="${ink}" stroke-width="2"/>
+        ${svgText("#", left + rankWidth / 2, tableTop + 38, { size: 20, weight: 900, fill: "#fff", anchor: "middle" })}
+        <rect x="${left + rankWidth}" y="${tableTop}" width="${nameWidth}" height="58" fill="${pale}" stroke="${ink}" stroke-width="2"/>
+        ${svgText("Participante", left + rankWidth + 14, tableTop + 38, { size: 21, weight: 900 })}
+        <rect x="${left + rankWidth + nameWidth}" y="${tableTop}" width="${predictionWidth}" height="58" fill="${pale}" stroke="${ink}" stroke-width="2"/>
+        ${svgText("Pronostico", left + rankWidth + nameWidth + 18, tableTop + 38, { size: 21, weight: 900 })}
+        ${rows.join("")}
+        ${svgText("Verde exacto - amarillo parcial - rojo 0 puntos", 42, height - 28, { size: 20, weight: 900, fill: "#5f5a54" })}
+        ${svgText("copa-kahl.onrender.com", width - 42, height - 28, { size: 20, weight: 900, fill: "#5f5a54", anchor: "end" })}
+      </svg>
+    `;
+  }
+
+  function selectedKnockoutFilename() {
+    const fixture = selectedKnockoutFixture;
+    if (!fixture) return "copa-kahl-eliminatorias.png";
+    return `copa-kahl-eliminatorias-${fixture.order}-${fixture.home}-vs-${fixture.away}`
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase()
+      .concat(".png");
+  }
+
+  async function downloadKnockoutShareCard() {
+    setKnockoutShareStatus("working");
+    setKnockoutShareMessage("");
+    try {
+      const file = await svgToPngFile(buildKnockoutShareSvg(), selectedKnockoutFilename());
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setKnockoutShareMessage("Imagen descargada.");
+    } catch (downloadError) {
+      setKnockoutShareMessage(downloadError instanceof Error ? downloadError.message : "No se pudo descargar la imagen.");
+    } finally {
+      setKnockoutShareStatus("idle");
+    }
+  }
+
+  async function shareKnockoutCard() {
+    setKnockoutShareStatus("working");
+    setKnockoutShareMessage("");
+    try {
+      if (!selectedKnockoutFixture) throw new Error("No hay cruce seleccionado.");
+      const file = await svgToPngFile(buildKnockoutShareSvg(), selectedKnockoutFilename());
+      const shareData = {
+        title: `Copa Kahl #${selectedKnockoutFixture.order}`,
+        text: `Pronosticos Copa Kahl ${selectedKnockoutFixture.home} vs ${selectedKnockoutFixture.away}`,
+        files: [file],
+      };
+      if (navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        setKnockoutShareMessage("Imagen lista para compartir.");
+      } else {
+        await downloadKnockoutShareCard();
+      }
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === "AbortError") {
+        setKnockoutShareMessage("");
+      } else {
+        setKnockoutShareMessage(shareError instanceof Error ? shareError.message : "No se pudo compartir la imagen.");
+      }
+    } finally {
+      setKnockoutShareStatus("idle");
+    }
+  }
+
   return (
     <div className="pageStack">
       <section className="compactHero">
@@ -567,28 +693,65 @@ export default function PronosticosPage() {
                   </p>
                 </section>
               ) : (
-                <section className="compactPredictionList knockoutCompactList">
-                  <div className="tableNote compactPredictionHeader">
-                    <strong>Detalle individual</strong>
-                    <div className="selectedMatchBar" aria-label="Cruce seleccionado">
-                      <span>#{selectedKnockoutFixture.order}</span>
-                      <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
+                <>
+                  <section className="compactPredictionList knockoutCompactList">
+                    <div className="tableNote compactPredictionHeader">
+                      <strong>Detalle individual</strong>
+                      <div className="selectedMatchBar" aria-label="Cruce seleccionado">
+                        <span>#{selectedKnockoutFixture.order}</span>
+                        <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
+                      </div>
                     </div>
-                  </div>
-                  <div className="compactPredictionRows">
-                    {knockoutPredictionRows.map((row) => (
-                      <article className={`compactPredictionRow knockoutVerdict ${row.score.verdict}`} key={row.submission.id}>
-                        <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
-                        <strong>{row.submission.name}</strong>
-                        <span>
-                          <b>{row.label}</b>
-                          <em>{selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente"}</em>
-                        </span>
-                      </article>
-                    ))}
-                    {knockoutPredictionRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}
-                  </div>
-                </section>
+                    <div className="compactPredictionRows">
+                      {knockoutPredictionRows.map((row) => (
+                        <article className={`compactPredictionRow knockoutVerdict ${row.score.verdict}`} key={row.submission.id}>
+                          <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
+                          <strong>{row.submission.name}</strong>
+                          <span>
+                            <b>{row.label}</b>
+                            <em>{selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente"}</em>
+                          </span>
+                        </article>
+                      ))}
+                      {knockoutPredictionRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}
+                    </div>
+                  </section>
+
+                  <section className="shareInlinePanel knockoutSharePanel" aria-label="Compartir pronosticos del cruce">
+                    <div className="tableNote">
+                      <strong>Compartir este partido</strong>
+                      <span>Imagen con los participantes y sus pronosticos del cruce seleccionado.</span>
+                    </div>
+                    <div className="shareCardPreview">
+                      <div>
+                        <span>#{selectedKnockoutFixture.order} · {knockoutStageLabels[selectedKnockoutFixture.stage]}</span>
+                        <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
+                      </div>
+                      <p>{knockoutPredictionRows.length} participantes</p>
+                    </div>
+                    <div className="shareActions">
+                      <button
+                        className="primaryAction"
+                        disabled={knockoutShareStatus === "working" || knockoutPredictionRows.length === 0}
+                        onClick={shareKnockoutCard}
+                        type="button"
+                      >
+                        {knockoutShareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
+                        Compartir
+                      </button>
+                      <button
+                        className="primaryAction light"
+                        disabled={knockoutShareStatus === "working" || knockoutPredictionRows.length === 0}
+                        onClick={downloadKnockoutShareCard}
+                        type="button"
+                      >
+                        <Download size={18} aria-hidden="true" />
+                        Descargar PNG
+                      </button>
+                    </div>
+                    {knockoutShareMessage ? <p className="shareMessage" aria-live="polite">{knockoutShareMessage}</p> : null}
+                  </section>
+                </>
               )}
             </>
           ) : (
