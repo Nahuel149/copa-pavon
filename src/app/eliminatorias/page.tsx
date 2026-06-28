@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2, LogIn, Save, Send, Trash2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
+import { isOptionalLateKnockoutFixture } from "@/lib/knockout-optional";
 import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
 import type { KnockoutPrediction, Submission } from "@/lib/prode";
 
@@ -102,12 +103,16 @@ export default function EliminatoriasPage() {
   const submitDockRef = useRef<HTMLDivElement | null>(null);
 
   const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
-  const completed = openFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
+  const requiredOpenFixtures = openFixtures.filter((fixture) => {
+    if (!isOptionalLateKnockoutFixture(fixture)) return true;
+    return isKnockoutPredictionComplete(predictions[fixture.id]);
+  });
+  const completed = requiredOpenFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
   const missingName = name.trim().length < 2;
   const missingLogin = !isUnlocked;
-  const missingFixtures = openFixtures.length - completed;
-  const canSubmit = !missingName && !missingLogin && openFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
-  const shouldWarnBeforeLeaving = isUnlocked && status !== "done" && status !== "saving" && openFixtures.length > 0 && completed > 0;
+  const missingFixtures = requiredOpenFixtures.length - completed;
+  const canSubmit = !missingName && !missingLogin && requiredOpenFixtures.length > 0 && missingFixtures === 0 && status !== "saving";
+  const shouldWarnBeforeLeaving = isUnlocked && status !== "done" && status !== "saving" && requiredOpenFixtures.length > 0 && completed > 0;
   const validationMessages = [
     ...(missingName ? ["Poné el mismo nombre que usaste en fase de grupos."] : []),
     ...(fixtures.length === 0 ? ["Todavía no hay cruces eliminatorios cargados desde admin."] : []),
@@ -362,7 +367,7 @@ export default function EliminatoriasPage() {
       return;
     }
 
-    setSavedCount(body.saved ?? openFixtures.length);
+    setSavedCount(body.saved ?? requiredOpenFixtures.length);
     window.localStorage.removeItem(knockoutDraftStorageKey);
     setStatus("done");
   }
@@ -440,7 +445,7 @@ export default function EliminatoriasPage() {
               {loginStatus === "checking" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <LogIn size={18} aria-hidden="true" />}
             </button>
           </div>
-          <span>{isUnlocked ? `${completed}/${openFixtures.length} cruces abiertos completos` : loginMessage || "Entra con nombre y PIN"}</span>
+          <span>{isUnlocked ? `${completed}/${requiredOpenFixtures.length} cruces requeridos completos` : loginMessage || "Entra con nombre y PIN"}</span>
         </div>
       </section>
 
@@ -562,7 +567,7 @@ export default function EliminatoriasPage() {
       <div className={highlightSubmit ? "submitDock attention" : "submitDock"} ref={submitDockRef}>
         <div>
           <span>{name.trim() || "Sin nombre"}</span>
-          <strong>{completed}/{openFixtures.length}</strong>
+          <strong>{completed}/{requiredOpenFixtures.length}</strong>
           {submitReminder ? <small>{submitReminder}</small> : null}
         </div>
         <button className="primaryAction" disabled={!canSubmit} type="submit">

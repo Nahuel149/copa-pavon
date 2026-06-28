@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import { isKnockoutFixtureEditable } from "@/lib/knockout-deadlines";
+import { isOptionalLateKnockoutFixture } from "@/lib/knockout-optional";
 import { validateParticipantPin, verifyPin } from "@/lib/pin";
 import { normalizeName, validateKnockoutSubmission } from "@/lib/prode";
 import { appendKnockoutPredictions, findSubmissionByNormalizedName, readResultStore } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function hasCompleteRawKnockoutPrediction(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const item = value as { homeGoals?: unknown; awayGoals?: unknown; qualifiedTeam?: unknown };
+  const homeGoals = typeof item.homeGoals === "string" ? item.homeGoals.trim() : item.homeGoals;
+  const awayGoals = typeof item.awayGoals === "string" ? item.awayGoals.trim() : item.awayGoals;
+  if (homeGoals === "" || awayGoals === "" || homeGoals === undefined || awayGoals === undefined) return false;
+  const homeNumber = Number(homeGoals);
+  const awayNumber = Number(awayGoals);
+  if (!Number.isInteger(homeNumber) || !Number.isInteger(awayNumber)) return false;
+  return homeNumber !== awayNumber || item.qualifiedTeam === "home" || item.qualifiedTeam === "away";
+}
 
 export async function POST(request: Request) {
   let payload: unknown;
@@ -35,6 +48,17 @@ export async function POST(request: Request) {
   const closedFixtureIds = results.knockoutFixtures
     .filter((fixture) => !isKnockoutFixtureEditable(fixture, new Date(), results.knockoutFixtures))
     .map((fixture) => fixture.id);
+  const rawPredictions = Array.isArray((payload as { predictions?: unknown })?.predictions)
+    ? ((payload as { predictions: unknown[] }).predictions)
+    : [];
+  const rawByFixture = new Map(
+    rawPredictions
+      .filter((item): item is { fixtureId: string } => Boolean(item) && typeof item === "object" && typeof (item as { fixtureId?: unknown }).fixtureId === "string")
+      .map((item) => [item.fixtureId, item] as const),
+  );
+  const optionalIncompleteFixtureIds = results.knockoutFixtures
+    .filter((fixture) => isOptionalLateKnockoutFixture(fixture) && !hasCompleteRawKnockoutPrediction(rawByFixture.get(fixture.id)))
+    .map((fixture) => fixture.id);
 
   if (results.knockoutFixtures.length > 0 && closedFixtureIds.length === results.knockoutFixtures.length) {
     return NextResponse.json(
@@ -46,7 +70,7 @@ export async function POST(request: Request) {
   const validation = validateKnockoutSubmission(
     payload as Parameters<typeof validateKnockoutSubmission>[0],
     results.knockoutFixtures,
-    { excludedFixtureIds: closedFixtureIds },
+    { excludedFixtureIds: [...closedFixtureIds, ...optionalIncompleteFixtureIds] },
   );
 
   if (!validation.ok) {
