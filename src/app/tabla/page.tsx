@@ -154,9 +154,6 @@ export default function TablaPage() {
   const movementHistoryLimit = fullGraphHistory.length === 0 ? 0 : Math.min(Math.max(movementLimit || fullGraphHistory.length, 1), fullGraphHistory.length);
   const movementTargetSnapshot = movementHistoryLimit > 1 ? fullGraphHistory[movementHistoryLimit - 1] : undefined;
   const movementBaseSnapshot = movementHistoryLimit > 1 ? fullGraphHistory[movementHistoryLimit - 2] : undefined;
-  const movementBaseLabel = movementBaseSnapshot && movementTargetSnapshot
-    ? `Cambios ${movementBaseSnapshot.label} -> ${movementTargetSnapshot.label}`
-    : "Cambios por fecha: falta una fecha anterior";
   const effectiveGraphDisplayLimit = graphDisplayLimit > 0 ? graphDisplayLimit : rows.length;
   const graphRows = (selectedGraphSnapshot?.positions ?? []).slice(0, effectiveGraphDisplayLimit);
   const visibleGraphRows = graphRows.filter((row) => !hiddenGraphIds.includes(row.submissionId));
@@ -627,43 +624,11 @@ export default function TablaPage() {
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={8}>La tabla aparece cuando haya envios guardados.</td>
+                <td colSpan={9}>La tabla aparece cuando haya envios guardados.</td>
               </tr>
             ) : null}
           </tbody>
         </table>
-        <details className="tableMoreDetails">
-          <summary>
-            <strong>Ver cambios y reglas</strong>
-            <span>{movementBaseLabel}.</span>
-          </summary>
-          <div className="tableNote compact">
-            <strong>Tabla</strong>
-            <div>
-              <span>
-                Los puntos se suman cuando hay resultados oficiales. Ganados/perdidos son aciertos y errores del prode.
-                Desempate: {(data.tieBreakRules ?? []).join(" y ").toLowerCase()}.
-              </span>
-              {fullGraphHistory.length > 1 ? (
-                <div className="movementCutSelector" role="group" aria-label="Elegir tramo de cambios de posiciones">
-                  {fullGraphHistory.slice(1).map((entry, index) => {
-                    const limit = index + 2;
-                    return (
-                      <button
-                        className={movementHistoryLimit === limit ? "active" : ""}
-                        key={entry.label}
-                        onClick={() => setMovementLimit(limit)}
-                        type="button"
-                      >
-                        {fullGraphHistory[index].label} {"->"} {entry.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </details>
       </section>
 
       {data.dailyRecap || dateHighlights.length > 0 ? (
@@ -706,11 +671,6 @@ export default function TablaPage() {
         <summary>
           <div>
             <strong>Carrera por la punta</strong>
-            <span>
-              {selectedGraphSnapshot
-                ? `Hasta ${selectedGraphSnapshot.label}: ${selectedGraphSnapshot.title}.`
-                : "Cada corte suma una fecha con resultados oficiales cargados."}
-            </span>
           </div>
           <b>Ver grafico</b>
         </summary>

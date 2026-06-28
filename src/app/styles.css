@@ -4060,7 +4060,7 @@ tbody tr.relegationRow:hover {
   }
 
   .positionCell {
-    gap: 4px;
+    gap: 2px;
   }
 
   .playerPointPanel {
@@ -4089,10 +4089,11 @@ tbody tr.relegationRow:hover {
   }
 
   .movement {
-    min-width: 28px;
-    min-height: 18px;
-    padding-inline: 4px;
-    font-size: 0.62rem;
+    min-width: 20px;
+    min-height: 14px;
+    padding-inline: 2px;
+    border-width: 1px;
+    font-size: 0.5rem;
   }
 
   .searchBox {
