@@ -106,12 +106,26 @@ function compactText(value: string, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, Math.max(0, maxLength - 1))}…` : value;
 }
 
+function isHiddenFromShare(name: string) {
+  return name.trim().toLocaleLowerCase("es") === "ale..";
+}
+
 function svgText(value: string, x: number, y: number, options: { size?: number; weight?: number; fill?: string; anchor?: string } = {}) {
   const size = options.size ?? 26;
   const weight = options.weight ?? 800;
   const fill = options.fill ?? "#050505";
   const anchor = options.anchor ? ` text-anchor="${options.anchor}"` : "";
   return `<text x="${x}" y="${y}" font-family="Trebuchet MS, Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}"${anchor}>${escapeXml(value)}</text>`;
+}
+
+function svgPredictionText(value: string, x: number, y: number) {
+  const parts = value.split(" · ");
+  const firstLine = parts.length > 1 ? parts.slice(0, 2).join(" · ") : value;
+  const secondLine = parts.length > 2 ? parts.slice(2).join(" · ") : "";
+  return `<text x="${x}" y="${y}" font-family="Trebuchet MS, Arial, sans-serif" font-size="21" font-weight="900" fill="#050505">
+    <tspan x="${x}" dy="0">${escapeXml(firstLine)}</tspan>
+    ${secondLine ? `<tspan x="${x}" dy="24">${escapeXml(secondLine)}</tspan>` : ""}
+  </text>`;
 }
 
 async function svgToPngFile(svg: string, filename: string) {
@@ -226,6 +240,10 @@ export default function PronosticosPage() {
       })
       .sort((a, b) => (a.position || 9999) - (b.position || 9999) || a.submission.name.localeCompare(b.submission.name, "es"));
   }, [data?.submissions, selectedKnockoutFixture, selectedKnockoutIsPublic, selectedKnockoutResult, standingPositionById]);
+  const knockoutShareRows = useMemo(
+    () => knockoutPredictionRows.filter((row) => !isHiddenFromShare(row.submission.name)),
+    [knockoutPredictionRows],
+  );
 
   const predictionRows = useMemo(() => {
     return (data?.submissions ?? [])
@@ -243,6 +261,7 @@ export default function PronosticosPage() {
 
   const shareRows = useMemo(() => {
     return (data?.submissions ?? [])
+      .filter((submission) => !isHiddenFromShare(submission.name))
       .map((submission) => ({
         submission,
         position: standingPositionById.get(submission.id) ?? 0,
@@ -518,15 +537,16 @@ export default function PronosticosPage() {
   function buildKnockoutShareSvg() {
     if (!selectedKnockoutFixture) throw new Error("No hay cruce seleccionado.");
     const width = 1080;
-    const rowHeight = 54;
+    const rowHeight = 68;
     const headerHeight = 250;
     const footerHeight = 72;
     const tableTop = headerHeight;
-    const height = tableTop + 58 + Math.max(knockoutPredictionRows.length, 1) * rowHeight + footerHeight;
+    const height = tableTop + 58 + Math.max(knockoutShareRows.length, 1) * rowHeight + footerHeight;
     const left = 36;
     const rankWidth = 64;
-    const nameWidth = 360;
-    const predictionWidth = width - left * 2 - rankWidth - nameWidth;
+    const nameWidth = 345;
+    const pointsWidth = 86;
+    const predictionWidth = width - left * 2 - rankWidth - nameWidth - pointsWidth;
     const red = "#fa3b22";
     const cream = "#fffdf7";
     const pale = "#fff1ec";
@@ -538,7 +558,7 @@ export default function PronosticosPage() {
       pending: "#fffdf7",
     } as const;
 
-    const rows = knockoutPredictionRows.map((row, index) => {
+    const rows = knockoutShareRows.map((row, index) => {
       const y = tableTop + 58 + index * rowHeight;
       const fill = verdictFill[row.score.verdict] ?? "#fffdf7";
       const points = selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente";
@@ -548,8 +568,9 @@ export default function PronosticosPage() {
         `<rect x="${left + rankWidth}" y="${y}" width="${nameWidth}" height="${rowHeight}" fill="${fill}" stroke="#bdb7ae" stroke-width="1"/>`,
         svgText(compactText(row.submission.name, 26), left + rankWidth + 14, y + 35, { size: 22, weight: 900 }),
         `<rect x="${left + rankWidth + nameWidth}" y="${y}" width="${predictionWidth}" height="${rowHeight}" fill="${fill}" stroke="#bdb7ae" stroke-width="1"/>`,
-        svgText(compactText(row.label, 28), left + rankWidth + nameWidth + 18, y + 35, { size: 22, weight: 900 }),
-        svgText(points, width - left - 18, y + 35, { size: 20, weight: 900, anchor: "end", fill: "#5f5a54" }),
+        svgPredictionText(row.label, left + rankWidth + nameWidth + 18, y + 30),
+        `<rect x="${left + rankWidth + nameWidth + predictionWidth}" y="${y}" width="${pointsWidth}" height="${rowHeight}" fill="${fill}" stroke="#bdb7ae" stroke-width="1"/>`,
+        svgText(points, width - left - 12, y + 42, { size: 19, weight: 900, anchor: "end", fill: "#5f5a54" }),
       ].join("");
     });
 
@@ -727,12 +748,12 @@ export default function PronosticosPage() {
                         <span>#{selectedKnockoutFixture.order} · {knockoutStageLabels[selectedKnockoutFixture.stage]}</span>
                         <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
                       </div>
-                      <p>{knockoutPredictionRows.length} participantes</p>
+                      <p>{knockoutShareRows.length} participantes</p>
                     </div>
                     <div className="shareActions">
                       <button
                         className="primaryAction"
-                        disabled={knockoutShareStatus === "working" || knockoutPredictionRows.length === 0}
+                        disabled={knockoutShareStatus === "working" || knockoutShareRows.length === 0}
                         onClick={shareKnockoutCard}
                         type="button"
                       >
@@ -741,7 +762,7 @@ export default function PronosticosPage() {
                       </button>
                       <button
                         className="primaryAction light"
-                        disabled={knockoutShareStatus === "working" || knockoutPredictionRows.length === 0}
+                        disabled={knockoutShareStatus === "working" || knockoutShareRows.length === 0}
                         onClick={downloadKnockoutShareCard}
                         type="button"
                       >

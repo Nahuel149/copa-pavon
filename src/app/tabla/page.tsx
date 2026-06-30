@@ -24,6 +24,10 @@ function compactText(value: string, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, Math.max(0, maxLength - 1))}…` : value;
 }
 
+function isHiddenFromShare(name: string) {
+  return name.trim().toLocaleLowerCase("es") === "ale..";
+}
+
 function svgText(value: string, x: number, y: number, options: { size?: number; weight?: number; fill?: string; anchor?: string } = {}) {
   const size = options.size ?? 26;
   const weight = options.weight ?? 800;
@@ -285,7 +289,8 @@ export default function TablaPage() {
     const headerHeight = 190;
     const footerHeight = 64;
     const tableTop = headerHeight;
-    const height = tableTop + 56 + Math.max(rows.length, 1) * rowHeight + footerHeight;
+    const shareRows = rows.filter((row) => !isHiddenFromShare(row.name));
+    const height = tableTop + 56 + Math.max(shareRows.length, 1) * rowHeight + footerHeight;
     const red = "#fa3b22";
     const cream = "#fffdf7";
     const pale = "#fff1ec";
@@ -318,9 +323,10 @@ export default function TablaPage() {
     ];
     const tableWidth = usable;
     const updated = data.updatedAt ? formatArgentinaDateTime(data.updatedAt) : "Actualizando";
-    const rowsSvg = rows.map((row, index) => {
+    const shareRelegationCount = shareRows.length > 10 ? 3 : 2;
+    const rowsSvg = shareRows.map((row, index) => {
       const y = tableTop + 56 + index * rowHeight;
-      const fill = index === 0 ? green : index >= rows.length - relegationCount ? "#ffe2dc" : index % 2 ? "#fff8ef" : cream;
+      const fill = index === 0 ? green : index >= shareRows.length - shareRelegationCount ? "#ffe2dc" : index % 2 ? "#fff8ef" : cream;
       return [
         `<rect x="${left}" y="${y}" width="${tableWidth}" height="${rowHeight}" fill="${fill}" stroke="#d3cec4" stroke-width="2"/>`,
         `<rect x="${left + col.rank + col.name}" y="${y}" width="${col.points}" height="${rowHeight}" fill="${red}" stroke="${ink}" stroke-width="2"/>`,
@@ -350,7 +356,7 @@ export default function TablaPage() {
       ${svgText("Copa Kahl", 124, 70, { size: 48, weight: 900, fill: "#fff" })}
       ${svgText("Tabla actual", 124, 108, { size: 24, weight: 900, fill: "#fff1ec" })}
       <rect x="${left}" y="144" width="${tableWidth}" height="34" fill="#f4fff0" stroke="${ink}" stroke-width="2"/>
-      ${svgText(`${rows.length} participantes · ${playedWorldCupMatches}/${worldCupTotalMatches} partidos · Actualizada ${updated}`, left + 16, 168, { size: 20, weight: 900, fill: muted })}
+      ${svgText(`${shareRows.length} participantes · ${playedWorldCupMatches}/${worldCupTotalMatches} partidos · Actualizada ${updated}`, left + 16, 168, { size: 20, weight: 900, fill: muted })}
       ${headersSvg}
       ${rowsSvg || svgText("La tabla aparece cuando haya envios.", left + 20, tableTop + 98, { size: 28, weight: 900 })}
       <rect x="${left}" y="${height - 46}" width="${tableWidth}" height="2" fill="${ink}"/>
