@@ -1688,7 +1688,7 @@ a {
 
 .compactPredictionRow.knockoutVerdict > span:last-child {
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
 }
 
 .compactPredictionRow.knockoutVerdict > span:last-child b {
@@ -1708,6 +1708,12 @@ a {
   font-size: 0.78rem;
   font-style: normal;
   font-weight: 900;
+}
+
+.compactPredictionRow.knockoutVerdict > span:last-child .predictionStatusBadge {
+  max-width: 88px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .groupPredictionPanel {
@@ -4160,6 +4166,19 @@ tbody tr.relegationRow:hover {
 
   .compactPredictionRow strong {
     font-size: 0.9rem;
+  }
+
+  .compactPredictionRow.knockoutVerdict > span:last-child {
+    gap: 5px;
+    padding-right: 6px;
+  }
+
+  .compactPredictionRow.knockoutVerdict > span:last-child .predictionStatusBadge {
+    max-width: 72px;
+    padding: 2px 4px;
+    border-width: 2px;
+    font-size: 0.64rem;
+    letter-spacing: 0;
   }
 
   .groupTabs {

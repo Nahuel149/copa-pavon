@@ -724,17 +724,17 @@ export default function PronosticosPage() {
                       </div>
                     </div>
                     <div className="compactPredictionRows">
-                      {knockoutPredictionRows.map((row) => (
+                      {knockoutShareRows.map((row) => (
                         <article className={`compactPredictionRow knockoutVerdict ${row.score.verdict}`} key={row.submission.id}>
                           <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
                           <strong>{row.submission.name}</strong>
                           <span>
                             <b>{row.label}</b>
-                            <em>{selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente"}</em>
+                            <em className="predictionStatusBadge">{selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente"}</em>
                           </span>
                         </article>
                       ))}
-                      {knockoutPredictionRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}
+                      {knockoutShareRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}
                     </div>
                   </section>
 
