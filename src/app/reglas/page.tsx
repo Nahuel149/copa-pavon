@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Brackets, ClipboardList, Medal, RefreshCw, ShieldCheck, Target } from "lucide-react";
-import { choiceMatches, exactScoreMatches, groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, matches } from "@/lib/matches";
+import { ArrowRight, Brackets, ClipboardList, RefreshCw, ShieldCheck } from "lucide-react";
+import { choiceMatches, exactScoreMatches, groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages } from "@/lib/matches";
 
 const ruleSteps = [
   {
@@ -41,36 +41,6 @@ const scoringRules = [
 export default function ReglasPage() {
   return (
     <div className="pageStack">
-      <section className="compactHero">
-        <div>
-          <p className="eyebrow">Reglas</p>
-          <h1>Cómo se juega.</h1>
-          <span>Puntos, grupos y eliminatorias en una sola pagina.</span>
-        </div>
-        <Link className="primaryAction light" href="/">
-          <ClipboardList size={18} aria-hidden="true" />
-          Ir al formulario
-        </Link>
-      </section>
-
-      <section className="metricGrid" aria-label="Resumen del prode">
-        <article className="metric">
-          <Target size={20} aria-hidden="true" />
-          <span>Partidos fase grupos</span>
-          <strong>{matches.length}</strong>
-        </article>
-        <article className="metric">
-          <BadgeCheck size={20} aria-hidden="true" />
-          <span>Exactos en grupos</span>
-          <strong>{exactScoreMatches.length}</strong>
-        </article>
-        <article className="metric alert">
-          <Medal size={20} aria-hidden="true" />
-          <span>Grupos con top 2</span>
-          <strong>{groups.length}</strong>
-        </article>
-      </section>
-
       <section className="rulesFlow" aria-label="Qué tiene que hacer cada participante">
         {ruleSteps.map((step) => {
           const Icon = step.icon;
