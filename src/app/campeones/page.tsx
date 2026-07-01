@@ -15,6 +15,7 @@ const champions = [
 ];
 
 const relegated = ["Javi", "El Buda", "Miguel"];
+const thirdDivision = [{ name: "Ale con Pelo", note: "Suspendido para jugar las próximas 3 copas" }];
 
 export default function CampeonesPage() {
   return (
@@ -61,6 +62,23 @@ export default function CampeonesPage() {
             <span key={name}>
               <ShieldAlert size={18} aria-hidden="true" />
               {name}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="relegationPanel thirdDivisionPanel" aria-label="C">
+        <div>
+          <p className="eyebrow">Descendidos</p>
+          <h2>La C</h2>
+          <p>Zona de castigo deportivo y administrativo.</p>
+        </div>
+        <div className="relegatedList">
+          {thirdDivision.map((player) => (
+            <span key={player.name}>
+              <ShieldAlert size={18} aria-hidden="true" />
+              <strong>{player.name}</strong>
+              <small>({player.note})</small>
             </span>
           ))}
         </div>

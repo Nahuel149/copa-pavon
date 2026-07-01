@@ -1038,6 +1038,29 @@ a {
   text-align: center;
 }
 
+.thirdDivisionPanel {
+  background: #f8f4ff;
+}
+
+.thirdDivisionPanel .relegatedList {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.thirdDivisionPanel .relegatedList span {
+  display: grid;
+  grid-template-columns: auto minmax(0, auto);
+  justify-content: center;
+  row-gap: 4px;
+}
+
+.thirdDivisionPanel .relegatedList small {
+  grid-column: 1 / -1;
+  color: #f5d8cf;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .adminLockedPanel {
   max-width: 760px;
   padding: clamp(22px, 3vw, 34px);
