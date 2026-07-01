@@ -406,6 +406,104 @@ export default function TablaPage() {
     }
   }
 
+  function buildKnockoutStandingsShareSvg() {
+    const width = 960;
+    const rowHeight = 56;
+    const headerHeight = 188;
+    const footerHeight = 58;
+    const tableTop = headerHeight;
+    const shareRows = knockoutRows.filter((row) => !isHiddenFromShare(row.name));
+    const height = tableTop + 56 + Math.max(shareRows.length, 1) * rowHeight + footerHeight;
+    const red = "#fa3b22";
+    const cream = "#fffdf7";
+    const pale = "#fff1ec";
+    const green = "#e5f7df";
+    const ink = "#050505";
+    const muted = "#625d55";
+    const left = 32;
+    const usable = width - left * 2;
+    const col = {
+      rank: 60,
+      name: 330,
+      points: 105,
+      played: 90,
+      exacts: 100,
+      winners: 105,
+      scorers: 90,
+    };
+    const headers = [
+      { label: "#", x: left, width: col.rank, anchor: "middle" },
+      { label: "Participante", x: left + col.rank, width: col.name, anchor: "start" },
+      { label: "Pts", x: left + col.rank + col.name, width: col.points, anchor: "middle" },
+      { label: "Jug", x: left + col.rank + col.name + col.points, width: col.played, anchor: "middle" },
+      { label: "Exa", x: left + col.rank + col.name + col.points + col.played, width: col.exacts, anchor: "middle" },
+      { label: "Clasif", x: left + col.rank + col.name + col.points + col.played + col.exacts, width: col.winners, anchor: "middle" },
+      { label: "Gol", x: left + col.rank + col.name + col.points + col.played + col.exacts + col.winners, width: col.scorers, anchor: "middle" },
+    ];
+    const updated = data.updatedAt ? formatArgentinaDateTime(data.updatedAt) : "Actualizando";
+    const rowsSvg = shareRows.map((row, index) => {
+      const y = tableTop + 56 + index * rowHeight;
+      const fill = index === 0 ? green : index % 2 ? "#fff8ef" : cream;
+      return [
+        `<rect x="${left}" y="${y}" width="${usable}" height="${rowHeight}" fill="${fill}" stroke="#d3cec4" stroke-width="2"/>`,
+        `<rect x="${left + col.rank + col.name}" y="${y}" width="${col.points}" height="${rowHeight}" fill="${red}" stroke="${ink}" stroke-width="2"/>`,
+        svgText(String(index + 1), left + col.rank / 2, y + 36, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(compactText(row.name, 20), left + col.rank + 16, y + 36, { size: 24, weight: 900, fill: ink }),
+        svgText(String(row.knockoutPoints), left + col.rank + col.name + col.points / 2, y + 39, { size: 34, weight: 900, fill: "#ffffff", anchor: "middle" }),
+        svgText(String(row.knockoutPlayed), left + col.rank + col.name + col.points + col.played / 2, y + 36, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.knockoutExactHits), left + col.rank + col.name + col.points + col.played + col.exacts / 2, y + 36, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.knockoutWinnerHits), left + col.rank + col.name + col.points + col.played + col.exacts + col.winners / 2, y + 36, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.knockoutScorerHits), left + col.rank + col.name + col.points + col.played + col.exacts + col.winners + col.scorers / 2, y + 36, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+      ].join("");
+    }).join("");
+    const headersSvg = headers.map((header) => {
+      const textX = header.anchor === "start" ? header.x + 16 : header.x + header.width / 2;
+      return [
+        `<rect x="${header.x}" y="${tableTop}" width="${header.width}" height="56" fill="${pale}" stroke="${ink}" stroke-width="2"/>`,
+        svgText(header.label, textX, tableTop + 36, { size: 19, weight: 900, fill: ink, anchor: header.anchor === "start" ? undefined : "middle" }),
+      ].join("");
+    }).join("");
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="${width}" height="${height}" fill="${cream}"/>
+      <rect x="0" y="0" width="${width}" height="128" fill="${red}"/>
+      ${svgText("CK", 58, 82, { size: 34, weight: 900, fill: "#fff" })}
+      ${svgText("Copa Kahl", 114, 70, { size: 48, weight: 900, fill: "#fff" })}
+      ${svgText("Tabla eliminatorias", 114, 108, { size: 24, weight: 900, fill: "#fff1ec" })}
+      <rect x="${left}" y="144" width="${usable}" height="34" fill="#f4fff0" stroke="${ink}" stroke-width="2"/>
+      ${svgText(`${shareRows.length} participantes · ${data.playedKnockoutMatches} cruces con resultado · Actualizada ${updated}`, left + 16, 168, { size: 20, weight: 900, fill: muted })}
+      ${headersSvg}
+      ${rowsSvg || svgText("La tabla aparece cuando haya cruces.", left + 20, tableTop + 98, { size: 28, weight: 900 })}
+      <rect x="${left}" y="${height - 42}" width="${usable}" height="2" fill="${ink}"/>
+      ${svgText("Solo puntos de eliminatorias: exactos, clasificados y goleadores.", left, height - 16, { size: 18, weight: 900, fill: muted })}
+    </svg>`;
+  }
+
+  async function shareKnockoutStandingsImage() {
+    if (knockoutRows.length === 0 || shareStatus === "working") return;
+    setShareStatus("working");
+    setShareMessage("");
+    try {
+      const file = await svgToPngFile(buildKnockoutStandingsShareSvg(), `copa-kahl-eliminatorias-${new Date().toISOString().slice(0, 10)}.png`);
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: "Tabla eliminatorias Copa Kahl", text: "Tabla de eliminatorias de la Copa Kahl", files: [file] });
+        setShareMessage("Imagen de eliminatorias lista para compartir.");
+      } else {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name;
+        link.click();
+        URL.revokeObjectURL(url);
+        setShareMessage("Imagen de eliminatorias descargada.");
+      }
+    } catch (shareError) {
+      setShareMessage(shareError instanceof Error ? shareError.message : "No se pudo generar la imagen.");
+    } finally {
+      setShareStatus("idle");
+    }
+  }
+
   const dateHighlights = useMemo(() => {
     if (rows.length === 0) return [];
     const topRow = rows[0];
@@ -830,7 +928,21 @@ export default function TablaPage() {
             <strong>Tabla eliminatorias</strong>
             <span>{data.playedKnockoutMatches} cruces con resultado.</span>
           </div>
-          <b>Ver tabla</b>
+          <span className="knockoutMiniActions">
+            <b>Ver tabla</b>
+            <button
+              disabled={knockoutRows.length === 0 || shareStatus === "working"}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                void shareKnockoutStandingsImage();
+              }}
+              type="button"
+            >
+              {shareStatus === "working" ? <Loader2 className="spin" size={15} aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
+              Compartir
+            </button>
+          </span>
         </summary>
         <div className="knockoutMiniTableWrap">
           <table className="standingsTable knockoutMiniTable">
