@@ -376,7 +376,7 @@ export default function EliminatoriasPage() {
     return (
       <section className="compactHero">
         <div>
-          <p className="eyebrow">Eliminatorias</p>
+          <p className="eyebrow">Editar Prode</p>
           <h1>Cargando cruces.</h1>
         </div>
       </section>
@@ -389,7 +389,7 @@ export default function EliminatoriasPage() {
         <section className="compactHero">
           <div>
             <p className="eyebrow">Enviado</p>
-            <h1>Eliminatorias guardadas.</h1>
+            <h1>Prode guardado.</h1>
             <span>{name.trim()} ya tiene los cruces guardados en la base de datos.</span>
           </div>
           <div className="scoreSeal">
@@ -406,7 +406,7 @@ export default function EliminatoriasPage() {
     <form className="pageStack" onSubmit={handleSubmit}>
       <section className="compactHero">
         <div>
-          <p className="eyebrow">Eliminatorias</p>
+          <p className="eyebrow">Editar Prode</p>
           <h1>Marcador exacto.</h1>
           <span>Exactos, clasificados y goleador. Cada partido cierra 10 minutos antes de su horario.</span>
         </div>

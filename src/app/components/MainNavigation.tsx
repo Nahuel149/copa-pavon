@@ -8,7 +8,6 @@ import {
   Brackets,
   ChevronDown,
   LockKeyhole,
-  PencilLine,
   Table2,
   X,
 } from "lucide-react";
@@ -17,11 +16,10 @@ import { useState } from "react";
 const primaryItems = [
   { href: "/tabla", label: "Tabla", icon: Table2 },
   { href: "/pronosticos", label: "Pronosticos", icon: BarChart3 },
-  { href: "/eliminatorias", label: "Eliminatorias", icon: Brackets },
+  { href: "/eliminatorias", label: "Editar Prode", icon: Brackets },
 ];
 
 const moreItems = [
-  { href: "/editar", label: "Editar mi prode", icon: PencilLine },
   { href: "/reglas", label: "Reglas", icon: BookOpenCheck },
   { href: "/campeones", label: "Campeones", icon: Award },
   { href: "/admin", label: "Admin", icon: LockKeyhole },
