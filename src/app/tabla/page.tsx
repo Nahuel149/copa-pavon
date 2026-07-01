@@ -140,6 +140,23 @@ export default function TablaPage() {
   const [commentMessage, setCommentMessage] = useState("");
   const [showAllComments, setShowAllComments] = useState(false);
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
+  const knockoutRows = useMemo(
+    () =>
+      rows
+        .map((row) => ({
+          ...row,
+          knockoutPlayed: row.pointAudit.filter((entry) => entry.category === "knockout").length,
+        }))
+        .toSorted(
+          (a, b) =>
+            b.knockoutPoints - a.knockoutPoints ||
+            b.knockoutExactHits - a.knockoutExactHits ||
+            b.knockoutWinnerHits - a.knockoutWinnerHits ||
+            b.knockoutScorerHits - a.knockoutScorerHits ||
+            a.name.localeCompare(b.name, "es", { sensitivity: "base" }),
+        ),
+    [rows],
+  );
   const visibleComments = showAllComments ? comments : comments.slice(0, 10);
   const hiddenCommentCount = Math.max(comments.length - visibleComments.length, 0);
   const playedWorldCupMatches = data.playedMatches + data.playedKnockoutMatches;
@@ -805,6 +822,49 @@ export default function TablaPage() {
         ) : (
           <div className="emptyState">El grafico aparece cuando haya participantes guardados.</div>
         )}
+      </details>
+
+      <details className="knockoutMiniTableDisclosure" aria-label="Tabla solo de eliminatorias">
+        <summary>
+          <div>
+            <strong>Tabla eliminatorias</strong>
+            <span>{data.playedKnockoutMatches} cruces con resultado.</span>
+          </div>
+          <b>Ver tabla</b>
+        </summary>
+        <div className="knockoutMiniTableWrap">
+          <table className="standingsTable knockoutMiniTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Participante</th>
+                <th>Puntos</th>
+                <th>Jug.</th>
+                <th>Exactos</th>
+                <th>Clasif.</th>
+                <th>Goles</th>
+              </tr>
+            </thead>
+            <tbody>
+              {knockoutRows.map((row, index) => (
+                <tr key={row.submissionId}>
+                  <td>{index + 1}</td>
+                  <td title={row.name}>{shortParticipantName(row.name)}</td>
+                  <td className="pointsCell"><strong>{row.knockoutPoints}</strong></td>
+                  <td>{row.knockoutPlayed}</td>
+                  <td>{row.knockoutExactHits}</td>
+                  <td>{row.knockoutWinnerHits}</td>
+                  <td>{row.knockoutScorerHits}</td>
+                </tr>
+              ))}
+              {knockoutRows.length === 0 ? (
+                <tr>
+                  <td colSpan={7}>Aparece cuando haya cruces de eliminatorias cargados.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </details>
 
       <section className="shareInlinePanel standingsSharePanel" aria-label="Compartir tabla actual">
