@@ -395,7 +395,7 @@ export default function TablaPage() {
     const historicHitsLeader = rows
       .map((row) => ({
         row,
-        hits: row.exactHits + row.winnerHits + row.knockoutExactHits + row.knockoutWinnerHits,
+        hits: row.exactHits + row.winnerHits + row.knockoutExactHits + row.knockoutWinnerHits + row.groupHits,
       }))
       .sort(
         (a, b) =>
@@ -418,7 +418,7 @@ export default function TablaPage() {
       {
         label: "Mas aciertos historicos",
         value: historicHitsLeader?.row.name ?? "Sin datos",
-        detail: historicHitsLeader ? `${historicHitsLeader.hits} resultados` : "-",
+        detail: historicHitsLeader ? `${historicHitsLeader.hits} aciertos` : "-",
       },
       { label: "Ultimo de la B", value: last?.name ?? "-", detail: `${last?.totalPoints ?? 0} pts` },
     ];
