@@ -74,9 +74,26 @@ function buildStandingsHistory(submissions: Submission[], results: ResultStore) 
     );
   }
 
-  if (results.knockoutResults.length > 0) {
-    snapshots.push(buildHistorySnapshot("Elim.", "Eliminatorias", submissions, results));
-  }
+  const knockoutResultByFixture = new Map(results.knockoutResults.map((result) => [result.fixtureId, result]));
+  const playedKnockoutFixtures = results.knockoutFixtures
+    .filter((fixture) => knockoutResultByFixture.has(fixture.id))
+    .toSorted(compareKnockoutFixtureOrder);
+
+  playedKnockoutFixtures.forEach((fixture, index) => {
+    const cumulativeFixtures = playedKnockoutFixtures.slice(0, index + 1);
+    const cumulativeResults = cumulativeFixtures
+      .map((item) => knockoutResultByFixture.get(item.id))
+      .filter((result): result is NonNullable<typeof result> => Boolean(result));
+    snapshots.push(
+      buildHistorySnapshot(`${knockoutStageLabels[fixture.stage]} #${fixture.order}`, `${fixture.home} vs. ${fixture.away}`, submissions, {
+        matchResults: results.matchResults,
+        groupResults: effectiveGroupResults,
+        knockoutFixtures: cumulativeFixtures,
+        knockoutResults: cumulativeResults,
+        manualAdjustments: results.manualAdjustments ?? [],
+      }),
+    );
+  });
 
   return snapshots;
 }
