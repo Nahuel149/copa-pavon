@@ -3781,7 +3781,7 @@ tbody tr.relegationRow:hover {
 
   .mobileNavPrimary {
     display: grid;
-    grid-template-columns: 0.9fr 1.14fr 1.42fr 0.78fr;
+    grid-template-columns: 0.86fr 1.22fr 1.34fr 46px;
   }
 
   .mobileNavPrimary .navItem {
@@ -3791,13 +3791,18 @@ tbody tr.relegationRow:hover {
   }
 
   .mobileNavPrimary .moreNavButton {
-    gap: 4px;
+    gap: 0;
+    padding-inline: 0;
     font-size: 0.74rem;
   }
 
   .mobileNavPrimary .moreNavButton svg {
-    width: 15px;
-    height: 15px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .mobileNavPrimary .moreNavButton .moreNavChevron {
+    display: none;
   }
 
   .mobileNavMore {

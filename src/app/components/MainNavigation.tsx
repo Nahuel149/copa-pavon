@@ -8,6 +8,7 @@ import {
   Brackets,
   ChevronDown,
   LockKeyhole,
+  Menu,
   Table2,
   X,
 } from "lucide-react";
@@ -48,9 +49,16 @@ export function MainNavigation() {
       <nav className={open ? "mobileNav open" : "mobileNav"} aria-label="Navegacion principal">
         <div className="mobileNavPrimary">
           {primaryItems.map((item) => <NavLink key={item.href} {...item} onClick={() => setOpen(false)} />)}
-          <button className="navItem moreNavButton" onClick={() => setOpen((current) => !current)} type="button" aria-expanded={open}>
-            {open ? <X size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
-            <span className="navLabel"><strong>{open ? "Cerrar" : "Ver mas"}</strong></span>
+          <button
+            className="navItem moreNavButton"
+            onClick={() => setOpen((current) => !current)}
+            type="button"
+            aria-expanded={open}
+            aria-label={open ? "Cerrar menu" : "Abrir menu"}
+            title={open ? "Cerrar menu" : "Abrir menu"}
+          >
+            {open ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
+            <ChevronDown className="moreNavChevron" size={14} aria-hidden="true" />
           </button>
         </div>
         {open ? (
