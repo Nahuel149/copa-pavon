@@ -13,6 +13,21 @@
   --shadow: 9px 9px 0 #050505;
 }
 
+:root[data-theme="dark"] {
+  --ink: #f7f2e8;
+  --muted: #c8bfb0;
+  --paper: #211c19;
+  --paper-strong: #35261f;
+  --panel: #151311;
+  --line: #f7f2e8;
+  --red: #ff5538;
+  --blue: #5fa4c9;
+  --green: #61a877;
+  --amber: #e0a93f;
+  --cream: #201a16;
+  --shadow: 7px 7px 0 #050505;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -29,6 +44,13 @@ body {
     url("/kahl-assets/site-background.png") center / cover fixed no-repeat;
   color: var(--ink);
   font-family: "Arial Black", "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", "Trebuchet MS", Verdana, sans-serif;
+}
+
+:root[data-theme="dark"] body {
+  background:
+    linear-gradient(180deg, rgba(8, 10, 10, 0.9) 0%, rgba(18, 14, 12, 0.92) 52%, rgba(27, 15, 12, 0.94) 100%),
+    radial-gradient(circle at 18px 18px, rgba(255, 255, 255, 0.05) 2px, transparent 21px),
+    url("/kahl-assets/site-background.png") center / cover fixed no-repeat;
 }
 
 button,
@@ -67,6 +89,10 @@ a {
   background: rgba(255, 253, 247, 0.94);
   border-bottom: 4px solid var(--red);
   backdrop-filter: blur(12px);
+}
+
+:root[data-theme="dark"] .masthead {
+  background: rgba(16, 14, 12, 0.94);
 }
 
 .brand {
@@ -169,7 +195,8 @@ a {
 }
 
 .roundAction,
-.iconSubmit {
+.iconSubmit,
+.themeToggle {
   display: grid;
   place-items: center;
   width: 44px;
@@ -183,16 +210,121 @@ a {
 }
 
 .roundAction:hover,
-.iconSubmit:hover {
+.iconSubmit:hover,
+.themeToggle:hover {
   background: var(--red);
   color: #fff;
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--ink);
 }
 
+.themeToggle {
+  background: var(--panel);
+}
+
+:root[data-theme="dark"] .roundAction,
+:root[data-theme="dark"] .iconSubmit,
+:root[data-theme="dark"] .themeToggle {
+  background: #211c19;
+  color: var(--ink);
+}
+
 .content {
   min-width: 0;
   padding: 40px clamp(18px, 4vw, 54px) 118px;
+}
+
+:root[data-theme="dark"] .brand small,
+:root[data-theme="dark"] .heroCopy,
+:root[data-theme="dark"] .tableNote span,
+:root[data-theme="dark"] .tableNote p,
+:root[data-theme="dark"] .sectionHeader p,
+:root[data-theme="dark"] small {
+  color: var(--muted);
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  background: #100f0d;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #8f8578;
+}
+
+:root[data-theme="dark"] .metricCard,
+:root[data-theme="dark"] .tableShell,
+:root[data-theme="dark"] .dailyRecap,
+:root[data-theme="dark"] .raceGraph,
+:root[data-theme="dark"] .knockoutMiniTableDisclosure,
+:root[data-theme="dark"] .shareInlinePanel,
+:root[data-theme="dark"] .commentsPanel,
+:root[data-theme="dark"] .sectionHeader,
+:root[data-theme="dark"] .rulePanel,
+:root[data-theme="dark"] .formPanel,
+:root[data-theme="dark"] .matchPick,
+:root[data-theme="dark"] .matchSummary,
+:root[data-theme="dark"] .pollCard,
+:root[data-theme="dark"] .scoreCloud,
+:root[data-theme="dark"] .compactPredictionList,
+:root[data-theme="dark"] .playerPointPanel,
+:root[data-theme="dark"] .pointAuditEntry,
+:root[data-theme="dark"] .matchVideoPanel,
+:root[data-theme="dark"] .imageScatter,
+:root[data-theme="dark"] .championCard,
+:root[data-theme="dark"] .descensoCard,
+:root[data-theme="dark"] .adminPanel,
+:root[data-theme="dark"] details {
+  background-color: rgba(21, 19, 17, 0.96);
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .standingsTable,
+:root[data-theme="dark"] .standingsTable tbody,
+:root[data-theme="dark"] .standingsTable tr,
+:root[data-theme="dark"] .compactPredictionRow,
+:root[data-theme="dark"] .compactPredictionRow > span:last-child,
+:root[data-theme="dark"] .raceLegend,
+:root[data-theme="dark"] .commentList article,
+:root[data-theme="dark"] .shareCardPreview,
+:root[data-theme="dark"] .pointBreakdown article {
+  background: #151311;
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .standingsTable th,
+:root[data-theme="dark"] .compactPredictionRow strong,
+:root[data-theme="dark"] .selectedMatchBar strong,
+:root[data-theme="dark"] .tableButton,
+:root[data-theme="dark"] .raceCutSelector button,
+:root[data-theme="dark"] .raceQuickFilters button,
+:root[data-theme="dark"] .primaryAction.light,
+:root[data-theme="dark"] .knockoutMiniActions button {
+  background: #241f1a;
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .leaderRow,
+:root[data-theme="dark"] .knockoutMiniTable tbody tr:nth-child(1),
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.exact strong,
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.exact > span:last-child {
+  background: #183523;
+}
+
+:root[data-theme="dark"] .relegationRow,
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.miss strong,
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.miss > span:last-child {
+  background: #3b1d17;
+}
+
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.partial strong,
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.partial > span:last-child,
+:root[data-theme="dark"] tbody tr:nth-child(5n) {
+  background: #3a3019;
 }
 
 .pageStack {
@@ -3897,7 +4029,20 @@ tbody tr.relegationRow:hover {
   }
 
   .mastActions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 0;
+    padding: 0;
+  }
+
+  .mastActions .tableShortcut {
     display: none;
+  }
+
+  .themeToggle {
+    width: 38px;
   }
 
   .masthead .desktopNav {
