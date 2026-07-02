@@ -5403,3 +5403,51 @@ tbody tr.relegationRow:hover {
   color: #fffdf7;
   border-color: #fffdf7;
 }
+
+/* Specific dark-mode fixes for pronosticos group/share details. */
+:root[data-theme="dark"] .shareDaySelector button,
+:root[data-theme="dark"] .groupPhaseFold > summary strong,
+:root[data-theme="dark"] .roundStrip .roundTab {
+  background: #061a2f;
+  color: #fffdf7;
+  border-color: #fffdf7;
+  box-shadow: 3px 3px 0 rgba(255, 253, 247, 0.22);
+}
+
+:root[data-theme="dark"] .shareDaySelector button:not(.active):not(:disabled):hover,
+:root[data-theme="dark"] .groupPhaseFold > summary strong:hover {
+  background: #0f3558;
+  color: #fffdf7;
+}
+
+:root[data-theme="dark"] .shareDaySelector button:disabled,
+:root[data-theme="dark"] .groupPhaseFold > summary strong[aria-disabled="true"] {
+  background: #0d2946;
+  color: #91a5ba;
+  border-color: rgba(255, 253, 247, 0.55);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .shareDaySelector button.active,
+:root[data-theme="dark"] .roundStrip .roundTab.active {
+  background: var(--red);
+  color: #fffdf7;
+  border-color: #fffdf7;
+  box-shadow: 3px 3px 0 rgba(255, 253, 247, 0.35);
+}
+
+:root[data-theme="dark"] .goalScorerStrip p,
+:root[data-theme="dark"] .matchVideoPanel .goalScorerStrip p {
+  background: #061a2f;
+  color: #fffdf7;
+  border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] .goalScorerStrip p *,
+:root[data-theme="dark"] .goalScorerStrip .teamBadge,
+:root[data-theme="dark"] .goalScorerStrip .teamBadge span,
+:root[data-theme="dark"] .matchVideoPanel .goalScorerStrip p *,
+:root[data-theme="dark"] .matchVideoPanel .goalScorerStrip .teamBadge,
+:root[data-theme="dark"] .matchVideoPanel .goalScorerStrip .teamBadge span {
+  color: #fffdf7;
+}
