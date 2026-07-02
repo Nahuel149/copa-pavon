@@ -5271,3 +5271,135 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .dailyRecap .tableNote strong + span {
   display: inline-block;
 }
+
+/* Dark-mode contrast hardening for late-stage surfaces. */
+:root[data-theme="dark"] .compactHero,
+:root[data-theme="dark"] .heroControl,
+:root[data-theme="dark"] .adminGate,
+:root[data-theme="dark"] .validationPanel,
+:root[data-theme="dark"] .draftPanel,
+:root[data-theme="dark"] .matchCard,
+:root[data-theme="dark"] .matchCard.exact,
+:root[data-theme="dark"] .matchCard.choice,
+:root[data-theme="dark"] .shareInlinePanel,
+:root[data-theme="dark"] .shareCardPanel,
+:root[data-theme="dark"] .groupPhaseFold,
+:root[data-theme="dark"] .groupPredictionPanel,
+:root[data-theme="dark"] .resultCard,
+:root[data-theme="dark"] .resultCard.knockoutResult,
+:root[data-theme="dark"] .knockoutResult,
+:root[data-theme="dark"] .sourceConflictPanel,
+:root[data-theme="dark"] .deadlineCard,
+:root[data-theme="dark"] .deadlineCard.closed,
+:root[data-theme="dark"] .highlightPanel,
+:root[data-theme="dark"] .auditPanel {
+  background: #08223d;
+  color: #fffdf7;
+  border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] .sectionHeader p:not(.eyebrow),
+:root[data-theme="dark"] .compactHero span,
+:root[data-theme="dark"] .heroControl span,
+:root[data-theme="dark"] .adminGate span,
+:root[data-theme="dark"] .adminGate p,
+:root[data-theme="dark"] .validationPanel p,
+:root[data-theme="dark"] .draftPanel p,
+:root[data-theme="dark"] .matchCard h2 span,
+:root[data-theme="dark"] .matchCard small,
+:root[data-theme="dark"] .scoreInputs span,
+:root[data-theme="dark"] .scorerInput span,
+:root[data-theme="dark"] .adminTextInput span,
+:root[data-theme="dark"] .adminTextInput small,
+:root[data-theme="dark"] .deadlineCard span,
+:root[data-theme="dark"] .deadlineCard small,
+:root[data-theme="dark"] .resultCard span,
+:root[data-theme="dark"] .resultCard small,
+:root[data-theme="dark"] .resultCard label span,
+:root[data-theme="dark"] .shareInlinePanel .tableNote span,
+:root[data-theme="dark"] .shareCardPreview span,
+:root[data-theme="dark"] .shareCardPreview p,
+:root[data-theme="dark"] .groupPhaseFold > summary strong,
+:root[data-theme="dark"] .groupFocusBar strong,
+:root[data-theme="dark"] .auditPanel span,
+:root[data-theme="dark"] .auditPanel small {
+  color: #d8e8f6;
+}
+
+:root[data-theme="dark"] .matchCard h2,
+:root[data-theme="dark"] .matchCard h2 strong,
+:root[data-theme="dark"] .matchCard .teamBadge,
+:root[data-theme="dark"] .resultCard strong,
+:root[data-theme="dark"] .resultCard .teamBadge,
+:root[data-theme="dark"] .compactPredictionHeader strong,
+:root[data-theme="dark"] .shareInlinePanel .tableNote strong,
+:root[data-theme="dark"] .shareCardPreview strong,
+:root[data-theme="dark"] .groupPhaseFold > summary span,
+:root[data-theme="dark"] .deadlineCard strong,
+:root[data-theme="dark"] .sectionHeader h2 {
+  color: #fffdf7;
+}
+
+:root[data-theme="dark"] .editState,
+:root[data-theme="dark"] .editState.open,
+:root[data-theme="dark"] .editState.closed,
+:root[data-theme="dark"] .resultSource,
+:root[data-theme="dark"] .resultSource.manual,
+:root[data-theme="dark"] .resultSource.api {
+  background: #0f3558;
+  color: #fffdf7;
+  border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] button:disabled,
+:root[data-theme="dark"] .primaryAction:disabled,
+:root[data-theme="dark"] .primaryAction.light:disabled,
+:root[data-theme="dark"] .tableButton:disabled {
+  background: #123a5f;
+  color: #d8e8f6;
+  border-color: rgba(255, 253, 247, 0.82);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict > span:last-child .predictionStatusBadge,
+:root[data-theme="dark"] .predictionStatusBadge {
+  background: #0f3558;
+  color: #fffdf7;
+  border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.exact > span:last-child .predictionStatusBadge {
+  background: #e8f7df;
+  color: #143f25;
+  border-color: #e8f7df;
+}
+
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.partial > span:last-child .predictionStatusBadge {
+  background: #fff0b8;
+  color: #312100;
+  border-color: #fff0b8;
+}
+
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.miss > span:last-child .predictionStatusBadge,
+:root[data-theme="dark"] .compactPredictionRow.knockoutVerdict.pending > span:last-child .predictionStatusBadge {
+  background: #ffd8cf;
+  color: #45160d;
+  border-color: #ffd8cf;
+}
+
+:root[data-theme="dark"] .commentForm input,
+:root[data-theme="dark"] .commentForm textarea,
+:root[data-theme="dark"] .heroControl input,
+:root[data-theme="dark"] .adminGate input,
+:root[data-theme="dark"] .scoreInputs input,
+:root[data-theme="dark"] .pinInput > div,
+:root[data-theme="dark"] .scorerInput input,
+:root[data-theme="dark"] .highlightUrlInput input,
+:root[data-theme="dark"] .adminTextInput input,
+:root[data-theme="dark"] .scorerInput select,
+:root[data-theme="dark"] .highlightUrlInput select,
+:root[data-theme="dark"] .adminTextInput select {
+  background: #061a2f;
+  color: #fffdf7;
+  border-color: #fffdf7;
+}
