@@ -28,6 +28,10 @@ function isHiddenFromShare(name: string) {
   return name.trim().toLocaleLowerCase("es") === "ale..";
 }
 
+function totalHits(row: StandingRow) {
+  return row.predictionWins + row.exactHits + row.knockoutExactHits + row.knockoutScorerHits + row.groupHits;
+}
+
 function svgText(value: string, x: number, y: number, options: { size?: number; weight?: number; fill?: string; anchor?: string } = {}) {
   const size = options.size ?? 26;
   const weight = options.weight ?? 800;
@@ -317,15 +321,16 @@ export default function TablaPage() {
     const left = 36;
     const usable = width - left * 2;
     const col = {
-      rank: 68,
-      name: 320,
-      points: 100,
-      played: 85,
-      wins: 85,
-      losses: 85,
-      exacts: 85,
-      scorers: 80,
-      groups: 100,
+      rank: 58,
+      name: 275,
+      points: 90,
+      played: 75,
+      wins: 75,
+      losses: 75,
+      exacts: 75,
+      scorers: 70,
+      groups: 85,
+      totalHits: 105,
     };
     const headers = [
       { label: "#", x: left, width: col.rank, anchor: "middle" },
@@ -337,6 +342,7 @@ export default function TablaPage() {
       { label: "Exa", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses, width: col.exacts, anchor: "middle" },
       { label: "Gol", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts, width: col.scorers, anchor: "middle" },
       { label: "Grupos", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers, width: col.groups, anchor: "middle" },
+      { label: "Aciertos", x: left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers + col.groups, width: col.totalHits, anchor: "middle" },
     ];
     const tableWidth = usable;
     const updated = data.updatedAt ? formatArgentinaDateTime(data.updatedAt) : "Actualizando";
@@ -354,8 +360,9 @@ export default function TablaPage() {
         svgText(String(row.predictionWins), left + col.rank + col.name + col.points + col.played + col.wins / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
         svgText(String(row.predictionLosses), left + col.rank + col.name + col.points + col.played + col.wins + col.losses / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
         svgText(String(row.exactHits + row.knockoutExactHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
-        svgText(String(row.knockoutScorerHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
-        svgText(`${row.groupHits}/${data.decidedGroups}`, left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers + col.groups / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(row.knockoutScorerHits), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers / 2, y + 35, { size: 21, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(`${row.groupHits}/${data.decidedGroups}`, left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers + col.groups / 2, y + 35, { size: 21, weight: 900, fill: ink, anchor: "middle" }),
+        svgText(String(totalHits(row)), left + col.rank + col.name + col.points + col.played + col.wins + col.losses + col.exacts + col.scorers + col.groups + col.totalHits / 2, y + 35, { size: 22, weight: 900, fill: ink, anchor: "middle" }),
       ].join("");
     }).join("");
     const headersSvg = headers.map((header) => {
@@ -377,7 +384,7 @@ export default function TablaPage() {
       ${headersSvg}
       ${rowsSvg || svgText("La tabla aparece cuando haya envios.", left + 20, tableTop + 98, { size: 28, weight: 900 })}
       <rect x="${left}" y="${height - 46}" width="${tableWidth}" height="2" fill="${ink}"/>
-      ${svgText("Puntos, jugados, ganados, perdidos, exactos, goleadores y grupos acertados.", left, height - 18, { size: 18, weight: 900, fill: muted })}
+      ${svgText("Aciertos = ganados + exactos + goleadores + grupos acertados.", left, height - 18, { size: 18, weight: 900, fill: muted })}
     </svg>`;
   }
 
@@ -657,6 +664,7 @@ export default function TablaPage() {
             <col className="standingExactCol" />
             <col className="standingMetricCol" />
             <col className="standingGroupExactCol" />
+            <col className="standingMetricCol" />
           </colgroup>
           <thead>
             <tr>
@@ -669,6 +677,7 @@ export default function TablaPage() {
               <th>Exactos</th>
               <th>Goles</th>
               <th>Grupos</th>
+              <th>Aciertos</th>
             </tr>
           </thead>
           <tbody>
@@ -696,10 +705,11 @@ export default function TablaPage() {
                     <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
                     <td data-label="Goleadores">{row.knockoutScorerHits}</td>
                     <td data-label="Grupos exactos">{row.groupHits}/{data.decidedGroups}</td>
+                    <td data-label="Aciertos totales">{totalHits(row)}</td>
                   </tr>
                   {expandedPlayerId === row.submissionId ? (
                     <tr className="detailRow">
-                      <td colSpan={9}>
+                      <td colSpan={10}>
                         <div className="playerPointPanel">
                           <div className="playerPointSummary">
                             <div>
@@ -748,7 +758,7 @@ export default function TablaPage() {
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={9}>La tabla aparece cuando haya envios guardados.</td>
+                <td colSpan={10}>La tabla aparece cuando haya envios guardados.</td>
               </tr>
             ) : null}
           </tbody>
