@@ -115,6 +115,9 @@ type CommentsResponse = {
   error?: string;
 };
 
+type SortKey = "position" | "name" | "points" | "played" | "wins" | "losses" | "exacts" | "scorers" | "groups" | "totalHits";
+type SortDirection = "asc" | "desc";
+
 export default function TablaPage() {
   const [data, setData] = useState<StandingsResponse>({
     standings: [],
@@ -143,7 +146,46 @@ export default function TablaPage() {
   const [commentStatus, setCommentStatus] = useState<"idle" | "saving">("idle");
   const [commentMessage, setCommentMessage] = useState("");
   const [showAllComments, setShowAllComments] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: "position", direction: "asc" });
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
+  const sortedRows = useMemo(() => {
+    const originalPositionById = new Map(rows.map((row, index) => [row.submissionId, index + 1]));
+    const valueForSort = (row: StandingRow) => {
+      switch (sortConfig.key) {
+        case "position":
+          return originalPositionById.get(row.submissionId) ?? 0;
+        case "name":
+          return row.name;
+        case "points":
+          return row.totalPoints;
+        case "played":
+          return row.predictionMatchesPlayed;
+        case "wins":
+          return row.predictionWins;
+        case "losses":
+          return row.predictionLosses;
+        case "exacts":
+          return row.exactHits + row.knockoutExactHits;
+        case "scorers":
+          return row.knockoutScorerHits;
+        case "groups":
+          return row.groupHits;
+        case "totalHits":
+          return totalHits(row);
+      }
+    };
+
+    return rows.toSorted((a, b) => {
+      const aValue = valueForSort(a);
+      const bValue = valueForSort(b);
+      const comparison =
+        typeof aValue === "string" && typeof bValue === "string"
+          ? aValue.localeCompare(bValue, "es", { sensitivity: "base" })
+          : Number(aValue) - Number(bValue);
+      const direction = sortConfig.direction === "asc" ? 1 : -1;
+      return comparison * direction || a.name.localeCompare(b.name, "es", { sensitivity: "base" });
+    });
+  }, [rows, sortConfig]);
   const knockoutRows = useMemo(
     () =>
       rows
@@ -231,6 +273,31 @@ export default function TablaPage() {
 
   function colorForSubmission(submissionId: string, fallbackIndex: number) {
     return graphColorById.get(submissionId) ?? graphColors[fallbackIndex % graphColors.length];
+  }
+
+  function toggleSort(key: SortKey) {
+    setSortConfig((current) => {
+      if (current.key === key) {
+        return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+      }
+      return { key, direction: key === "name" || key === "position" ? "asc" : "desc" };
+    });
+  }
+
+  function sortButton(key: SortKey, label: string) {
+    const active = sortConfig.key === key;
+    const directionLabel = active ? (sortConfig.direction === "asc" ? "ascendente" : "descendente") : "sin ordenar";
+    return (
+      <button
+        aria-label={`Ordenar por ${label}, ${directionLabel}`}
+        className={`sortHeaderButton${active ? " active" : ""}`}
+        onClick={() => toggleSort(key)}
+        type="button"
+      >
+        <span>{label}</span>
+        <b aria-hidden="true">{active ? (sortConfig.direction === "asc" ? "↑" : "↓") : "↕"}</b>
+      </button>
+    );
   }
 
   function graphPoint(index: number, position: number) {
@@ -668,22 +735,22 @@ export default function TablaPage() {
           </colgroup>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Participante</th>
-              <th className="pointsHeader">Puntos</th>
-              <th>Jugados</th>
-              <th>Ganados</th>
-              <th>Perdidos</th>
-              <th>Exactos</th>
-              <th>Goles</th>
-              <th>Grupos</th>
-              <th>Aciertos</th>
+              <th>{sortButton("position", "#")}</th>
+              <th>{sortButton("name", "Participante")}</th>
+              <th className="pointsHeader">{sortButton("points", "Puntos")}</th>
+              <th>{sortButton("played", "Jugados")}</th>
+              <th>{sortButton("wins", "Ganados")}</th>
+              <th>{sortButton("losses", "Perdidos")}</th>
+              <th>{sortButton("exacts", "Exactos")}</th>
+              <th>{sortButton("scorers", "Goles")}</th>
+              <th>{sortButton("groups", "Grupos")}</th>
+              <th>{sortButton("totalHits", "Aciertos")}</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => {
+            {sortedRows.map((row, index) => {
               const isLeader = index === 0;
-              const isRelegation = rows.length > 1 && index >= rows.length - relegationCount;
+              const isRelegation = sortedRows.length > 1 && index >= sortedRows.length - relegationCount;
               return (
                 <Fragment key={row.submissionId}>
                   <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""}>

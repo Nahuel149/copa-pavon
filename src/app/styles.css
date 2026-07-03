@@ -3541,6 +3541,43 @@ tbody tr.relegationRow:hover {
   min-width: 180px;
 }
 
+.sortHeaderButton {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.sortHeaderButton span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sortHeaderButton b {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid currentColor;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.sortHeaderButton.active b {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 .positionCell {
   display: inline-flex;
   gap: 6px;
@@ -4521,6 +4558,16 @@ tbody tr.relegationRow:hover {
     text-align: center;
     text-overflow: clip;
     white-space: nowrap;
+  }
+
+  .sortHeaderButton {
+    gap: 2px;
+  }
+
+  .sortHeaderButton b {
+    width: 13px;
+    height: 13px;
+    font-size: 0.5rem;
   }
 
   .standingsTable col.standingPositionCol {
