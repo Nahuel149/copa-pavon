@@ -295,7 +295,6 @@ export default function TablaPage() {
         type="button"
       >
         <span>{label}</span>
-        <b aria-hidden="true">{active ? (sortConfig.direction === "asc" ? "↑" : "↓") : "↕"}</b>
       </button>
     );
   }
