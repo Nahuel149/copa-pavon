@@ -124,6 +124,19 @@ export default function EliminatoriasPage() {
       return acc;
     }, {});
   }, [fixtures]);
+  const stageGroups = useMemo(
+    () =>
+      knockoutStages
+        .map((stage) => {
+          const stageFixtures = (fixturesByStage[stage] ?? []).toSorted((a, b) => a.order - b.order);
+          const closed = stageFixtures.length > 0 && stageFixtures.every((fixture) => fixtureStatus[fixture.id]?.open === false);
+          return { stage, fixtures: stageFixtures, closed };
+        })
+        .filter((group) => group.fixtures.length > 0),
+    [fixtureStatus, fixturesByStage],
+  );
+  const activeStageGroups = stageGroups.filter((group) => !group.closed);
+  const closedStageGroups = stageGroups.filter((group) => group.closed);
 
   const importantPanel = (
     <section className="validationPanel dangerPanel" aria-live="polite">
@@ -372,6 +385,83 @@ export default function EliminatoriasPage() {
     setStatus("done");
   }
 
+  function renderFixtureCard(fixture: KnockoutFixture) {
+    const value = predictions[fixture.id] ?? { homeGoals: "", awayGoals: "", qualifiedTeam: "", goalScorer: "" };
+    const lock = fixtureStatus[fixture.id];
+    const fixtureOpen = lock?.open ?? true;
+    const deadline = lock?.editDeadline ? formatArgentinaDateTime(lock.editDeadline) : "10 min antes";
+    return (
+      <article className="matchCard exact" key={fixture.id}>
+        <div className="matchHeader">
+          <span>#{fixture.order}</span>
+          <strong>Eliminatoria exacta</strong>
+        </div>
+        <h2>
+          <TeamBadge team={fixture.home} />
+          <span>vs.</span>
+          <TeamBadge team={fixture.away} />
+        </h2>
+        <small className={fixtureOpen ? "editState open" : "editState closed"}>
+          {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
+        </small>
+        <div className="scoreInputs">
+          <label>
+            <TeamBadge compact team={fixture.home} />
+            <input
+              inputMode="numeric"
+              value={value.homeGoals}
+              onChange={(event) => setScore(fixture.id, "homeGoals", event.target.value)}
+              disabled={!isUnlocked || !fixtureOpen || status === "saving"}
+            />
+          </label>
+          <b>-</b>
+          <label>
+            <TeamBadge compact team={fixture.away} />
+            <input
+              inputMode="numeric"
+              value={value.awayGoals}
+              onChange={(event) => setScore(fixture.id, "awayGoals", event.target.value)}
+              disabled={!isUnlocked || !fixtureOpen || status === "saving"}
+            />
+          </label>
+        </div>
+        {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
+          <div className="penaltyQualifier" role="radiogroup" aria-label="Clasifica por penales">
+            <span>Clasifica por penales</span>
+            <div>
+              {(["home", "away"] as const).map((side) => {
+                const selected = value.qualifiedTeam === side;
+                return (
+                  <button
+                    aria-checked={selected}
+                    className={selected ? "penaltyOption selected" : "penaltyOption"}
+                    disabled={!isUnlocked || !fixtureOpen || status === "saving"}
+                    key={side}
+                    onClick={() => setQualifiedTeam(fixture.id, side)}
+                    role="radio"
+                    type="button"
+                  >
+                    <CheckCircle2 size={18} aria-hidden="true" />
+                    {side === "home" ? fixture.home : fixture.away}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+        <label className="scorerInput">
+          <span>Goleador del partido (+1)</span>
+          <input
+            value={value.goalScorer ?? ""}
+            onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
+            disabled={!isUnlocked || !fixtureOpen || status === "saving"}
+            placeholder="Ej: Messi, Haaland, Mbappe. Maximo 1 goleador, maximo 1 punto."
+          />
+        </label>
+      </article>
+    );
+  }
+
   if (status === "loading") {
     return (
       <section className="compactHero">
@@ -465,10 +555,10 @@ export default function EliminatoriasPage() {
       {fixtures.length === 0 ? (
         <section className="emptyState">Todavía no hay cruces cargados desde admin.</section>
       ) : (
-        Object.entries(fixturesByStage).map(([stage, stageFixtures]) => (
+        activeStageGroups.map(({ stage, fixtures: stageFixtures }) => (
           <section className="pageStack compactStack" key={stage}>
             <div className="sectionHeader">
-              <p className="eyebrow">{knockoutStageLabels[stage as keyof typeof knockoutStageLabels]}</p>
+              <p className="eyebrow">{knockoutStageLabels[stage]}</p>
               <h2>{stageFixtures.length} cruces</h2>
             </div>
             <div className="matchGrid">
@@ -577,6 +667,19 @@ export default function EliminatoriasPage() {
       </div>
 
       {validationPanel}
+      {closedStageGroups.length > 0 ? (
+        <section className="pageStack closedRoundsStack" aria-label="Rondas cerradas">
+          {closedStageGroups.map((group) => (
+            <details className="closedRoundFold" key={group.stage}>
+              <summary>
+                <span>{knockoutStageLabels[group.stage]}</span>
+                <strong>{group.fixtures.length} cruces cerrados</strong>
+              </summary>
+              <div className="matchGrid">{group.fixtures.map(renderFixtureCard)}</div>
+            </details>
+          ))}
+        </section>
+      ) : null}
       {importantPanel}
       {draftPanel}
       {knockoutRulesPanel}
