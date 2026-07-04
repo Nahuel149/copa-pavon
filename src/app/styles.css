@@ -1710,6 +1710,53 @@ a {
   padding: 4px 8px 8px 4px;
 }
 
+.knockoutStageSelector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 8px;
+  padding: 0 0 4px;
+}
+
+.knockoutStageSelector button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.86rem;
+  font-weight: 900;
+  box-shadow: 3px 3px 0 rgba(5, 5, 5, 0.2);
+  text-transform: uppercase;
+}
+
+.knockoutStageSelector button.active,
+.knockoutStageSelector button:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+.knockoutStageSelector strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  min-height: 24px;
+  padding: 0 6px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.knockoutStageSelector button.active strong,
+.knockoutStageSelector button:hover strong {
+  background: #fff;
+  color: var(--red);
+}
+
 .matchPick {
   display: grid;
   gap: 7px;
@@ -4463,6 +4510,17 @@ tbody tr.relegationRow:hover {
     margin-inline: -4px;
   }
 
+  .knockoutStageSelector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-inline: 4px;
+  }
+
+  .knockoutStageSelector button {
+    min-height: 38px;
+    padding: 7px 8px;
+    font-size: 0.78rem;
+  }
+
   .matchPick {
     flex-basis: min(276px, 84vw);
   }
@@ -5477,6 +5535,7 @@ tbody tr.relegationRow:hover {
 
 /* Specific dark-mode fixes for pronosticos group/share details. */
 :root[data-theme="dark"] .shareDaySelector button,
+:root[data-theme="dark"] .knockoutStageSelector button,
 :root[data-theme="dark"] .closedRoundFold > summary span,
 :root[data-theme="dark"] .groupPhaseFold > summary strong,
 :root[data-theme="dark"] .roundStrip .roundTab {
@@ -5487,6 +5546,7 @@ tbody tr.relegationRow:hover {
 }
 
 :root[data-theme="dark"] .shareDaySelector button:not(.active):not(:disabled):hover,
+:root[data-theme="dark"] .knockoutStageSelector button:not(.active):hover,
 :root[data-theme="dark"] .groupPhaseFold > summary strong:hover {
   background: #0f3558;
   color: #fffdf7;
@@ -5501,11 +5561,23 @@ tbody tr.relegationRow:hover {
 }
 
 :root[data-theme="dark"] .shareDaySelector button.active,
+:root[data-theme="dark"] .knockoutStageSelector button.active,
 :root[data-theme="dark"] .roundStrip .roundTab.active {
   background: var(--red);
   color: #fffdf7;
   border-color: #fffdf7;
   box-shadow: 3px 3px 0 rgba(255, 253, 247, 0.35);
+}
+
+:root[data-theme="dark"] .knockoutStageSelector strong {
+  background: #fffdf7;
+  color: #061a2f;
+}
+
+:root[data-theme="dark"] .knockoutStageSelector button.active strong,
+:root[data-theme="dark"] .knockoutStageSelector button:hover strong {
+  background: #fffdf7;
+  color: var(--red);
 }
 
 :root[data-theme="dark"] .goalScorerStrip p,

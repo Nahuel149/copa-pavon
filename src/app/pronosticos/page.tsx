@@ -5,7 +5,17 @@ import { BarChart3, Download, ExternalLink, Loader2, PlayCircle, Share2 } from "
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
-import { groups, knockoutStageLabels, matches, roundLabels, type GroupId, type KnockoutFixture, type Match, type MatchRound } from "@/lib/matches";
+import {
+  groups,
+  knockoutStageLabels,
+  knockoutStages,
+  matches,
+  roundLabels,
+  type GroupId,
+  type KnockoutFixture,
+  type Match,
+  type MatchRound,
+} from "@/lib/matches";
 import {
   choiceLabel,
   scoreKnockoutPredictionForFixture,
@@ -208,6 +218,19 @@ export default function PronosticosPage() {
   const knockoutFixtures = data?.results.knockoutFixtures ?? [];
   const selectedKnockoutFixture =
     knockoutFixtures.find((fixture) => fixture.id === selectedKnockoutFixtureId) ?? knockoutFixtures[0];
+  const knockoutStageGroups = useMemo(
+    () =>
+      knockoutStages
+        .map((stage) => ({
+          stage,
+          fixtures: knockoutFixtures.filter((fixture) => fixture.stage === stage).toSorted((a, b) => a.order - b.order),
+        }))
+        .filter((group) => group.fixtures.length > 0),
+    [knockoutFixtures],
+  );
+  const selectedKnockoutStage = selectedKnockoutFixture?.stage ?? knockoutStageGroups[0]?.stage;
+  const visibleKnockoutFixtures =
+    knockoutStageGroups.find((group) => group.stage === selectedKnockoutStage)?.fixtures ?? knockoutFixtures;
   const shareDayMatches = useMemo(() => matches.filter((match) => match.dateLabel === shareDay), [shareDay]);
   const resultByMatch = useMemo(
     () => new Map((data?.results.matchResults ?? []).map((result) => [result.matchId, result])),
@@ -674,7 +697,22 @@ export default function PronosticosPage() {
 
       <section className="predictionExplorer knockoutPredictionPanel">
         <aside className="matchPicker" aria-label="Cruces de eliminatorias">
-          {knockoutFixtures.map((fixture) => (
+          {knockoutStageGroups.length > 1 ? (
+            <div className="knockoutStageSelector" aria-label="Rondas de eliminatorias">
+              {knockoutStageGroups.map((group) => (
+                <button
+                  className={selectedKnockoutStage === group.stage ? "active" : ""}
+                  key={group.stage}
+                  onClick={() => setSelectedKnockoutFixtureId(group.fixtures[0]?.id ?? selectedKnockoutFixtureId)}
+                  type="button"
+                >
+                  <span>{knockoutStageLabels[group.stage]}</span>
+                  <strong>{group.fixtures.length}</strong>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {visibleKnockoutFixtures.map((fixture) => (
             <button
               className={selectedKnockoutFixture?.id === fixture.id ? "matchPick active" : "matchPick"}
               key={fixture.id}
