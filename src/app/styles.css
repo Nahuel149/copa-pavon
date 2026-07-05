@@ -1710,6 +1710,11 @@ a {
   padding: 4px 8px 8px 4px;
 }
 
+.knockoutMatchList {
+  grid-template-columns: repeat(var(--knockout-match-columns, 1), minmax(0, 1fr));
+  align-items: stretch;
+}
+
 .knockoutPickerColumn {
   display: grid;
   gap: 10px;

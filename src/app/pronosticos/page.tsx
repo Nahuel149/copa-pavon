@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { BarChart3, Download, ExternalLink, Loader2, PlayCircle, Share2 } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
@@ -209,19 +209,23 @@ export default function PronosticosPage() {
   }, [selectedMatchId]);
 
   useEffect(() => {
-    const firstFixture = data?.results.knockoutFixtures[0];
+    const stageOrder = new Map(knockoutStages.map((stage, index) => [stage, index]));
+    const firstFixture = data?.results.knockoutFixtures
+      .toSorted((a, b) => {
+        const stageDiff = (stageOrder.get(b.stage) ?? 0) - (stageOrder.get(a.stage) ?? 0);
+        if (stageDiff !== 0) return stageDiff;
+        return a.order - b.order;
+      })[0];
     if (!selectedKnockoutFixtureId && firstFixture) setSelectedKnockoutFixtureId(firstFixture.id);
   }, [data?.results.knockoutFixtures, selectedKnockoutFixtureId]);
 
   const roundMatches = useMemo(() => matches.filter((match) => match.round === activeRound), [activeRound]);
   const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? roundMatches[0] ?? matches[0];
   const knockoutFixtures = data?.results.knockoutFixtures ?? [];
-  const selectedKnockoutFixture =
-    knockoutFixtures.find((fixture) => fixture.id === selectedKnockoutFixtureId) ?? knockoutFixtures[0];
   const knockoutStageGroups = useMemo(() => {
     const stageOrder = new Map(knockoutStages.map((stage, index) => [stage, index]));
     const stagesInFixtures = Array.from(new Set(knockoutFixtures.map((fixture) => fixture.stage))).toSorted(
-      (a, b) => (stageOrder.get(a) ?? 99) - (stageOrder.get(b) ?? 99),
+      (a, b) => (stageOrder.get(b) ?? -1) - (stageOrder.get(a) ?? -1),
     );
     return stagesInFixtures
       .map((stage) => ({
@@ -230,6 +234,10 @@ export default function PronosticosPage() {
       }))
       .filter((group) => group.fixtures.length > 0);
   }, [knockoutFixtures]);
+  const selectedKnockoutFixture =
+    knockoutFixtures.find((fixture) => fixture.id === selectedKnockoutFixtureId) ??
+    knockoutStageGroups[0]?.fixtures[0] ??
+    knockoutFixtures[0];
   const selectedKnockoutStage = selectedKnockoutFixture?.stage ?? knockoutStageGroups[0]?.stage;
   const visibleKnockoutFixtures =
     knockoutStageGroups.find((group) => group.stage === selectedKnockoutStage)?.fixtures ?? knockoutFixtures;
@@ -714,7 +722,10 @@ export default function PronosticosPage() {
               ))}
             </div>
           ) : null}
-          <div className="matchPicker knockoutMatchList">
+          <div
+            className="matchPicker knockoutMatchList"
+            style={{ "--knockout-match-columns": Math.max(1, Math.ceil(visibleKnockoutFixtures.length / 4)) } as CSSProperties}
+          >
           {visibleKnockoutFixtures.map((fixture) => (
             <button
               className={selectedKnockoutFixture?.id === fixture.id ? "matchPick active" : "matchPick"}
