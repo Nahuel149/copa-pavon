@@ -218,16 +218,18 @@ export default function PronosticosPage() {
   const knockoutFixtures = data?.results.knockoutFixtures ?? [];
   const selectedKnockoutFixture =
     knockoutFixtures.find((fixture) => fixture.id === selectedKnockoutFixtureId) ?? knockoutFixtures[0];
-  const knockoutStageGroups = useMemo(
-    () =>
-      knockoutStages
-        .map((stage) => ({
-          stage,
-          fixtures: knockoutFixtures.filter((fixture) => fixture.stage === stage).toSorted((a, b) => a.order - b.order),
-        }))
-        .filter((group) => group.fixtures.length > 0),
-    [knockoutFixtures],
-  );
+  const knockoutStageGroups = useMemo(() => {
+    const stageOrder = new Map(knockoutStages.map((stage, index) => [stage, index]));
+    const stagesInFixtures = Array.from(new Set(knockoutFixtures.map((fixture) => fixture.stage))).toSorted(
+      (a, b) => (stageOrder.get(a) ?? 99) - (stageOrder.get(b) ?? 99),
+    );
+    return stagesInFixtures
+      .map((stage) => ({
+        stage,
+        fixtures: knockoutFixtures.filter((fixture) => fixture.stage === stage).toSorted((a, b) => a.order - b.order),
+      }))
+      .filter((group) => group.fixtures.length > 0);
+  }, [knockoutFixtures]);
   const selectedKnockoutStage = selectedKnockoutFixture?.stage ?? knockoutStageGroups[0]?.stage;
   const visibleKnockoutFixtures =
     knockoutStageGroups.find((group) => group.stage === selectedKnockoutStage)?.fixtures ?? knockoutFixtures;
@@ -696,7 +698,7 @@ export default function PronosticosPage() {
       {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
 
       <section className="predictionExplorer knockoutPredictionPanel">
-        <aside className="matchPicker" aria-label="Cruces de eliminatorias">
+        <aside className="knockoutPickerColumn" aria-label="Cruces de eliminatorias">
           {knockoutStageGroups.length > 1 ? (
             <div className="knockoutStageSelector" aria-label="Rondas de eliminatorias">
               {knockoutStageGroups.map((group) => (
@@ -712,6 +714,7 @@ export default function PronosticosPage() {
               ))}
             </div>
           ) : null}
+          <div className="matchPicker knockoutMatchList">
           {visibleKnockoutFixtures.map((fixture) => (
             <button
               className={selectedKnockoutFixture?.id === fixture.id ? "matchPick active" : "matchPick"}
@@ -724,6 +727,7 @@ export default function PronosticosPage() {
             </button>
           ))}
           {knockoutFixtures.length === 0 ? <div className="emptyState">Todavia no hay cruces de eliminatorias cargados.</div> : null}
+          </div>
         </aside>
 
         <section className="predictionInsight">

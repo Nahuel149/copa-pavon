@@ -1710,6 +1710,13 @@ a {
   padding: 4px 8px 8px 4px;
 }
 
+.knockoutPickerColumn {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+}
+
 .knockoutStageSelector {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
