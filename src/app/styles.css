@@ -2691,6 +2691,85 @@ a {
   font-size: 1rem;
 }
 
+.scorerInput select[data-role="star"] {
+  border-color: #f23b25;
+  background: #ffe4dd;
+}
+
+.scorerInput select[data-role="forward"] {
+  border-color: #dca624;
+  background: #fff2bd;
+}
+
+.scorerInput select[data-role="field"] {
+  border-color: #238657;
+  background: #dcf7e7;
+}
+
+.scorerLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scorerRolePill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border: 2px solid var(--ink);
+  padding: 2px 7px;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.scorerRolePill.star {
+  background: #ffd8cf;
+}
+
+.scorerRolePill.forward {
+  background: #fff0ad;
+}
+
+.scorerRolePill.field {
+  background: #d9f5e3;
+}
+
+.knockoutRuleNote {
+  display: grid;
+  gap: 6px;
+  border: 3px solid var(--ink);
+  background: #eef9ef;
+  box-shadow: 7px 7px 0 var(--shadow);
+  margin: 10px 0 18px;
+  padding: 14px 16px;
+}
+
+.knockoutRuleNote strong {
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.knockoutRuleNote span {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.compactRuleNote {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.compactRuleNote span {
+  font-size: 0.9rem;
+}
+
 .penaltyQualifier {
   display: grid;
   gap: 8px;
@@ -5430,6 +5509,7 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .sourceConflictPanel,
 :root[data-theme="dark"] .deadlineCard,
 :root[data-theme="dark"] .deadlineCard.closed,
+:root[data-theme="dark"] .knockoutRuleNote,
 :root[data-theme="dark"] .highlightPanel,
 :root[data-theme="dark"] .auditPanel {
   background: #08223d;
@@ -5452,6 +5532,7 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .adminTextInput small,
 :root[data-theme="dark"] .deadlineCard span,
 :root[data-theme="dark"] .deadlineCard small,
+:root[data-theme="dark"] .knockoutRuleNote span,
 :root[data-theme="dark"] .resultCard span,
 :root[data-theme="dark"] .resultCard small,
 :root[data-theme="dark"] .resultCard label span,
@@ -5476,6 +5557,7 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .shareCardPreview strong,
 :root[data-theme="dark"] .closedRoundFold > summary span,
 :root[data-theme="dark"] .groupPhaseFold > summary span,
+:root[data-theme="dark"] .knockoutRuleNote strong,
 :root[data-theme="dark"] .deadlineCard strong,
 :root[data-theme="dark"] .sectionHeader h2 {
   color: #fffdf7;
@@ -5606,4 +5688,39 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .matchVideoPanel .goalScorerStrip .teamBadge,
 :root[data-theme="dark"] .matchVideoPanel .goalScorerStrip .teamBadge span {
   color: #fffdf7;
+}
+
+:root[data-theme="dark"] .scorerInput select[data-role="star"] {
+  background: #4a1718;
+  color: #fffdf7;
+  border-color: #ff9a8d;
+}
+
+:root[data-theme="dark"] .scorerInput select[data-role="forward"] {
+  background: #433507;
+  color: #fffdf7;
+  border-color: #ffe08a;
+}
+
+:root[data-theme="dark"] .scorerInput select[data-role="field"] {
+  background: #0d3d2a;
+  color: #fffdf7;
+  border-color: #95efbd;
+}
+
+:root[data-theme="dark"] .scorerRolePill {
+  color: #fffdf7;
+  border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] .scorerRolePill.star {
+  background: #5a211e;
+}
+
+:root[data-theme="dark"] .scorerRolePill.forward {
+  background: #513f0b;
+}
+
+:root[data-theme="dark"] .scorerRolePill.field {
+  background: #0d4a31;
 }

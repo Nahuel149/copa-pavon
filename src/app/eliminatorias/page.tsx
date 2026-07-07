@@ -6,6 +6,7 @@ import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { isOptionalLateKnockoutFixture } from "@/lib/knockout-optional";
+import { getKnockoutScorerOptions, getKnockoutScorerRole, knockoutScorerRoleLabels } from "@/lib/knockout-rosters";
 import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
 import type { KnockoutPrediction, Submission } from "@/lib/prode";
 
@@ -33,6 +34,11 @@ type SavedKnockoutDraft = {
 };
 
 const knockoutDraftStorageKey = "copa-kahl-knockout-draft-v1";
+const variableScorerStages = new Set(["QF", "SF", "THIRD", "FINAL"]);
+
+function hasVariableQuarterfinalRules(stage: KnockoutFixture["stage"]) {
+  return variableScorerStages.has(stage);
+}
 
 function draftFromFixtures(fixtures: KnockoutFixture[]) {
   return fixtures.reduce<KnockoutDraft>((draft, fixture) => {
@@ -317,6 +323,74 @@ export default function EliminatoriasPage() {
     }));
   }
 
+  function renderScorerControl(fixture: KnockoutFixture, value: KnockoutDraft[string], fixtureOpen: boolean) {
+    const options = getKnockoutScorerOptions(fixture.home, fixture.away);
+    const selectedRole = getKnockoutScorerRole(fixture.home, fixture.away, value.goalScorer ?? "");
+    const hasSelectedOption = options.some((option) => option.name === value.goalScorer);
+    const disabled = !isUnlocked || !fixtureOpen || status === "saving";
+
+    if (!hasVariableQuarterfinalRules(fixture.stage) || options.length === 0) {
+      return (
+        <label className="scorerInput">
+          <span>Goleador del partido (+1)</span>
+          <input
+            value={value.goalScorer ?? ""}
+            onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
+            disabled={disabled}
+            placeholder="Ej: Messi, Haaland, Mbappe. Maximo 1 goleador, maximo 1 punto."
+          />
+        </label>
+      );
+    }
+
+    return (
+      <label className="scorerInput">
+        <span>Goleador del partido (+1/+2/+3)</span>
+        <select
+          value={value.goalScorer ?? ""}
+          onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
+          disabled={disabled}
+          data-role={selectedRole ?? ""}
+        >
+          <option value="">Sin goleador / 0-0</option>
+          {value.goalScorer && !hasSelectedOption ? <option value={value.goalScorer}>Actual: {value.goalScorer}</option> : null}
+          {(["home", "away"] as const).map((side) => {
+            const teamOptions = options.filter((option) => option.side === side);
+            if (teamOptions.length === 0) return null;
+            return (
+              <optgroup key={side} label={side === "home" ? fixture.home : fixture.away}>
+                {teamOptions.map((option) => (
+                  <option className={`scorerRoleOption ${option.role}`} key={`${option.team}-${option.name}`} value={option.name}>
+                    {option.name} - {knockoutScorerRoleLabels[option.role]}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
+        </select>
+        <small className="scorerLegend">
+          <b className="scorerRolePill star">Figura +1</b>
+          <b className="scorerRolePill forward">Delantero +2</b>
+          <b className="scorerRolePill field">Medio/defensa +3</b>
+        </small>
+      </label>
+    );
+  }
+
+  function renderQuarterfinalRuleNote(fixture: KnockoutFixture) {
+    if (!hasVariableQuarterfinalRules(fixture.stage)) return null;
+
+    return (
+      <section className="knockoutRuleNote compactRuleNote">
+        <strong>Regla desde cuartos</strong>
+        <span>
+          Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto,
+          bonus extra +3 por batacazo.
+        </span>
+      </section>
+    );
+  }
+
   async function handleLogin() {
     setLoginMessage("");
     setErrors([]);
@@ -404,6 +478,7 @@ export default function EliminatoriasPage() {
         <small className={fixtureOpen ? "editState open" : "editState closed"}>
           {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
         </small>
+        {renderQuarterfinalRuleNote(fixture)}
         <div className="scoreInputs">
           <label>
             <TeamBadge compact team={fixture.home} />
@@ -449,15 +524,7 @@ export default function EliminatoriasPage() {
             </div>
           </div>
         ) : null}
-        <label className="scorerInput">
-          <span>Goleador del partido (+1)</span>
-          <input
-            value={value.goalScorer ?? ""}
-            onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
-            disabled={!isUnlocked || !fixtureOpen || status === "saving"}
-            placeholder="Ej: Messi, Haaland, Mbappe. Maximo 1 goleador, maximo 1 punto."
-          />
-        </label>
+        {renderScorerControl(fixture, value, fixtureOpen)}
       </article>
     );
   }
@@ -581,6 +648,7 @@ export default function EliminatoriasPage() {
                     <small className={fixtureOpen ? "editState open" : "editState closed"}>
                       {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
                     </small>
+                    {renderQuarterfinalRuleNote(fixture)}
                     <div className="scoreInputs">
                       <label>
                         <TeamBadge compact team={fixture.home} />
@@ -626,15 +694,7 @@ export default function EliminatoriasPage() {
                         </div>
                       </div>
                     ) : null}
-                    <label className="scorerInput">
-                      <span>Goleador del partido (+1)</span>
-                      <input
-                        value={value.goalScorer ?? ""}
-                        onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
-                        disabled={!isUnlocked || !fixtureOpen || status === "saving"}
-                        placeholder="Ej: Messi, Haaland, Mbappe. Maximo 1 goleador, maximo 1 punto."
-                      />
-                    </label>
+                    {renderScorerControl(fixture, value, fixtureOpen)}
                   </article>
                 );
               })}

@@ -9,6 +9,7 @@ import {
   type KnockoutFixture,
   type KnockoutStage,
 } from "./matches";
+import { getKnockoutScorerRole, knockoutScorerRolePoints } from "./knockout-rosters";
 import { isKnockoutFixtureEditable } from "./knockout-deadlines";
 
 export type PredictionChoice = "home" | "draw" | "away";
@@ -130,7 +131,7 @@ export type ResultStore = {
 
 export type PointAuditEntry = {
   id: string;
-  category: "group-match" | "group" | "knockout" | "scorer";
+  category: "group-match" | "group" | "knockout" | "scorer" | "underdog";
   label: string;
   prediction: string;
   official: string;
@@ -328,6 +329,15 @@ function knockoutScorerBonusMatches(prediction: KnockoutPrediction, result: Knoc
   return scorerNameMatches(prediction.goalScorer, result.scorerNames);
 }
 
+function knockoutScorerBonusPoints(prediction: KnockoutPrediction, result: KnockoutResult, fixture?: KnockoutFixture) {
+  if (!knockoutScorerBonusMatches(prediction, result)) return 0;
+  if (!normalizeScorerName(prediction.goalScorer ?? "")) return 1;
+  if (!fixture || !underdogBonusStages.has(fixture.stage)) return 1;
+
+  const role = getKnockoutScorerRole(fixture.home, fixture.away, prediction.goalScorer ?? "");
+  return role ? knockoutScorerRolePoints[role] : 1;
+}
+
 export function getOutcome(homeGoals: number, awayGoals: number): PredictionChoice {
   if (homeGoals > awayGoals) return "home";
   if (awayGoals > homeGoals) return "away";
@@ -338,6 +348,38 @@ function getKnockoutQualifiedTeam(homeGoals: number, awayGoals: number, qualifie
   if (homeGoals > awayGoals) return "home";
   if (awayGoals > homeGoals) return "away";
   return qualifiedTeam;
+}
+
+const underdogBonusStages = new Set<KnockoutStage>(["QF", "SF", "THIRD", "FINAL"]);
+
+export function getKnockoutQualifierVoteCounts(fixture: KnockoutFixture | undefined, submissions: Submission[]) {
+  const votes = { home: 0, away: 0 };
+  if (!fixture) return votes;
+
+  for (const submission of submissions) {
+    const prediction = submission.knockoutPredictions?.find((item) => item.fixtureId === fixture.id);
+    if (!prediction) continue;
+    const qualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
+    if (qualified === "home" || qualified === "away") votes[qualified] += 1;
+  }
+
+  return votes;
+}
+
+export function getKnockoutUnderdogBonus(
+  prediction: KnockoutPrediction | undefined,
+  result: KnockoutResult | undefined,
+  fixture: KnockoutFixture | undefined,
+  submissions: Submission[],
+) {
+  if (!prediction || !result || !fixture || !underdogBonusStages.has(fixture.stage)) return 0;
+
+  const predictionQualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
+  const resultQualified = getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
+  if (!predictionQualified || !resultQualified || predictionQualified !== resultQualified) return 0;
+
+  const votes = getKnockoutQualifierVoteCounts(fixture, submissions);
+  return votes[predictionQualified] > 0 && votes[predictionQualified] <= 7 ? 3 : 0;
 }
 
 function knockoutWrongPenaltyExactPoints(stage = "R32") {
@@ -351,12 +393,13 @@ export function scoreKnockoutPredictionForFixture(
   prediction: KnockoutPrediction | undefined,
   result: KnockoutResult | undefined,
   fixture: KnockoutFixture | undefined,
+  options: { underdogBonus?: number } = {},
 ) {
   if (!result) {
-    return { basePoints: 0, scorerPoints: 0, totalPoints: 0, verdict: "pending" as const };
+    return { basePoints: 0, scorerPoints: 0, underdogPoints: 0, totalPoints: 0, verdict: "pending" as const };
   }
   if (!prediction) {
-    return { basePoints: 0, scorerPoints: 0, totalPoints: 0, verdict: "miss" as const };
+    return { basePoints: 0, scorerPoints: 0, underdogPoints: 0, totalPoints: 0, verdict: "miss" as const };
   }
 
   const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
@@ -382,9 +425,10 @@ export function scoreKnockoutPredictionForFixture(
     verdict = "partial";
   }
 
-  const scorerPoints = knockoutScorerBonusMatches(prediction, result) ? 1 : 0;
-  if (verdict === "miss" && scorerPoints > 0) verdict = "partial";
-  return { basePoints, scorerPoints, totalPoints: basePoints + scorerPoints, verdict };
+  const scorerPoints = knockoutScorerBonusPoints(prediction, result, fixture);
+  const underdogPoints = options.underdogBonus ?? 0;
+  if (verdict === "miss" && scorerPoints + underdogPoints > 0) verdict = "partial";
+  return { basePoints, scorerPoints, underdogPoints, totalPoints: basePoints + scorerPoints + underdogPoints, verdict };
 }
 
 export function choiceLabel(choice: PredictionChoice, home: string, away: string) {
@@ -882,7 +926,7 @@ export function getEffectiveGroupResults(results: ResultStore) {
   return [...results.groupResults, ...automatic];
 }
 
-export function scoreSubmission(submission: Submission, results: ResultStore): StandingRow {
+export function scoreSubmission(submission: Submission, results: ResultStore, allSubmissions: Submission[] = []): StandingRow {
   const resultByMatch = new Map(results.matchResults.map((result) => [result.matchId, result]));
   const effectiveGroupResults = getEffectiveGroupResults(results);
   const resultByGroup = new Map(effectiveGroupResults.map((result) => [result.groupId, result]));
@@ -1014,9 +1058,10 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
       verdict: baseVerdict,
     });
 
-    const scorerHit = knockoutScorerBonusMatches(prediction, result);
+    const scorerPoints = knockoutScorerBonusPoints(prediction, result, fixture);
+    const scorerHit = scorerPoints > 0;
     if (scorerHit) {
-      knockoutPoints += 1;
+      knockoutPoints += scorerPoints;
       knockoutScorerHits += 1;
     }
     pointAudit.push({
@@ -1025,9 +1070,26 @@ export function scoreSubmission(submission: Submission, results: ResultStore): S
       label: fixture ? `Goleador: ${fixture.home} vs. ${fixture.away}` : `Goleador: ${prediction.fixtureId}`,
       prediction: prediction.goalScorer?.trim() || "Sin goleador (0-0)",
       official: result.scorerNames?.join(", ") || "Sin goleadores",
-      points: scorerHit ? 1 : 0,
+      points: scorerPoints,
       verdict: scorerHit ? "correct" : "miss",
     });
+
+    const underdogPoints = getKnockoutUnderdogBonus(prediction, result, fixture, allSubmissions);
+    if (underdogPoints > 0) {
+      knockoutPoints += underdogPoints;
+      pointAudit.push({
+        id: `${prediction.fixtureId}-minority`,
+        category: "underdog",
+        label: fixture ? `MinorÃ­a: ${fixture.home} vs. ${fixture.away}` : `MinorÃ­a: ${prediction.fixtureId}`,
+        prediction:
+          fixture && predictionQualified
+            ? `Clasifica ${predictionQualified === "home" ? fixture.home : fixture.away}`
+            : "Clasificado elegido",
+        official: "Apuesta de 7 votos o menos",
+        points: underdogPoints,
+        verdict: "correct",
+      });
+    }
   }
 
   const predictionMatchesPlayed = playedMatchPredictions + playedKnockoutPredictions;
@@ -1071,6 +1133,6 @@ export function compareStandingRows(a: StandingRow, b: StandingRow) {
 export function buildStandings(submissions: Submission[], results: ResultStore, now = new Date()) {
   return submissions
     .filter((submission) => !isEliminatedFromKnockoutTable(submission, results, now))
-    .map((submission) => scoreSubmission(submission, results))
+    .map((submission) => scoreSubmission(submission, results, submissions))
     .sort(compareStandingRows);
 }

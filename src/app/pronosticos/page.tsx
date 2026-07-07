@@ -18,6 +18,7 @@ import {
 } from "@/lib/matches";
 import {
   choiceLabel,
+  getKnockoutUnderdogBonus,
   scoreKnockoutPredictionForFixture,
   serializeKnockoutPrediction,
   serializePrediction,
@@ -262,7 +263,9 @@ export default function PronosticosPage() {
     return (data?.submissions ?? [])
       .map((submission) => {
         const prediction = submission.knockoutPredictions?.find((item) => item.fixtureId === selectedKnockoutFixture.id);
-        const score = scoreKnockoutPredictionForFixture(prediction, selectedKnockoutResult, selectedKnockoutFixture);
+        const score = scoreKnockoutPredictionForFixture(prediction, selectedKnockoutResult, selectedKnockoutFixture, {
+          underdogBonus: getKnockoutUnderdogBonus(prediction, selectedKnockoutResult, selectedKnockoutFixture, data?.submissions ?? []),
+        });
         return {
           submission,
           prediction,
@@ -756,6 +759,16 @@ export default function PronosticosPage() {
                   </strong>
                 </p>
               </div>
+
+              {["QF", "SF", "THIRD", "FINAL"].includes(selectedKnockoutFixture.stage) ? (
+                <section className="knockoutRuleNote">
+                  <strong>Regla desde cuartos</strong>
+                  <span>
+                    Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto,
+                    bonus extra +3 por batacazo.
+                  </span>
+                </section>
+              ) : null}
 
               {!selectedKnockoutIsPublic ? (
                 <section className="validationPanel knockoutPrivateNotice">

@@ -4,6 +4,7 @@ import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knocko
 import { getMatchEditDeadline, getMatchEditStatus } from "./edit-deadline";
 import { getLateEditExcludedMatchIds } from "./edit-validation";
 import { groups, matches, type KnockoutFixture, type Match } from "./matches";
+import { knockoutTeamRosters } from "./knockout-rosters";
 import {
   buildStandings,
   countCompletePredictions,
@@ -760,6 +761,101 @@ describe("prode scoring", () => {
     expect(row.knockoutPoints).toBe(5);
     expect(row.knockoutExactHits).toBe(1);
     expect(row.knockoutScorerHits).toBe(1);
+  });
+
+  it("loads 26 scorer options per quarterfinal team", () => {
+    expect(Object.values(knockoutTeamRosters).every((roster) => roster.length === 26)).toBe(true);
+  });
+
+  it("keeps knockout scorer bonus fixed at one point before quarterfinals", () => {
+    const fixture: KnockoutFixture = { id: "k-r16-scorer", order: 1, stage: "R16", home: "Inglaterra", away: "Noruega" };
+    const result = { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: ["Erling Haaland"] };
+
+    expect(
+      scoreKnockoutPredictionForFixture(
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 2, goalScorer: "Erling Haaland" },
+        result,
+        fixture,
+      ),
+    ).toMatchObject({
+      basePoints: 2,
+      scorerPoints: 1,
+      totalPoints: 3,
+    });
+  });
+
+  it("scores quarterfinal scorer picks by role only from quarterfinals onward", () => {
+    const fixture: KnockoutFixture = { id: "k-qf-scorer", order: 1, stage: "QF", home: "Inglaterra", away: "Noruega" };
+
+    expect(
+      scoreKnockoutPredictionForFixture(
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 2, goalScorer: "Erling Haaland" },
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: ["Erling Haaland"] },
+        fixture,
+      ).scorerPoints,
+    ).toBe(1);
+    expect(
+      scoreKnockoutPredictionForFixture(
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 2, goalScorer: "Alexander Sorloth" },
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: ["Alexander Sorloth"] },
+        fixture,
+      ).scorerPoints,
+    ).toBe(2);
+    expect(
+      scoreKnockoutPredictionForFixture(
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 2, goalScorer: "Martin Odegaard" },
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: ["Martin Odegaard"] },
+        fixture,
+      ).scorerPoints,
+    ).toBe(3);
+  });
+
+  it("adds the minority qualifier bonus only from quarterfinals onward", () => {
+    const fixture: KnockoutFixture = { id: "k-qf-underdog", order: 1, stage: "QF", home: "Argentina", away: "Colombia" };
+    const submissions = Array.from({ length: 8 }, (_, index) => ({
+      ...submissionFromPayload(`Jugador ${index + 1}`),
+      knockoutPredictions: [
+        {
+          fixtureId: fixture.id,
+          homeGoals: index < 7 ? 2 : 0,
+          awayGoals: index < 7 ? 0 : 1,
+        },
+      ],
+    }));
+
+    const standings = buildStandings(submissions, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: fixture.id, homeGoals: 1, awayGoals: 0 }],
+    });
+
+    const argentinaPick = standings.find((row) => row.name === "Jugador 1");
+    const colombiaPick = standings.find((row) => row.name === "Jugador 8");
+    expect(argentinaPick?.knockoutPoints).toBe(6);
+    expect(argentinaPick?.pointAudit).toEqual(expect.arrayContaining([expect.objectContaining({ category: "underdog", points: 3 })]));
+    expect(colombiaPick?.knockoutPoints).toBe(0);
+  });
+
+  it("does not add a minority qualifier bonus in 16avos or octavos", () => {
+    const fixture: KnockoutFixture = { id: "k-r16-no-underdog", order: 1, stage: "R16", home: "Argentina", away: "Colombia" };
+    const submissions = Array.from({ length: 8 }, (_, index) => ({
+      ...submissionFromPayload(`R16 ${index + 1}`),
+      knockoutPredictions: [
+        {
+          fixtureId: fixture.id,
+          homeGoals: index < 7 ? 2 : 0,
+          awayGoals: index < 7 ? 0 : 1,
+        },
+      ],
+    }));
+
+    const standings = buildStandings(submissions, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [{ fixtureId: fixture.id, homeGoals: 1, awayGoals: 0 }],
+    });
+
+    expect(standings.find((row) => row.name === "R16 1")?.knockoutPoints).toBe(2);
   });
 
   it("sorts tied standings by alphabetical name after points, exacts and wins", () => {
