@@ -31,6 +31,7 @@ const knockoutTeamAliases: Record<string, string[]> = {
   Inglaterra: ["Inglaterra", "England"],
   Marruecos: ["Marruecos", "Morocco"],
   Noruega: ["Noruega", "Norway"],
+  Suiza: ["Suiza", "Switzerland", "Suisse", "Schweiz"],
 };
 
 export const knockoutTeamRosters: Record<string, KnockoutRosterPlayer[]> = {
@@ -257,6 +258,34 @@ export const knockoutTeamRosters: Record<string, KnockoutRosterPlayer[]> = {
     { name: "Mats Moller Daehli", role: "field" },
     { name: "Sander Tronstad", role: "field" },
     { name: "Bard Finne", role: "forward" },
+  ],
+  Suiza: [
+    { name: "Breel Embolo", role: "star" },
+    { name: "Noah Okafor", role: "forward" },
+    { name: "Dan Ndoye", role: "forward" },
+    { name: "Ruben Vargas", role: "forward" },
+    { name: "Zeki Amdouni", role: "forward" },
+    { name: "Andi Zeqiri", role: "forward" },
+    { name: "Haris Seferovic", role: "forward" },
+    { name: "Yann Sommer", role: "field" },
+    { name: "Gregor Kobel", role: "field" },
+    { name: "Yvon Mvogo", role: "field" },
+    { name: "Manuel Akanji", role: "field" },
+    { name: "Nico Elvedi", role: "field" },
+    { name: "Ricardo Rodriguez", role: "field" },
+    { name: "Fabian Schar", role: "field" },
+    { name: "Silvan Widmer", role: "field" },
+    { name: "Becir Omeragic", role: "field" },
+    { name: "Eray Comert", role: "field" },
+    { name: "Remo Freuler", role: "field" },
+    { name: "Granit Xhaka", role: "field" },
+    { name: "Denis Zakaria", role: "field" },
+    { name: "Michel Aebischer", role: "field" },
+    { name: "Djibril Sow", role: "field" },
+    { name: "Vincent Sierro", role: "field" },
+    { name: "Fabian Rieder", role: "field" },
+    { name: "Xherdan Shaqiri", role: "field" },
+    { name: "Ardon Jashari", role: "field" },
   ],
 };
 

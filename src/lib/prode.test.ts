@@ -4,7 +4,7 @@ import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knocko
 import { getMatchEditDeadline, getMatchEditStatus } from "./edit-deadline";
 import { getLateEditExcludedMatchIds } from "./edit-validation";
 import { groups, matches, type KnockoutFixture, type Match } from "./matches";
-import { knockoutTeamRosters } from "./knockout-rosters";
+import { getKnockoutRoster, knockoutTeamRosters } from "./knockout-rosters";
 import {
   buildStandings,
   countCompletePredictions,
@@ -765,6 +765,13 @@ describe("prode scoring", () => {
 
   it("loads 26 scorer options per quarterfinal team", () => {
     expect(Object.values(knockoutTeamRosters).every((roster) => roster.length === 26)).toBe(true);
+  });
+
+  it("has 26 scorer options for every current quarterfinal team", () => {
+    const currentQuarterfinalTeams = ["Francia", "Marruecos", "Noruega", "Inglaterra", "Espana", "Belgica", "Argentina", "Suiza"];
+    expect(currentQuarterfinalTeams.map((team) => [team, getKnockoutRoster(team).length])).toEqual(
+      currentQuarterfinalTeams.map((team) => [team, 26]),
+    );
   });
 
   it("keeps knockout scorer bonus fixed at one point before quarterfinals", () => {
