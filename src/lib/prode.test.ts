@@ -764,6 +764,9 @@ describe("prode scoring", () => {
   });
 
   it("loads 26 scorer options per quarterfinal team", () => {
+    expect(Object.keys(knockoutTeamRosters).sort()).toEqual(
+      ["Argentina", "Belgica", "Espana", "Francia", "Inglaterra", "Marruecos", "Noruega", "Suiza"].sort(),
+    );
     expect(Object.values(knockoutTeamRosters).every((roster) => roster.length === 26)).toBe(true);
   });
 
