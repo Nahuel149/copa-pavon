@@ -186,9 +186,9 @@ export const knockoutStageScoring: Record<KnockoutStage, { exact: number; winner
   R32: { exact: 4, winner: 2, winnerLabel: "ganador clasificado" },
   R16: { exact: 4, winner: 2, winnerLabel: "ganador clasificado" },
   QF: { exact: 5, winner: 3, winnerLabel: "ganador clasificado" },
-  SF: { exact: 6, winner: 4, winnerLabel: "ganador clasificado" },
-  THIRD: { exact: 4, winner: 2, winnerLabel: "ganador" },
-  FINAL: { exact: 8, winner: 5, winnerLabel: "campeon correcto" },
+  SF: { exact: 7, winner: 4, winnerLabel: "ganador clasificado" },
+  THIRD: { exact: 7, winner: 4, winnerLabel: "ganador" },
+  FINAL: { exact: 9, winner: 5, winnerLabel: "campeon correcto" },
 };
 
 export const exactScoreMatches = matches.filter((match) => match.exactScore);

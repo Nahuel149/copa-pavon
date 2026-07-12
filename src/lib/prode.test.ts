@@ -327,7 +327,7 @@ describe("prode scoring", () => {
       knockoutResults: [{ fixtureId: "k-final", homeGoals: 2, awayGoals: 1 }],
     });
 
-    expect(row.knockoutPoints).toBe(8);
+    expect(row.knockoutPoints).toBe(9);
     expect(row.knockoutExactHits).toBe(1);
     expect(row.knockoutWinnerHits).toBe(0);
     expect(row.predictionMatchesPlayed).toBe(1);
@@ -377,6 +377,7 @@ describe("prode scoring", () => {
     const cases = [
       { stage: "QF" as const, points: 3 },
       { stage: "SF" as const, points: 4 },
+      { stage: "THIRD" as const, points: 4 },
       { stage: "FINAL" as const, points: 5 },
     ];
 

@@ -129,7 +129,7 @@ export default function ReglasPage() {
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
-                Empate exacto con clasificado errado: 2 pts en 16avos/octavos/tercer puesto, 3 en cuartos, 4 en semis y 5 en final.
+                Empate exacto con clasificado errado: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 5 en final.
               </p>
             </article>
           );

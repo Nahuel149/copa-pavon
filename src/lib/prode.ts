@@ -382,11 +382,8 @@ export function getKnockoutUnderdogBonus(
   return votes[predictionQualified] > 0 && votes[predictionQualified] <= 7 ? 3 : 0;
 }
 
-function knockoutWrongPenaltyExactPoints(stage = "R32") {
-  if (stage === "QF") return 3;
-  if (stage === "SF") return 4;
-  if (stage === "FINAL") return 5;
-  return 2;
+function knockoutWrongPenaltyExactPoints(stage: KnockoutStage = "R32") {
+  return knockoutStageScoring[stage].winner;
 }
 
 export function scoreKnockoutPredictionForFixture(

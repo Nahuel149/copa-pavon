@@ -207,7 +207,7 @@ export default function EliminatoriasPage() {
             <p>
               Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha:{" "}
               {knockoutStageSchedule[stage]}. Si el marcador queda empatado tras 120&apos; y errás el clasificado por
-              penales, suma parcial: 2 pts en 16avos/octavos/tercer puesto, 3 en cuartos, 4 en semis y 5 en final.
+              penales, suma parcial: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 5 en final.
               Goleador acertado: +1. Vacio suma si sale 0-0.
             </p>
           </article>
