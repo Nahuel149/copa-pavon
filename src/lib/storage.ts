@@ -455,17 +455,19 @@ function cleanComment(comment: Document | TablaComment): TablaComment {
   };
 }
 
-export async function readTablaComments(limit = 40) {
+export async function readTablaComments(limit?: number) {
   const collections = await getMongoCollections();
   if (collections) {
-    const comments = await collections.comments.find({}).sort({ createdAt: -1 }).limit(limit).toArray();
+    const query = collections.comments.find({}).sort({ createdAt: -1 });
+    const comments = typeof limit === "number" ? await query.limit(limit).toArray() : await query.toArray();
     return comments.map(cleanComment).filter((comment) => comment.name && comment.comment);
   }
 
   await ensureCommentsFile();
   const raw = await fs.readFile(commentsPath, "utf8");
   const store = JSON.parse(raw) as { comments?: TablaComment[] };
-  return (Array.isArray(store.comments) ? store.comments : []).map(cleanComment).filter((comment) => comment.name && comment.comment).slice(0, limit);
+  const comments = (Array.isArray(store.comments) ? store.comments : []).map(cleanComment).filter((comment) => comment.name && comment.comment);
+  return typeof limit === "number" ? comments.slice(0, limit) : comments;
 }
 
 export async function appendTablaComment(input: { name: string; comment: string }) {
@@ -486,7 +488,7 @@ export async function appendTablaComment(input: { name: string; comment: string 
   const store = JSON.parse(raw) as { comments?: TablaComment[] };
   const comments = Array.isArray(store.comments) ? store.comments : [];
   comments.unshift(entry);
-  await fs.writeFile(commentsPath, JSON.stringify({ comments: comments.slice(0, 200) }, null, 2), "utf8");
+  await fs.writeFile(commentsPath, JSON.stringify({ comments }, null, 2), "utf8");
   return entry;
 }
 
