@@ -2452,19 +2452,18 @@ a {
   text-transform: uppercase;
 }
 
-.commentReactions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.commentReactionPicker {
+  position: relative;
+  width: fit-content;
   margin-top: 4px;
 }
 
+.commentReactionTrigger,
 .commentReaction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 38px;
   min-height: 32px;
   padding: 3px 8px;
   border: 2px solid var(--ink);
@@ -2476,31 +2475,62 @@ a {
   transition: transform 140ms ease, background 140ms ease, color 140ms ease;
 }
 
+.commentReactionTrigger {
+  min-width: 112px;
+}
+
+.commentReactionOptions {
+  position: absolute;
+  z-index: 4;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 174px;
+  padding: 7px;
+  border: 2px solid var(--ink);
+  background: var(--panel);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.commentReaction {
+  min-width: 38px;
+}
+
 .commentReaction b {
   font-size: 0.72rem;
 }
 
+.commentReactionTrigger:hover:not(:disabled),
 .commentReaction:hover:not(:disabled) {
   background: var(--paper-strong);
   transform: translateY(-1px);
 }
 
-.commentReaction.selected {
+.commentReactionTrigger.selected {
   background: var(--red);
   color: #fff;
 }
 
+:root[data-theme="dark"] .commentReactionTrigger,
 :root[data-theme="dark"] .commentReaction {
   background: #0b2745;
   border-color: #fffdf7;
   color: #fffdf7;
 }
 
+:root[data-theme="dark"] .commentReactionOptions {
+  background: #0b2745;
+  border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] .commentReactionTrigger:hover:not(:disabled),
 :root[data-theme="dark"] .commentReaction:hover:not(:disabled) {
   background: #16466e;
 }
 
-:root[data-theme="dark"] .commentReaction.selected {
+:root[data-theme="dark"] .commentReactionTrigger.selected {
   background: var(--red);
   color: #fff;
 }

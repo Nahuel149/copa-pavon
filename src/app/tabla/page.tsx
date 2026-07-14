@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Download, Loader2, MessageSquare, RefreshCw, Send, Share2, Trophy } from "lucide-react";
+import { ChevronDown, Download, Loader2, MessageSquare, RefreshCw, Send, Share2, SmilePlus, Trophy } from "lucide-react";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { tablaReactionEmojis, type TablaCommentReactions, type TablaReactionEmoji } from "@/lib/comment-reactions";
@@ -149,7 +149,8 @@ export default function TablaPage() {
   const [commentStatus, setCommentStatus] = useState<"idle" | "saving">("idle");
   const [commentMessage, setCommentMessage] = useState("");
   const [showAllComments, setShowAllComments] = useState(false);
-  const [selectedCommentReactions, setSelectedCommentReactions] = useState<Record<string, TablaReactionEmoji[]>>({});
+  const [selectedCommentReactions, setSelectedCommentReactions] = useState<Record<string, TablaReactionEmoji>>({});
+  const [openCommentReactionPicker, setOpenCommentReactionPicker] = useState<string | null>(null);
   const [reactionSaving, setReactionSaving] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: "position", direction: "asc" });
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
@@ -676,7 +677,7 @@ export default function TablaPage() {
   }
 
   async function addCommentReaction(commentId: string, reaction: TablaReactionEmoji) {
-    if (selectedCommentReactions[commentId]?.includes(reaction)) return;
+    if (selectedCommentReactions[commentId]) return;
 
     const reactionKey = `${commentId}:${reaction}`;
     setReactionSaving(reactionKey);
@@ -692,10 +693,11 @@ export default function TablaPage() {
 
       setComments((current) => current.map((comment) => (comment.id === commentId ? body.comment as TablaComment : comment)));
       setSelectedCommentReactions((current) => {
-        const next = { ...current, [commentId]: [...(current[commentId] ?? []), reaction] };
+        const next = { ...current, [commentId]: reaction };
         window.localStorage.setItem(commentReactionStorageKey, JSON.stringify(next));
         return next;
       });
+      setOpenCommentReactionPicker(null);
     } catch (reactionError) {
       setCommentMessage(reactionError instanceof Error ? reactionError.message : "No se pudo guardar la reaccion.");
     } finally {
@@ -720,9 +722,13 @@ export default function TablaPage() {
       const selected = Object.fromEntries(
         Object.entries(stored).map(([commentId, reactions]) => [
           commentId,
-          Array.isArray(reactions) ? reactions.filter((reaction): reaction is TablaReactionEmoji => tablaReactionEmojis.includes(reaction as TablaReactionEmoji)) : [],
+          Array.isArray(reactions)
+            ? reactions.find((reaction): reaction is TablaReactionEmoji => tablaReactionEmojis.includes(reaction as TablaReactionEmoji))
+            : tablaReactionEmojis.includes(reactions as TablaReactionEmoji)
+              ? reactions
+              : undefined,
         ]),
-      ) as Record<string, TablaReactionEmoji[]>;
+      ) as Record<string, TablaReactionEmoji>;
       setSelectedCommentReactions(selected);
     } catch {
       window.localStorage.removeItem(commentReactionStorageKey);
@@ -1154,26 +1160,50 @@ export default function TablaPage() {
             <article key={comment.id}>
               <strong>{comment.name}</strong>
               <p>{comment.comment}</p>
-              <div className="commentReactions" aria-label={`Reacciones para el comentario de ${comment.name}`}>
-                {tablaReactionEmojis.map((reaction) => {
-                  const selected = selectedCommentReactions[comment.id]?.includes(reaction) ?? false;
-                  const saving = reactionSaving === `${comment.id}:${reaction}`;
-                  const count = comment.reactions?.[reaction] ?? 0;
+              <div className="commentReactionPicker" aria-label={`Reacciones para el comentario de ${comment.name}`}>
+                {(() => {
+                  const selectedReaction = selectedCommentReactions[comment.id];
+                  const totalReactions = tablaReactionEmojis.reduce((total, reaction) => total + (comment.reactions?.[reaction] ?? 0), 0);
+                  const isOpen = openCommentReactionPicker === comment.id;
+                  const isSaving = reactionSaving?.startsWith(`${comment.id}:`) ?? false;
                   return (
-                    <button
-                      aria-label={`Reaccionar ${reaction}${count > 0 ? `, ${count} reacciones` : ""}`}
-                      className={`commentReaction${selected ? " selected" : ""}`}
-                      disabled={selected || saving}
-                      key={reaction}
-                      onClick={() => void addCommentReaction(comment.id, reaction)}
-                      title={selected ? "Ya reaccionaste" : `Reaccionar ${reaction}`}
-                      type="button"
-                    >
-                      <span aria-hidden="true">{reaction}</span>
-                      {count > 0 ? <b>{count}</b> : null}
-                    </button>
+                    <>
+                      <button
+                        aria-expanded={isOpen}
+                        aria-haspopup="true"
+                        className={`commentReactionTrigger${selectedReaction ? " selected" : ""}`}
+                        disabled={Boolean(selectedReaction) || isSaving}
+                        onClick={() => setOpenCommentReactionPicker((current) => (current === comment.id ? null : comment.id))}
+                        type="button"
+                      >
+                        {selectedReaction ? <span aria-hidden="true">{selectedReaction}</span> : <SmilePlus size={16} aria-hidden="true" />}
+                        <span>{selectedReaction ? "Reaccionaste" : "Reaccionar"}</span>
+                        {!selectedReaction ? <ChevronDown size={15} aria-hidden="true" /> : null}
+                        {totalReactions > 0 ? <b>{totalReactions}</b> : null}
+                      </button>
+                      {isOpen ? (
+                        <div className="commentReactionOptions" role="group" aria-label="Elegir una reaccion">
+                          {tablaReactionEmojis.map((reaction) => {
+                            const count = comment.reactions?.[reaction] ?? 0;
+                            return (
+                              <button
+                                aria-label={`Reaccionar ${reaction}${count > 0 ? `, ${count} reacciones` : ""}`}
+                                className="commentReaction"
+                                disabled={isSaving}
+                                key={reaction}
+                                onClick={() => void addCommentReaction(comment.id, reaction)}
+                                type="button"
+                              >
+                                <span aria-hidden="true">{reaction}</span>
+                                {count > 0 ? <b>{count}</b> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </>
                   );
-                })}
+                })()}
               </div>
               <small>{formatArgentinaDateTime(comment.createdAt)}</small>
             </article>
