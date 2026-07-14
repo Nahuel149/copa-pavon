@@ -2452,6 +2452,59 @@ a {
   text-transform: uppercase;
 }
 
+.commentReactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.commentReaction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 38px;
+  min-height: 32px;
+  padding: 3px 8px;
+  border: 2px solid var(--ink);
+  background: var(--panel);
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.commentReaction b {
+  font-size: 0.72rem;
+}
+
+.commentReaction:hover:not(:disabled) {
+  background: var(--paper-strong);
+  transform: translateY(-1px);
+}
+
+.commentReaction.selected {
+  background: var(--red);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .commentReaction {
+  background: #0b2745;
+  border-color: #fffdf7;
+  color: #fffdf7;
+}
+
+:root[data-theme="dark"] .commentReaction:hover:not(:disabled) {
+  background: #16466e;
+}
+
+:root[data-theme="dark"] .commentReaction.selected {
+  background: var(--red);
+  color: #fff;
+}
+
 .commentsMoreButton {
   justify-self: start;
 }

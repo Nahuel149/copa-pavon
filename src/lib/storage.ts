@@ -11,6 +11,12 @@ import {
   type Submission,
   type SubmissionStore,
 } from "./prode";
+import {
+  emptyTablaCommentReactions,
+  normalizeTablaCommentReactions,
+  type TablaCommentReactions,
+  type TablaReactionEmoji,
+} from "./comment-reactions";
 
 const dataDir = process.env.PRODE_DATA_DIR ?? path.join(process.cwd(), "data");
 const storePath = path.join(dataDir, "submissions.json");
@@ -50,6 +56,7 @@ export type TablaComment = {
   name: string;
   comment: string;
   createdAt: string;
+  reactions: TablaCommentReactions;
 };
 
 let mongoClientPromise: Promise<MongoClient> | null = null;
@@ -452,6 +459,7 @@ function cleanComment(comment: Document | TablaComment): TablaComment {
     name: String(comment.name ?? "").trim().replace(/\s+/g, " ").slice(0, 40),
     comment: String(comment.comment ?? "").trim().replace(/\s+/g, " ").slice(0, 240),
     createdAt: typeof comment.createdAt === "string" ? comment.createdAt : new Date().toISOString(),
+    reactions: normalizeTablaCommentReactions(comment.reactions),
   };
 }
 
@@ -476,6 +484,7 @@ export async function appendTablaComment(input: { name: string; comment: string 
     name: input.name.trim().replace(/\s+/g, " ").slice(0, 40),
     comment: input.comment.trim().replace(/\s+/g, " ").slice(0, 240),
     createdAt: new Date().toISOString(),
+    reactions: emptyTablaCommentReactions(),
   };
   const collections = await getMongoCollections();
   if (collections) {
@@ -490,6 +499,32 @@ export async function appendTablaComment(input: { name: string; comment: string 
   comments.unshift(entry);
   await fs.writeFile(commentsPath, JSON.stringify({ comments }, null, 2), "utf8");
   return entry;
+}
+
+export async function addTablaCommentReaction(commentId: string, reaction: TablaReactionEmoji) {
+  const collections = await getMongoCollections();
+  if (collections) {
+    const comment = await collections.comments.findOneAndUpdate(
+      { id: commentId },
+      { $inc: { [`reactions.${reaction}`]: 1 } } as Document,
+      { returnDocument: "after" },
+    );
+    return comment ? cleanComment(comment) : null;
+  }
+
+  await ensureCommentsFile();
+  const raw = await fs.readFile(commentsPath, "utf8");
+  const store = JSON.parse(raw) as { comments?: TablaComment[] };
+  const comments = Array.isArray(store.comments) ? store.comments.map(cleanComment) : [];
+  const index = comments.findIndex((comment) => comment.id === commentId);
+  if (index === -1) return null;
+
+  const comment = comments[index];
+  const reactions = { ...comment.reactions, [reaction]: comment.reactions[reaction] + 1 };
+  const updated = { ...comment, reactions };
+  comments[index] = updated;
+  await fs.writeFile(commentsPath, JSON.stringify({ comments }, null, 2), "utf8");
+  return updated;
 }
 
 export async function writeTablaComments(comments: TablaComment[]) {

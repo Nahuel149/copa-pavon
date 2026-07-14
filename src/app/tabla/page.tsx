@@ -4,9 +4,11 @@ import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Download, Loader2, MessageSquare, RefreshCw, Send, Share2, Trophy } from "lucide-react";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
+import { tablaReactionEmojis, type TablaCommentReactions, type TablaReactionEmoji } from "@/lib/comment-reactions";
 import { type ClanId, type StandingRow } from "@/lib/prode";
 
 const worldCupTotalMatches = 104;
+const commentReactionStorageKey = "copa-kahl-comment-reactions";
 
 function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
@@ -107,6 +109,7 @@ type TablaComment = {
   name: string;
   comment: string;
   createdAt: string;
+  reactions: TablaCommentReactions;
 };
 
 type CommentsResponse = {
@@ -146,6 +149,8 @@ export default function TablaPage() {
   const [commentStatus, setCommentStatus] = useState<"idle" | "saving">("idle");
   const [commentMessage, setCommentMessage] = useState("");
   const [showAllComments, setShowAllComments] = useState(false);
+  const [selectedCommentReactions, setSelectedCommentReactions] = useState<Record<string, TablaReactionEmoji[]>>({});
+  const [reactionSaving, setReactionSaving] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: "position", direction: "asc" });
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const sortedRows = useMemo(() => {
@@ -670,6 +675,34 @@ export default function TablaPage() {
     }
   }
 
+  async function addCommentReaction(commentId: string, reaction: TablaReactionEmoji) {
+    if (selectedCommentReactions[commentId]?.includes(reaction)) return;
+
+    const reactionKey = `${commentId}:${reaction}`;
+    setReactionSaving(reactionKey);
+    setCommentMessage("");
+    try {
+      const response = await fetch("/api/comments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId, reaction }),
+      });
+      const body = await readJsonResponse<CommentsResponse>(response);
+      if (!response.ok || body.error || !body.comment) throw new Error(body.error ?? "No se pudo guardar la reaccion.");
+
+      setComments((current) => current.map((comment) => (comment.id === commentId ? body.comment as TablaComment : comment)));
+      setSelectedCommentReactions((current) => {
+        const next = { ...current, [commentId]: [...(current[commentId] ?? []), reaction] };
+        window.localStorage.setItem(commentReactionStorageKey, JSON.stringify(next));
+        return next;
+      });
+    } catch (reactionError) {
+      setCommentMessage(reactionError instanceof Error ? reactionError.message : "No se pudo guardar la reaccion.");
+    } finally {
+      setReactionSaving(null);
+    }
+  }
+
   useEffect(() => {
     void loadStandings();
     void loadComments();
@@ -677,6 +710,23 @@ export default function TablaPage() {
       void loadStandings();
     }, 30000);
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(commentReactionStorageKey);
+      if (!raw) return;
+      const stored = JSON.parse(raw) as Record<string, unknown>;
+      const selected = Object.fromEntries(
+        Object.entries(stored).map(([commentId, reactions]) => [
+          commentId,
+          Array.isArray(reactions) ? reactions.filter((reaction): reaction is TablaReactionEmoji => tablaReactionEmojis.includes(reaction as TablaReactionEmoji)) : [],
+        ]),
+      ) as Record<string, TablaReactionEmoji[]>;
+      setSelectedCommentReactions(selected);
+    } catch {
+      window.localStorage.removeItem(commentReactionStorageKey);
+    }
   }, []);
 
   useEffect(() => {
@@ -1104,6 +1154,27 @@ export default function TablaPage() {
             <article key={comment.id}>
               <strong>{comment.name}</strong>
               <p>{comment.comment}</p>
+              <div className="commentReactions" aria-label={`Reacciones para el comentario de ${comment.name}`}>
+                {tablaReactionEmojis.map((reaction) => {
+                  const selected = selectedCommentReactions[comment.id]?.includes(reaction) ?? false;
+                  const saving = reactionSaving === `${comment.id}:${reaction}`;
+                  const count = comment.reactions?.[reaction] ?? 0;
+                  return (
+                    <button
+                      aria-label={`Reaccionar ${reaction}${count > 0 ? `, ${count} reacciones` : ""}`}
+                      className={`commentReaction${selected ? " selected" : ""}`}
+                      disabled={selected || saving}
+                      key={reaction}
+                      onClick={() => void addCommentReaction(comment.id, reaction)}
+                      title={selected ? "Ya reaccionaste" : `Reaccionar ${reaction}`}
+                      type="button"
+                    >
+                      <span aria-hidden="true">{reaction}</span>
+                      {count > 0 ? <b>{count}</b> : null}
+                    </button>
+                  );
+                })}
+              </div>
               <small>{formatArgentinaDateTime(comment.createdAt)}</small>
             </article>
           ))}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { appendTablaComment, readTablaComments } from "@/lib/storage";
+import { tablaReactionEmojis, type TablaReactionEmoji } from "@/lib/comment-reactions";
+import { addTablaCommentReaction, appendTablaComment, readTablaComments } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,5 +41,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ comment: saved }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "No se pudo guardar el comentario." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "No se pudo leer la reaccion." }, { status: 400 });
+  }
+
+  const body = payload && typeof payload === "object" ? (payload as { commentId?: unknown; reaction?: unknown }) : {};
+  const commentId = cleanInput(body.commentId, 120);
+  const reaction = typeof body.reaction === "string" ? body.reaction : "";
+  if (!commentId || !tablaReactionEmojis.includes(reaction as TablaReactionEmoji)) {
+    return NextResponse.json({ error: "La reaccion no es valida." }, { status: 400 });
+  }
+
+  try {
+    const comment = await addTablaCommentReaction(commentId, reaction as TablaReactionEmoji);
+    if (!comment) return NextResponse.json({ error: "No encontramos ese comentario." }, { status: 404 });
+    return NextResponse.json({ comment });
+  } catch {
+    return NextResponse.json({ error: "No se pudo guardar la reaccion." }, { status: 500 });
   }
 }
