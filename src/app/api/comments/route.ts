@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { tablaReactionEmojis, type TablaReactionEmoji } from "@/lib/comment-reactions";
-import { addTablaCommentReaction, appendTablaComment, readTablaComments } from "@/lib/storage";
+import { addTablaCommentReaction, appendTablaComment, appendTablaCommentReply, readTablaComments } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,9 +29,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se pudo leer el comentario." }, { status: 400 });
   }
 
-  const body = payload && typeof payload === "object" ? (payload as { name?: unknown; comment?: unknown }) : {};
+  const body = payload && typeof payload === "object" ? (payload as { name?: unknown; comment?: unknown; parentId?: unknown }) : {};
   const name = cleanInput(body.name, 40);
   const comment = cleanInput(body.comment, 240);
+  const parentId = cleanInput(body.parentId, 120);
 
   if (name.length < 2) {
     return NextResponse.json({ error: "Escribi tu nombre." }, { status: 400 });
@@ -41,6 +42,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (parentId) {
+      const saved = await appendTablaCommentReply({ commentId: parentId, name, comment });
+      if (!saved) return NextResponse.json({ error: "No encontramos ese comentario." }, { status: 404 });
+      return NextResponse.json({ comment: saved }, { status: 201 });
+    }
+
     const saved = await appendTablaComment({ name, comment });
     return NextResponse.json({ comment: saved }, { status: 201 });
   } catch {

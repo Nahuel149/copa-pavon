@@ -58,6 +58,14 @@ export type TablaComment = {
   comment: string;
   createdAt: string;
   reactions: TablaCommentReactions;
+  replies: TablaCommentReply[];
+};
+
+export type TablaCommentReply = {
+  id: string;
+  name: string;
+  comment: string;
+  createdAt: string;
 };
 
 type StoredTablaComment = TablaComment & {
@@ -470,6 +478,21 @@ function cleanReactionVoters(value: unknown) {
   return voters;
 }
 
+function cleanTablaCommentReply(reply: unknown): TablaCommentReply | null {
+  if (!reply || typeof reply !== "object") return null;
+  const source = reply as Partial<TablaCommentReply> & { _id?: unknown };
+  const name = String(source.name ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
+  const comment = String(source.comment ?? "").trim().replace(/\s+/g, " ").slice(0, 240);
+  if (!name || !comment) return null;
+
+  return {
+    id: String(source.id ?? source._id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`),
+    name,
+    comment,
+    createdAt: typeof source.createdAt === "string" ? source.createdAt : new Date().toISOString(),
+  };
+}
+
 function cleanStoredComment(comment: Document | TablaComment | StoredTablaComment): StoredTablaComment {
   return {
     id: String(comment.id ?? ("_id" in comment ? comment._id : `${Date.now()}`)),
@@ -477,6 +500,7 @@ function cleanStoredComment(comment: Document | TablaComment | StoredTablaCommen
     comment: String(comment.comment ?? "").trim().replace(/\s+/g, " ").slice(0, 240),
     createdAt: typeof comment.createdAt === "string" ? comment.createdAt : new Date().toISOString(),
     reactions: normalizeTablaCommentReactions(comment.reactions),
+    replies: Array.isArray(comment.replies) ? comment.replies.map(cleanTablaCommentReply).filter((reply): reply is TablaCommentReply => Boolean(reply)) : [],
     reactionVoters: cleanReactionVoters("reactionVoters" in comment ? comment.reactionVoters : undefined),
   };
 }
@@ -508,6 +532,7 @@ export async function appendTablaComment(input: { name: string; comment: string 
     comment: input.comment.trim().replace(/\s+/g, " ").slice(0, 240),
     createdAt: new Date().toISOString(),
     reactions: emptyTablaCommentReactions(),
+    replies: [],
   };
   const collections = await getMongoCollections();
   if (collections) {
@@ -522,6 +547,37 @@ export async function appendTablaComment(input: { name: string; comment: string 
   comments.unshift(entry);
   await fs.writeFile(commentsPath, JSON.stringify({ comments }, null, 2), "utf8");
   return entry;
+}
+
+export async function appendTablaCommentReply(input: { commentId: string; name: string; comment: string }) {
+  const reply: TablaCommentReply = {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    name: input.name.trim().replace(/\s+/g, " ").slice(0, 40),
+    comment: input.comment.trim().replace(/\s+/g, " ").slice(0, 240),
+    createdAt: new Date().toISOString(),
+  };
+
+  const collections = await getMongoCollections();
+  if (collections) {
+    const updated = await collections.comments.findOneAndUpdate(
+      { id: input.commentId },
+      { $push: { replies: reply } } as Document,
+      { returnDocument: "after" },
+    );
+    return updated ? cleanComment(updated) : null;
+  }
+
+  await ensureCommentsFile();
+  const raw = await fs.readFile(commentsPath, "utf8");
+  const store = JSON.parse(raw) as { comments?: StoredTablaComment[] };
+  const comments = Array.isArray(store.comments) ? store.comments.map(cleanStoredComment) : [];
+  const index = comments.findIndex((comment) => comment.id === input.commentId);
+  if (index === -1) return null;
+
+  const updated = { ...comments[index], replies: [...comments[index].replies, reply] };
+  comments[index] = updated;
+  await fs.writeFile(commentsPath, JSON.stringify({ comments }, null, 2), "utf8");
+  return cleanComment(updated);
 }
 
 export async function addTablaCommentReaction(commentId: string, reaction: TablaReactionEmoji, voterId: string) {

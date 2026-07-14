@@ -2534,6 +2534,117 @@ a {
   color: #fff;
 }
 
+.commentReplyButton,
+.commentReplySubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.commentReplyButton span {
+  min-width: 18px;
+  padding: 1px 4px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 0.72rem;
+}
+
+.commentReplyButton:hover,
+.commentReplySubmit:hover:not(:disabled) {
+  background: var(--paper-strong);
+}
+
+.commentReplyForm {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.4fr) minmax(220px, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  margin-top: 4px;
+  padding: 10px;
+  border-left: 4px solid var(--red);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.commentReplyForm label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.commentReplyForm label span {
+  color: var(--muted);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.commentReplyForm input,
+.commentReplyForm textarea {
+  width: 100%;
+  border: 2px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.commentReplyForm input {
+  height: 38px;
+  padding: 0 9px;
+}
+
+.commentReplyForm textarea {
+  min-height: 38px;
+  max-height: 90px;
+  padding: 8px 9px;
+  resize: vertical;
+}
+
+.commentReplySubmit {
+  background: var(--red);
+  color: #fff;
+}
+
+.commentReplies {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+  padding-left: 16px;
+  border-left: 3px solid rgba(5, 5, 5, 0.25);
+}
+
+.commentReply {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid rgba(5, 5, 5, 0.18);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.commentReply strong {
+  font-size: 0.88rem;
+}
+
+.commentReply p {
+  font-size: 0.95rem;
+}
+
+.commentReply small {
+  font-size: 0.66rem;
+}
+
 :root[data-theme="dark"] .commentReactionTrigger,
 :root[data-theme="dark"] .commentReaction {
   background: #0b2745;
@@ -2560,6 +2671,48 @@ a {
 :root[data-theme="dark"] .commentReactionTrigger.selected {
   background: var(--red);
   color: #fff;
+}
+
+:root[data-theme="dark"] .commentReplyButton {
+  border-color: #fffdf7;
+  color: #fffdf7;
+}
+
+:root[data-theme="dark"] .commentReplyButton span {
+  background: #fffdf7;
+  color: #0b2745;
+}
+
+:root[data-theme="dark"] .commentReplyButton:hover,
+:root[data-theme="dark"] .commentReplySubmit:hover:not(:disabled) {
+  background: #16466e;
+}
+
+:root[data-theme="dark"] .commentReplyForm,
+:root[data-theme="dark"] .commentReply {
+  background: #0a2038;
+  border-color: rgba(255, 253, 247, 0.34);
+}
+
+:root[data-theme="dark"] .commentReplyForm input,
+:root[data-theme="dark"] .commentReplyForm textarea {
+  border-color: #fffdf7;
+  background: #061827;
+  color: #fffdf7;
+}
+
+:root[data-theme="dark"] .commentReplies {
+  border-color: rgba(255, 253, 247, 0.45);
+}
+
+@media (max-width: 720px) {
+  .commentReplyForm {
+    grid-template-columns: 1fr;
+  }
+
+  .commentReplySubmit {
+    width: 100%;
+  }
 }
 
 .commentsMoreButton {

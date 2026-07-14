@@ -110,7 +110,10 @@ type TablaComment = {
   comment: string;
   createdAt: string;
   reactions: TablaCommentReactions;
+  replies: Array<{ id: string; name: string; comment: string; createdAt: string }>;
 };
+
+type CommentReplyDraft = { name: string; comment: string };
 
 type CommentsResponse = {
   comments?: TablaComment[];
@@ -154,6 +157,9 @@ export default function TablaPage() {
   const [selectedCommentReactions, setSelectedCommentReactions] = useState<Record<string, TablaReactionEmoji>>({});
   const [openCommentReactionPicker, setOpenCommentReactionPicker] = useState<string | null>(null);
   const [reactionSaving, setReactionSaving] = useState<string | null>(null);
+  const [openReplyForm, setOpenReplyForm] = useState<string | null>(null);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, CommentReplyDraft>>({});
+  const [replySaving, setReplySaving] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: "position", direction: "asc" });
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const sortedRows = useMemo(() => {
@@ -708,6 +714,53 @@ export default function TablaPage() {
     }
   }
 
+  function openReply(commentId: string) {
+    setOpenReplyForm((current) => (current === commentId ? null : commentId));
+    setReplyDrafts((current) => current[commentId] ? current : { ...current, [commentId]: { name: commentName, comment: "" } });
+  }
+
+  function updateReplyDraft(commentId: string, field: keyof CommentReplyDraft, value: string) {
+    setReplyDrafts((current) => ({
+      ...current,
+      [commentId]: { name: current[commentId]?.name ?? commentName, comment: current[commentId]?.comment ?? "", [field]: value },
+    }));
+  }
+
+  async function submitReply(event: FormEvent<HTMLFormElement>, commentId: string) {
+    event.preventDefault();
+    const draft = replyDrafts[commentId] ?? { name: commentName, comment: "" };
+    const name = draft.name.trim();
+    const comment = draft.comment.trim();
+    if (name.length < 2) {
+      setCommentMessage("Escribi tu nombre para responder.");
+      return;
+    }
+    if (comment.length < 2) {
+      setCommentMessage("Escribi una respuesta.");
+      return;
+    }
+
+    setReplySaving(commentId);
+    setCommentMessage("");
+    try {
+      const response = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parentId: commentId, name, comment }),
+      });
+      const body = await readJsonResponse<CommentsResponse>(response);
+      if (!response.ok || body.error || !body.comment) throw new Error(body.error ?? "No se pudo guardar la respuesta.");
+      setComments((current) => current.map((entry) => (entry.id === commentId ? body.comment as TablaComment : entry)));
+      setReplyDrafts((current) => ({ ...current, [commentId]: { name, comment: "" } }));
+      setOpenReplyForm(null);
+      setCommentMessage("Respuesta publicada.");
+    } catch (replyError) {
+      setCommentMessage(replyError instanceof Error ? replyError.message : "No se pudo guardar la respuesta.");
+    } finally {
+      setReplySaving(null);
+    }
+  }
+
   useEffect(() => {
     void loadStandings();
     void loadComments();
@@ -1216,6 +1269,47 @@ export default function TablaPage() {
                   );
                 })()}
               </div>
+              <button className="commentReplyButton" onClick={() => openReply(comment.id)} type="button">
+                {openReplyForm === comment.id ? "Cerrar respuesta" : "Responder"}
+                {comment.replies.length > 0 ? <span>{comment.replies.length}</span> : null}
+              </button>
+              {openReplyForm === comment.id ? (
+                <form className="commentReplyForm" onSubmit={(event) => void submitReply(event, comment.id)}>
+                  <label>
+                    <span>Nombre</span>
+                    <input
+                      maxLength={40}
+                      onChange={(event) => updateReplyDraft(comment.id, "name", event.target.value)}
+                      placeholder="Tu nombre"
+                      value={replyDrafts[comment.id]?.name ?? commentName}
+                    />
+                  </label>
+                  <label>
+                    <span>Respuesta</span>
+                    <textarea
+                      maxLength={240}
+                      onChange={(event) => updateReplyDraft(comment.id, "comment", event.target.value)}
+                      placeholder={`Responder a ${comment.name}...`}
+                      value={replyDrafts[comment.id]?.comment ?? ""}
+                    />
+                  </label>
+                  <button className="commentReplySubmit" disabled={replySaving === comment.id} type="submit">
+                    {replySaving === comment.id ? <Loader2 className="spin" size={16} aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
+                    Publicar respuesta
+                  </button>
+                </form>
+              ) : null}
+              {comment.replies.length > 0 ? (
+                <div className="commentReplies" aria-label={`Respuestas al comentario de ${comment.name}`}>
+                  {comment.replies.map((reply) => (
+                    <article className="commentReply" key={reply.id}>
+                      <strong>{reply.name}</strong>
+                      <p>{reply.comment}</p>
+                      <small>{formatArgentinaDateTime(reply.createdAt)}</small>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
               <small>{formatArgentinaDateTime(comment.createdAt)}</small>
             </article>
           ))}
