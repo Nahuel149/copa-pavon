@@ -115,6 +115,8 @@ type TablaComment = {
 type CommentsResponse = {
   comments?: TablaComment[];
   comment?: TablaComment;
+  viewerReaction?: TablaReactionEmoji;
+  alreadyReacted?: boolean;
   error?: string;
 };
 
@@ -693,11 +695,12 @@ export default function TablaPage() {
 
       setComments((current) => current.map((comment) => (comment.id === commentId ? body.comment as TablaComment : comment)));
       setSelectedCommentReactions((current) => {
-        const next = { ...current, [commentId]: reaction };
+        const next = { ...current, [commentId]: body.viewerReaction ?? reaction };
         window.localStorage.setItem(commentReactionStorageKey, JSON.stringify(next));
         return next;
       });
       setOpenCommentReactionPicker(null);
+      if (body.alreadyReacted) setCommentMessage("Ya habias reaccionado a este comentario.");
     } catch (reactionError) {
       setCommentMessage(reactionError instanceof Error ? reactionError.message : "No se pudo guardar la reaccion.");
     } finally {
@@ -1198,6 +1201,14 @@ export default function TablaPage() {
                                 {count > 0 ? <b>{count}</b> : null}
                               </button>
                             );
+                          })}
+                        </div>
+                      ) : null}
+                      {totalReactions > 0 ? (
+                        <div className="commentReactionCounts" aria-label={`${totalReactions} reacciones`}>
+                          {tablaReactionEmojis.map((reaction) => {
+                            const count = comment.reactions?.[reaction] ?? 0;
+                            return count > 0 ? <span key={reaction}>{reaction} {count}</span> : null;
                           })}
                         </div>
                       ) : null}

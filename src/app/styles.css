@@ -2494,6 +2494,27 @@ a {
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
+.commentReactionCounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.commentReactionCounts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 24px;
+  padding: 2px 6px;
+  border: 1px solid rgba(5, 5, 5, 0.35);
+  background: #fffdf7;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .commentReaction {
   min-width: 38px;
 }
@@ -2523,6 +2544,12 @@ a {
 :root[data-theme="dark"] .commentReactionOptions {
   background: #0b2745;
   border-color: #fffdf7;
+}
+
+:root[data-theme="dark"] .commentReactionCounts span {
+  border-color: #fffdf7;
+  background: #123555;
+  color: #fffdf7;
 }
 
 :root[data-theme="dark"] .commentReactionTrigger:hover:not(:disabled),

@@ -14,6 +14,7 @@ import {
 import {
   emptyTablaCommentReactions,
   normalizeTablaCommentReactions,
+  tablaReactionEmojis,
   type TablaCommentReactions,
   type TablaReactionEmoji,
 } from "./comment-reactions";
@@ -57,6 +58,10 @@ export type TablaComment = {
   comment: string;
   createdAt: string;
   reactions: TablaCommentReactions;
+};
+
+type StoredTablaComment = TablaComment & {
+  reactionVoters?: Record<string, TablaReactionEmoji>;
 };
 
 let mongoClientPromise: Promise<MongoClient> | null = null;
@@ -453,14 +458,32 @@ async function ensureCommentsFile() {
   }
 }
 
-function cleanComment(comment: Document | TablaComment): TablaComment {
+function cleanReactionVoters(value: unknown) {
+  if (!value || typeof value !== "object") return {} as Record<string, TablaReactionEmoji>;
+
+  const voters: Record<string, TablaReactionEmoji> = {};
+  for (const [voterId, reaction] of Object.entries(value as Record<string, unknown>)) {
+    if (voterId.length > 0 && voterId.length <= 120 && typeof reaction === "string" && tablaReactionEmojis.includes(reaction as TablaReactionEmoji)) {
+      voters[voterId] = reaction as TablaReactionEmoji;
+    }
+  }
+  return voters;
+}
+
+function cleanStoredComment(comment: Document | TablaComment | StoredTablaComment): StoredTablaComment {
   return {
     id: String(comment.id ?? ("_id" in comment ? comment._id : `${Date.now()}`)),
     name: String(comment.name ?? "").trim().replace(/\s+/g, " ").slice(0, 40),
     comment: String(comment.comment ?? "").trim().replace(/\s+/g, " ").slice(0, 240),
     createdAt: typeof comment.createdAt === "string" ? comment.createdAt : new Date().toISOString(),
     reactions: normalizeTablaCommentReactions(comment.reactions),
+    reactionVoters: cleanReactionVoters("reactionVoters" in comment ? comment.reactionVoters : undefined),
   };
+}
+
+function cleanComment(comment: Document | TablaComment | StoredTablaComment): TablaComment {
+  const { reactionVoters: _reactionVoters, ...safeComment } = cleanStoredComment(comment);
+  return safeComment;
 }
 
 export async function readTablaComments(limit?: number) {
@@ -501,30 +524,46 @@ export async function appendTablaComment(input: { name: string; comment: string 
   return entry;
 }
 
-export async function addTablaCommentReaction(commentId: string, reaction: TablaReactionEmoji) {
+export async function addTablaCommentReaction(commentId: string, reaction: TablaReactionEmoji, voterId: string) {
   const collections = await getMongoCollections();
   if (collections) {
+    const original = await collections.comments.findOne({ id: commentId });
+    if (!original) return null;
+
+    const existingReaction = cleanStoredComment(original).reactionVoters?.[voterId];
+    if (existingReaction) {
+      return { comment: cleanComment(original), reaction: existingReaction, added: false };
+    }
+
     const comment = await collections.comments.findOneAndUpdate(
-      { id: commentId },
-      { $inc: { [`reactions.${reaction}`]: 1 } } as Document,
+      { id: commentId, [`reactionVoters.${voterId}`]: { $exists: false } },
+      { $inc: { [`reactions.${reaction}`]: 1 }, $set: { [`reactionVoters.${voterId}`]: reaction } } as Document,
       { returnDocument: "after" },
     );
-    return comment ? cleanComment(comment) : null;
+    if (comment) return { comment: cleanComment(comment), reaction, added: true };
+
+    const updated = await collections.comments.findOne({ id: commentId });
+    if (!updated) return null;
+    const concurrentReaction = cleanStoredComment(updated).reactionVoters?.[voterId];
+    return { comment: cleanComment(updated), reaction: concurrentReaction ?? reaction, added: false };
   }
 
   await ensureCommentsFile();
   const raw = await fs.readFile(commentsPath, "utf8");
-  const store = JSON.parse(raw) as { comments?: TablaComment[] };
-  const comments = Array.isArray(store.comments) ? store.comments.map(cleanComment) : [];
+  const store = JSON.parse(raw) as { comments?: StoredTablaComment[] };
+  const comments = Array.isArray(store.comments) ? store.comments.map(cleanStoredComment) : [];
   const index = comments.findIndex((comment) => comment.id === commentId);
   if (index === -1) return null;
 
   const comment = comments[index];
+  const existingReaction = comment.reactionVoters?.[voterId];
+  if (existingReaction) return { comment: cleanComment(comment), reaction: existingReaction, added: false };
+
   const reactions = { ...comment.reactions, [reaction]: comment.reactions[reaction] + 1 };
-  const updated = { ...comment, reactions };
+  const updated = { ...comment, reactions, reactionVoters: { ...comment.reactionVoters, [voterId]: reaction } };
   comments[index] = updated;
   await fs.writeFile(commentsPath, JSON.stringify({ comments }, null, 2), "utf8");
-  return updated;
+  return { comment: cleanComment(updated), reaction, added: true };
 }
 
 export async function writeTablaComments(comments: TablaComment[]) {
