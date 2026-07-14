@@ -2476,7 +2476,8 @@ a {
 }
 
 .commentReactionTrigger {
-  min-width: 112px;
+  min-width: 0;
+  padding-inline: 7px;
 }
 
 .commentReactionOptions {

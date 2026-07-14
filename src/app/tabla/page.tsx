@@ -1224,19 +1224,20 @@ export default function TablaPage() {
                   const isSaving = reactionSaving?.startsWith(`${comment.id}:`) ?? false;
                   return (
                     <>
-                      <button
-                        aria-expanded={isOpen}
-                        aria-haspopup="true"
-                        className={`commentReactionTrigger${selectedReaction ? " selected" : ""}`}
-                        disabled={Boolean(selectedReaction) || isSaving}
-                        onClick={() => setOpenCommentReactionPicker((current) => (current === comment.id ? null : comment.id))}
-                        type="button"
-                      >
-                        {selectedReaction ? <span aria-hidden="true">{selectedReaction}</span> : <SmilePlus size={16} aria-hidden="true" />}
-                        <span>{selectedReaction ? "Reaccionaste" : "Reaccionar"}</span>
-                        {!selectedReaction ? <ChevronDown size={15} aria-hidden="true" /> : null}
-                        {totalReactions > 0 ? <b>{totalReactions}</b> : null}
-                      </button>
+                      {!selectedReaction ? (
+                        <button
+                          aria-expanded={isOpen}
+                          aria-haspopup="true"
+                          aria-label="Elegir una reaccion"
+                          className="commentReactionTrigger"
+                          disabled={isSaving}
+                          onClick={() => setOpenCommentReactionPicker((current) => (current === comment.id ? null : comment.id))}
+                          type="button"
+                        >
+                          <SmilePlus size={16} aria-hidden="true" />
+                          <ChevronDown size={15} aria-hidden="true" />
+                        </button>
+                      ) : null}
                       {isOpen ? (
                         <div className="commentReactionOptions" role="group" aria-label="Elegir una reaccion">
                           {tablaReactionEmojis.map((reaction) => {
