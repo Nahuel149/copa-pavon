@@ -652,6 +652,23 @@ describe("prode scoring", () => {
     expect(standings.map((row) => row.name)).toEqual(["Completo", "Falta uno"]);
   });
 
+  it("keeps Maxi in standings even when he misses closed knockout matches", () => {
+    const fixtures: KnockoutFixture[] = [
+      { id: "k-1", order: 1, stage: "R32", home: "Argentina", away: "Francia", kickoffAt: "2026-06-28T19:00:00.000Z" },
+      { id: "k-2", order: 2, stage: "R32", home: "Brasil", away: "Espana", kickoffAt: "2026-06-28T20:00:00.000Z" },
+    ];
+    const maxi = submissionFromPayload("Maxi");
+
+    const standings = buildStandings(
+      [maxi],
+      { ...emptyResults, knockoutFixtures: fixtures },
+      new Date("2026-06-28T19:50:00.000Z"),
+    );
+
+    expect(standings.map((row) => row.name)).toEqual(["Maxi"]);
+    expect(standings[0]?.playedKnockoutMatches).toBe(0);
+  });
+
   it("hides public knockout predictions until each fixture edit deadline", () => {
     const fixtures: KnockoutFixture[] = [
       { id: "k-r32-a", order: 1, stage: "R32", home: "Argentina", away: "Francia", kickoffAt: "2026-06-28T19:00:00.000Z" },

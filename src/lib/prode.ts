@@ -835,7 +835,10 @@ export function countMissedClosedKnockoutPredictions(submission: Submission, res
   }, 0);
 }
 
+const knockoutEliminationExemptions = new Set(["maxi"]);
+
 export function isEliminatedFromKnockoutTable(submission: Submission, results: ResultStore, now = new Date()) {
+  if (knockoutEliminationExemptions.has(submission.normalizedName)) return false;
   return countMissedClosedKnockoutPredictions(submission, results, now) >= 2;
 }
 
