@@ -11,6 +11,15 @@ const fallbackStageKickoffs: Record<KnockoutStage, string> = {
   FINAL: "2026-07-19T19:00:00.000Z",
 };
 
+const knockoutStageProgressionRank: Record<KnockoutStage, number> = {
+  R32: 1,
+  R16: 2,
+  QF: 3,
+  SF: 4,
+  THIRD: 5,
+  FINAL: 5,
+};
+
 const defaultRoundOf32Kickoffs = [
   "2026-06-28T19:00:00.000Z",
   "2026-06-29T17:00:00.000Z",
@@ -58,7 +67,13 @@ export function getKnockoutEditDeadline(fixture: KnockoutFixture, fixtures: Knoc
   return new Date(baseTime - knockoutEditCloseMinutes * 60_000).toISOString();
 }
 
+export function isKnockoutStageSuperseded(stage: KnockoutStage, fixtures: KnockoutFixture[] = []) {
+  const stageRank = knockoutStageProgressionRank[stage];
+  return fixtures.some((fixture) => knockoutStageProgressionRank[fixture.stage] > stageRank);
+}
+
 export function isKnockoutFixtureEditable(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
+  if (isKnockoutStageSuperseded(fixture.stage, fixtures)) return false;
   return now.getTime() < new Date(getKnockoutEditDeadline(fixture, fixtures)).getTime();
 }
 

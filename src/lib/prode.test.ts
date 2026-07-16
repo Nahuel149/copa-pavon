@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { compareKnockoutFixturesByKickoff, getKnockoutEditDeadline, isKnockoutFixtureEditable } from "./knockout-deadlines";
+import {
+  compareKnockoutFixturesByKickoff,
+  getKnockoutEditDeadline,
+  isKnockoutFixtureEditable,
+  isKnockoutStageSuperseded,
+} from "./knockout-deadlines";
 import { filterPublicKnockoutPredictions, getKnockoutVisibility } from "./knockout-visibility";
 import { getMatchEditDeadline, getMatchEditStatus } from "./edit-deadline";
 import { getLateEditExcludedMatchIds } from "./edit-validation";
@@ -591,6 +596,42 @@ describe("prode scoring", () => {
     expect(isKnockoutFixtureEditable(fixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(false);
     expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-28T18:50:00.000Z"), fixtures)).toBe(true);
     expect(isKnockoutFixtureEditable(laterFixture, new Date("2026-06-29T18:50:00.000Z"), fixtures)).toBe(false);
+  });
+
+  it("closes completed rounds when a later knockout round exists", () => {
+    const staleRoundOf32: KnockoutFixture = {
+      id: "stale-r32",
+      order: 1,
+      stage: "R32",
+      home: "Sudafrica",
+      away: "Canada",
+      kickoffAt: "2026-07-18T19:00:00.000Z",
+    };
+    const thirdPlace: KnockoutFixture = {
+      id: "third-place",
+      order: 31,
+      stage: "THIRD",
+      home: "Francia",
+      away: "Inglaterra",
+      kickoffAt: "2026-07-18T21:00:00.000Z",
+    };
+    const final: KnockoutFixture = {
+      id: "final",
+      order: 32,
+      stage: "FINAL",
+      home: "Argentina",
+      away: "Espana",
+      kickoffAt: "2026-07-19T19:00:00.000Z",
+    };
+    const fixtures = [staleRoundOf32, thirdPlace, final];
+    const now = new Date("2026-07-16T12:00:00.000Z");
+
+    expect(isKnockoutStageSuperseded("R32", fixtures)).toBe(true);
+    expect(isKnockoutFixtureEditable(staleRoundOf32, now, fixtures)).toBe(false);
+    expect(isKnockoutStageSuperseded("THIRD", fixtures)).toBe(false);
+    expect(isKnockoutStageSuperseded("FINAL", fixtures)).toBe(false);
+    expect(isKnockoutFixtureEditable(thirdPlace, now, fixtures)).toBe(true);
+    expect(isKnockoutFixtureEditable(final, now, fixtures)).toBe(true);
   });
 
   it("sorts knockout fixtures by kickoff before order", () => {
