@@ -331,11 +331,12 @@ function knockoutScorerBonusMatches(prediction: KnockoutPrediction, result: Knoc
 
 function knockoutScorerBonusPoints(prediction: KnockoutPrediction, result: KnockoutResult, fixture?: KnockoutFixture) {
   if (!knockoutScorerBonusMatches(prediction, result)) return 0;
-  if (!normalizeScorerName(prediction.goalScorer ?? "")) return 1;
-  if (!fixture || !underdogBonusStages.has(fixture.stage)) return 1;
+  const multiplier = fixture ? knockoutStageScoring[fixture.stage].bonusMultiplier : 1;
+  if (!normalizeScorerName(prediction.goalScorer ?? "")) return multiplier;
+  if (!fixture || !underdogBonusStages.has(fixture.stage)) return multiplier;
 
   const role = getKnockoutScorerRole(fixture.home, fixture.away, prediction.goalScorer ?? "");
-  return role ? knockoutScorerRolePoints[role] : 1;
+  return (role ? knockoutScorerRolePoints[role] : 1) * multiplier;
 }
 
 export function getOutcome(homeGoals: number, awayGoals: number): PredictionChoice {
@@ -379,7 +380,9 @@ export function getKnockoutUnderdogBonus(
   if (!predictionQualified || !resultQualified || predictionQualified !== resultQualified) return 0;
 
   const votes = getKnockoutQualifierVoteCounts(fixture, submissions);
-  return votes[predictionQualified] > 0 && votes[predictionQualified] <= 7 ? 3 : 0;
+  return votes[predictionQualified] > 0 && votes[predictionQualified] <= 7
+    ? 3 * knockoutStageScoring[fixture.stage].bonusMultiplier
+    : 0;
 }
 
 function knockoutWrongPenaltyExactPoints(stage: KnockoutStage = "R32") {

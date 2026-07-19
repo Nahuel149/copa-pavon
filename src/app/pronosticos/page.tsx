@@ -762,10 +762,11 @@ export default function PronosticosPage() {
 
               {["QF", "SF", "THIRD", "FINAL"].includes(selectedKnockoutFixture.stage) ? (
                 <section className="knockoutRuleNote">
-                  <strong>Regla desde cuartos</strong>
+                  <strong>{selectedKnockoutFixture.stage === "FINAL" ? "Final x3" : "Regla desde cuartos"}</strong>
                   <span>
-                    Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto,
-                    bonus extra +3 por batacazo.
+                    {selectedKnockoutFixture.stage === "FINAL"
+                      ? "Exacto 27, campeon 15, goleador +3/+6/+9 y batacazo +9. Maximo 45 puntos; exacto y campeon no se acumulan."
+                      : "Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto, bonus extra +3 por batacazo."}
                   </span>
                 </section>
               ) : null}

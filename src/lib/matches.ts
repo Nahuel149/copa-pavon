@@ -182,13 +182,16 @@ export const knockoutStageSchedule: Record<KnockoutStage, string> = {
   FINAL: "19 Jul",
 };
 
-export const knockoutStageScoring: Record<KnockoutStage, { exact: number; winner: number; winnerLabel: string }> = {
-  R32: { exact: 4, winner: 2, winnerLabel: "ganador clasificado" },
-  R16: { exact: 4, winner: 2, winnerLabel: "ganador clasificado" },
-  QF: { exact: 5, winner: 3, winnerLabel: "ganador clasificado" },
-  SF: { exact: 7, winner: 4, winnerLabel: "ganador clasificado" },
-  THIRD: { exact: 7, winner: 4, winnerLabel: "ganador" },
-  FINAL: { exact: 9, winner: 5, winnerLabel: "campeon correcto" },
+export const knockoutStageScoring: Record<
+  KnockoutStage,
+  { exact: number; winner: number; winnerLabel: string; bonusMultiplier: number }
+> = {
+  R32: { exact: 4, winner: 2, winnerLabel: "ganador clasificado", bonusMultiplier: 1 },
+  R16: { exact: 4, winner: 2, winnerLabel: "ganador clasificado", bonusMultiplier: 1 },
+  QF: { exact: 5, winner: 3, winnerLabel: "ganador clasificado", bonusMultiplier: 1 },
+  SF: { exact: 7, winner: 4, winnerLabel: "ganador clasificado", bonusMultiplier: 1 },
+  THIRD: { exact: 7, winner: 4, winnerLabel: "ganador", bonusMultiplier: 1 },
+  FINAL: { exact: 27, winner: 15, winnerLabel: "campeon correcto", bonusMultiplier: 3 },
 };
 
 export const exactScoreMatches = matches.filter((match) => match.exactScore);

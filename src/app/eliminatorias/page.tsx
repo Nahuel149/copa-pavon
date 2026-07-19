@@ -6,7 +6,12 @@ import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { isOptionalLateKnockoutFixture } from "@/lib/knockout-optional";
-import { getKnockoutScorerOptions, getKnockoutScorerRole, knockoutScorerRoleLabels } from "@/lib/knockout-rosters";
+import {
+  getKnockoutScorerOptions,
+  getKnockoutScorerRole,
+  knockoutScorerRoleLabels,
+  knockoutScorerRolePoints,
+} from "@/lib/knockout-rosters";
 import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
 import type { KnockoutPrediction, Submission } from "@/lib/prode";
 
@@ -200,15 +205,22 @@ export default function EliminatoriasPage() {
         const scoring = knockoutStageScoring[stage];
         return (
           <article key={stage}>
-            <span>{knockoutStageLabels[stage]}</span>
+            <span>
+              {knockoutStageLabels[stage]}
+              {scoring.bonusMultiplier > 1 ? ` x${scoring.bonusMultiplier}` : ""}
+            </span>
             <strong>
               {scoring.exact} / {scoring.winner}
             </strong>
             <p>
               Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha:{" "}
               {knockoutStageSchedule[stage]}. Si el marcador queda empatado tras 120&apos; y errás el clasificado por
-              penales, suma parcial: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 5 en final.
-              Goleador acertado: +1. Vacio suma si sale 0-0.
+              penales, suma parcial: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 15 en final.
+              {stage === "FINAL"
+                ? " Final x3: goleador +3/+6/+9 y batacazo +9. Vacio suma 3 si sale 0-0."
+                : stage === "QF" || stage === "SF" || stage === "THIRD"
+                  ? " Goleador +1/+2/+3 y batacazo +3. Vacio suma 1 si sale 0-0."
+                  : " Goleador acertado: +1. Vacio suma si sale 0-0."}
             </p>
           </article>
         );
@@ -345,7 +357,7 @@ export default function EliminatoriasPage() {
 
     return (
       <label className="scorerInput">
-        <span>Goleador del partido (+1/+2/+3)</span>
+        <span>{fixture.stage === "FINAL" ? "Goleador del partido - Final x3 (+3/+6/+9)" : "Goleador del partido (+1/+2/+3)"}</span>
         <select
           value={value.goalScorer ?? ""}
           onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
@@ -361,7 +373,8 @@ export default function EliminatoriasPage() {
               <optgroup key={side} label={side === "home" ? fixture.home : fixture.away}>
                 {teamOptions.map((option) => (
                   <option className={`scorerRoleOption ${option.role}`} key={`${option.team}-${option.name}`} value={option.name}>
-                    {option.name} - {knockoutScorerRoleLabels[option.role]}
+                    {option.name} - {knockoutScorerRoleLabels[option.role].split(" +")[0]} +
+                    {knockoutScorerRolePoints[option.role] * knockoutStageScoring[fixture.stage].bonusMultiplier}
                   </option>
                 ))}
               </optgroup>
@@ -369,9 +382,9 @@ export default function EliminatoriasPage() {
           })}
         </select>
         <small className="scorerLegend">
-          <b className="scorerRolePill star">Figura +1</b>
-          <b className="scorerRolePill forward">Delantero +2</b>
-          <b className="scorerRolePill field">Medio/defensa +3</b>
+          <b className="scorerRolePill star">Figura +{fixture.stage === "FINAL" ? 3 : 1}</b>
+          <b className="scorerRolePill forward">Delantero +{fixture.stage === "FINAL" ? 6 : 2}</b>
+          <b className="scorerRolePill field">Medio/defensa +{fixture.stage === "FINAL" ? 9 : 3}</b>
         </small>
       </label>
     );
@@ -382,10 +395,11 @@ export default function EliminatoriasPage() {
 
     return (
       <section className="knockoutRuleNote compactRuleNote">
-        <strong>Regla desde cuartos</strong>
+        <strong>{fixture.stage === "FINAL" ? "Final x3" : "Regla desde cuartos"}</strong>
         <span>
-          Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto,
-          bonus extra +3 por batacazo.
+          {fixture.stage === "FINAL"
+            ? "Exacto 27, campeon 15, goleador +3/+6/+9 y batacazo +9. Maximo 45 puntos; exacto y campeon no se acumulan."
+            : "Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto, bonus extra +3 por batacazo."}
         </span>
       </section>
     );

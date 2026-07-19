@@ -332,7 +332,7 @@ describe("prode scoring", () => {
       knockoutResults: [{ fixtureId: "k-final", homeGoals: 2, awayGoals: 1 }],
     });
 
-    expect(row.knockoutPoints).toBe(9);
+    expect(row.knockoutPoints).toBe(27);
     expect(row.knockoutExactHits).toBe(1);
     expect(row.knockoutWinnerHits).toBe(0);
     expect(row.predictionMatchesPlayed).toBe(1);
@@ -383,7 +383,7 @@ describe("prode scoring", () => {
       { stage: "QF" as const, points: 3 },
       { stage: "SF" as const, points: 4 },
       { stage: "THIRD" as const, points: 4 },
-      { stage: "FINAL" as const, points: 5 },
+      { stage: "FINAL" as const, points: 15 },
     ];
 
     for (const item of cases) {
@@ -877,6 +877,49 @@ describe("prode scoring", () => {
         fixture,
       ).scorerPoints,
     ).toBe(3);
+  });
+
+  it("triples every final scoring component without accumulating exact and winner points", () => {
+    const fixture: KnockoutFixture = { id: "k-final-x3", order: 1, stage: "FINAL", home: "Inglaterra", away: "Noruega" };
+    const result = { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: ["Martin Odegaard"] };
+
+    expect(
+      scoreKnockoutPredictionForFixture(
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, goalScorer: "Martin Odegaard" },
+        result,
+        fixture,
+        { underdogBonus: 9 },
+      ),
+    ).toMatchObject({
+      basePoints: 27,
+      scorerPoints: 9,
+      underdogPoints: 9,
+      totalPoints: 45,
+      verdict: "exact",
+    });
+
+    expect(
+      scoreKnockoutPredictionForFixture(
+        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 2 },
+        result,
+        fixture,
+      ),
+    ).toMatchObject({ basePoints: 15, totalPoints: 15, verdict: "partial" });
+
+    const submissions = Array.from({ length: 8 }, (_, index) => ({
+      ...submissionFromPayload(`Finalista ${index + 1}`),
+      knockoutPredictions: [
+        { fixtureId: fixture.id, homeGoals: index < 7 ? 0 : 2, awayGoals: index < 7 ? 1 : 0 },
+      ],
+    }));
+    const standings = buildStandings(submissions, {
+      ...emptyResults,
+      knockoutFixtures: [fixture],
+      knockoutResults: [result],
+    });
+    expect(standings.find((row) => row.name === "Finalista 1")?.pointAudit).toEqual(
+      expect.arrayContaining([expect.objectContaining({ category: "underdog", points: 9 })]),
+    );
   });
 
   it("adds the minority qualifier bonus only from quarterfinals onward", () => {

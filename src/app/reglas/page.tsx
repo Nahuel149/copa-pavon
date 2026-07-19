@@ -113,10 +113,11 @@ export default function ReglasPage() {
         <h2>Puntos por etapa.</h2>
         <p>
           Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto. El goleador
-          acertado suma 1 punto extra en cualquier cruce. Dejarlo vacio equivale a elegir sin goleador, y suma si el
-          partido termina 0-0. En empates tras 120 minutos tambien se elige quien clasifica por penales.
+          acertado suma 1 punto en 16avos/octavos y +1/+2/+3 desde cuartos segun su rol. Dejarlo vacio equivale a elegir
+          sin goleador, y suma si el partido termina 0-0. En empates tras 120 minutos tambien se elige quien clasifica por penales.
           Cada partido se bloquea 10 minutos antes de empezar. Si un participante deja 2 partidos de eliminatorias sin
-          pronosticar cuando ya cerraron, queda eliminado de la tabla.
+          pronosticar cuando ya cerraron, queda eliminado de la tabla. La final vale x3: 27 por exacto, 15 por campeon,
+          goleador +3/+6/+9 y batacazo +9; el maximo es 45 y exacto y campeon no se acumulan.
         </p>
       </section>
 
@@ -125,11 +126,15 @@ export default function ReglasPage() {
           const scoring = knockoutStageScoring[stage];
           return (
             <article key={stage}>
-              <span>{knockoutStageLabels[stage]}</span>
+              <span>
+                {knockoutStageLabels[stage]}
+                {scoring.bonusMultiplier > 1 ? ` x${scoring.bonusMultiplier}` : ""}
+              </span>
               <strong>{scoring.exact} / {scoring.winner}</strong>
               <p>
                 Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
-                Empate exacto con clasificado errado: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 5 en final.
+                Empate exacto con clasificado errado: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 15 en final.
+                {stage === "FINAL" ? " Goleador +3/+6/+9 y batacazo +9." : ""}
               </p>
             </article>
           );
