@@ -335,12 +335,11 @@ export default function CampeonesPage() {
             </section>
           </div>
         ) : (
-          /* PALMARÉS & ACCUMULATED ALL-TIME TABLE */
           <section className="palmaresPanel" style={{ marginTop: "16px" }}>
             <div className="panelHeader">
-              <p className="eyebrow">Cuadro de Honor</p>
-              <h2>Palmarés Histórico de Campeones</h2>
-              <p>Historial unificado de títulos conseguidos por cada participante en todas las ediciones jugadas.</p>
+              <p className="eyebrow">Medallero Histórico Acumulado</p>
+              <h2>Palmarés Completo de Campeones y Podios</h2>
+              <p>Clasificación histórica acumulada según medallas de Oro (Campeón), Plata (Subcampeón) y Bronce (3er Puesto) obtenidas en todas las copas.</p>
             </div>
 
             <div className="tableWrapper">
@@ -349,22 +348,40 @@ export default function CampeonesPage() {
                   <tr>
                     <th>#</th>
                     <th>Jugador</th>
-                    <th>Copas Ganadas</th>
-                    <th>Títulos Obtenidos</th>
+                    <th>🏆 Oro</th>
+                    <th>🥈 Plata</th>
+                    <th>🥉 Bronce</th>
+                    <th>Detalle de Medallas & Copas</th>
                   </tr>
                 </thead>
                 <tbody>
                   {allTimePalmares.map((player, idx) => (
-                    <tr key={player.participant} className={idx === 0 ? "kingRow" : ""}>
-                      <td className="posCell">{idx === 0 ? <Trophy size={18} className="goldTrophy" /> : idx + 1}</td>
+                    <tr key={player.participant} className={idx === 0 ? "kingRow" : idx === 1 ? "runnerUpRow" : ""}>
+                      <td className="posCell">
+                        {idx === 0 ? (
+                          <Trophy size={18} className="goldTrophy" />
+                        ) : idx === 1 ? (
+                          <Medal size={18} className="silverMedal" />
+                        ) : (
+                          idx + 1
+                        )}
+                      </td>
                       <td className="participantCell">
                         <strong>{player.participant}</strong>
                       </td>
-                      <td className="highlightCount gold">{player.titles}</td>
+                      <td className="pointsCell" style={{ color: "#d97706", fontWeight: 900 }}>{player.gold}</td>
+                      <td className="pointsCell" style={{ color: "#475569", fontWeight: 900 }}>{player.silver}</td>
+                      <td className="pointsCell" style={{ color: "#c2410c", fontWeight: 900 }}>{player.bronze}</td>
                       <td>
-                        {player.trophies.map((t) => (
-                          <span key={t} className="historyBadge championTag" style={{ marginRight: 6, display: "inline-block", margin: "2px 4px" }}>
-                            🏆 {t}
+                        {player.medals.map((m, mIdx) => (
+                          <span
+                            key={mIdx}
+                            className={`historyBadge ${
+                              m.type === "gold" ? "championTag" : m.type === "silver" ? "runnerTag" : "podiumTag"
+                            }`}
+                            style={{ marginRight: 6, display: "inline-block", margin: "3px 4px" }}
+                          >
+                            {m.type === "gold" ? "🏆" : m.type === "silver" ? "🥈" : "🥉"} {m.title}
                           </span>
                         ))}
                       </td>

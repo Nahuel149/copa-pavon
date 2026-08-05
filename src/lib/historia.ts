@@ -171,13 +171,77 @@ export const historicalEditions: HistoricalEdition[] = [
   },
 ];
 
+export type MedalDetail = {
+  type: "gold" | "silver" | "bronze";
+  title: string;
+};
+
 export type AllTimeRecord = {
   participant: string;
-  titles: number;
-  trophies: string[];
+  gold: number;
+  silver: number;
+  bronze: number;
+  medals: MedalDetail[];
 };
 
 export const allTimePalmares: AllTimeRecord[] = [
-  { participant: "Gonza Fiss / Gonza el + Fachero.", titles: 2, trophies: ["Copa Chiqui Bauch", "Copa Kahl"] },
-  { participant: "Javi / Javier", titles: 1, trophies: ["Copa Fiss"] },
+  {
+    participant: "Gonza Fiss / Gonza el + Fachero.",
+    gold: 2,
+    silver: 0,
+    bronze: 0,
+    medals: [
+      { type: "gold", title: "Copa Chiqui Bauch 2025" },
+      { type: "gold", title: "Copa Kahl 2026" },
+    ],
+  },
+  {
+    participant: "Javi / Javier",
+    gold: 1,
+    silver: 0,
+    bronze: 0,
+    medals: [{ type: "gold", title: "Copa Fiss 2024" }],
+  },
+  {
+    participant: "Nicolas Montes",
+    gold: 0,
+    silver: 1,
+    bronze: 0,
+    medals: [{ type: "silver", title: "Copa Kahl 2026" }],
+  },
+  {
+    participant: "Mono Andrés",
+    gold: 0,
+    silver: 1,
+    bronze: 0,
+    medals: [{ type: "silver", title: "Copa Chiqui Bauch 2025" }],
+  },
+  {
+    participant: "Nahuel",
+    gold: 0,
+    silver: 1,
+    bronze: 0,
+    medals: [{ type: "silver", title: "Copa Fiss 2024" }],
+  },
+  {
+    participant: "Miguel (El Borracho)",
+    gold: 0,
+    silver: 0,
+    bronze: 1,
+    medals: [{ type: "bronze", title: "Copa Kahl 2026" }],
+  },
+  {
+    participant: "Tony",
+    gold: 0,
+    silver: 0,
+    bronze: 1,
+    medals: [{ type: "bronze", title: "Copa Chiqui Bauch 2025" }],
+  },
+  {
+    participant: "Ale Bauch",
+    gold: 0,
+    silver: 0,
+    bronze: 1,
+    medals: [{ type: "bronze", title: "Copa Fiss 2024" }],
+  },
 ];
