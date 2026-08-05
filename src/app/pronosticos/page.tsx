@@ -698,408 +698,86 @@ export default function PronosticosPage() {
 
   return (
     <div className="pageStack">
-      <section className="compactHero">
+      <section className="heroBand tableHero standingsHero">
         <div>
-          <p className="eyebrow">Pronosticos</p>
-          <h1>Mapa del torneo.</h1>
-          <span>{data?.updatedAt ? `Actualizada ${formatArgentinaTime(data.updatedAt)}` : "Cargando..."}</span>
+          <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
+            PRÓXIMAMENTE 🏆
+          </p>
+          <h1>Copa "Se mató Pavón"</h1>
+          <p className="heroCopy">
+            Los pronósticos del mapa de partidos, cruces eliminatorios y tendencias se habilitarán próximamente antes del inicio del torneo.
+          </p>
         </div>
       </section>
 
-      {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
-
-      <section className="predictionExplorer knockoutPredictionPanel">
-        <aside className="knockoutPickerColumn" aria-label="Cruces de eliminatorias">
-          {knockoutStageGroups.length > 1 ? (
-            <div className="knockoutStageSelector" aria-label="Rondas de eliminatorias">
-              {knockoutStageGroups.map((group) => (
-                <button
-                  className={selectedKnockoutStage === group.stage ? "active" : ""}
-                  key={group.stage}
-                  onClick={() => setSelectedKnockoutFixtureId(group.fixtures[0]?.id ?? selectedKnockoutFixtureId)}
-                  type="button"
-                >
-                  <span>{knockoutStageLabels[group.stage]}</span>
-                  <strong>{group.fixtures.length}</strong>
-                </button>
-              ))}
-            </div>
-          ) : null}
-          <div
-            className="matchPicker knockoutMatchList"
-            style={{ "--knockout-match-columns": Math.max(1, Math.ceil(visibleKnockoutFixtures.length / 4)) } as CSSProperties}
-          >
-          {visibleKnockoutFixtures.map((fixture) => (
-            <button
-              className={selectedKnockoutFixture?.id === fixture.id ? "matchPick active" : "matchPick"}
-              key={fixture.id}
-              onClick={() => setSelectedKnockoutFixtureId(fixture.id)}
-              type="button"
-            >
-              <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
-              <strong><TeamBadge compact team={fixture.home} /> vs <TeamBadge compact team={fixture.away} /></strong>
-            </button>
-          ))}
-          {knockoutFixtures.length === 0 ? <div className="emptyState">Todavia no hay cruces de eliminatorias cargados.</div> : null}
-          </div>
-        </aside>
-
-        <section className="predictionInsight">
-          {selectedKnockoutFixture ? (
-            <>
-              <div className="matchFocus">
-                <span>{knockoutStageLabels[selectedKnockoutFixture.stage]} · Marcador exacto</span>
-                <h2><TeamBadge team={selectedKnockoutFixture.home} /> <b>vs</b> <TeamBadge team={selectedKnockoutFixture.away} /></h2>
-                <p>
-                  Resultado oficial:{" "}
-                  <strong>
-                    {selectedKnockoutResult
-                      ? `${selectedKnockoutResult.homeGoals}-${selectedKnockoutResult.awayGoals}`
-                      : "Pendiente"}
-                  </strong>
-                </p>
-              </div>
-
-              {["QF", "SF", "THIRD", "FINAL"].includes(selectedKnockoutFixture.stage) ? (
-                <section className="knockoutRuleNote">
-                  <strong>{selectedKnockoutFixture.stage === "FINAL" ? "Final x3" : "Regla desde cuartos"}</strong>
-                  <span>
-                    {selectedKnockoutFixture.stage === "FINAL"
-                      ? "Exacto 27, campeon 15, goleador +3/+6/+9 y batacazo +9. Maximo 45 puntos; exacto y campeon no se acumulan."
-                      : "Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto, bonus extra +3 por batacazo."}
-                  </span>
-                </section>
-              ) : null}
-
-              {!selectedKnockoutIsPublic ? (
-                <section className="validationPanel knockoutPrivateNotice">
-                  <p className="eyebrow">Privado</p>
-                  <h2>Los pronosticos de este partido todavia estan ocultos.</h2>
-                  <p>
-                    Se hacen publicos cuando se cierra la edicion de este partido.
-                    {selectedKnockoutVisibility?.unlockAt ? ` Hora de apertura: ${formatArgentinaDateTime(selectedKnockoutVisibility.unlockAt)}.` : ""}
-                  </p>
-                </section>
-              ) : (
-                <>
-                  <section className="compactPredictionList knockoutCompactList">
-                    <div className="tableNote compactPredictionHeader">
-                      <strong>Detalle individual</strong>
-                      <div className="selectedMatchBar" aria-label="Cruce seleccionado">
-                        <span>#{selectedKnockoutFixture.order}</span>
-                        <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
-                      </div>
-                    </div>
-                    <div className="compactPredictionRows">
-                      {knockoutShareRows.map((row) => (
-                        <article className={`compactPredictionRow knockoutVerdict ${row.score.verdict}`} key={row.submission.id}>
-                          <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
-                          <strong>{row.submission.name}</strong>
-                          <span>
-                            <b>{row.label}</b>
-                            <em className="predictionStatusBadge">{selectedKnockoutResult ? `${row.score.totalPoints} pts` : "Pendiente"}</em>
-                          </span>
-                        </article>
-                      ))}
-                      {knockoutShareRows.length === 0 ? <div className="emptyState">Todavia no hay pronosticos publicos para este cruce.</div> : null}
-                    </div>
-                  </section>
-
-                  <section className="shareInlinePanel knockoutSharePanel" aria-label="Compartir pronosticos del cruce">
-                    <div className="tableNote">
-                      <strong>Compartir este partido</strong>
-                      <span>Imagen con los participantes y sus pronosticos del cruce seleccionado.</span>
-                    </div>
-                    <div className="shareCardPreview">
-                      <div>
-                        <span>#{selectedKnockoutFixture.order} · {knockoutStageLabels[selectedKnockoutFixture.stage]}</span>
-                        <strong><TeamBadge compact team={selectedKnockoutFixture.home} /> vs <TeamBadge compact team={selectedKnockoutFixture.away} /></strong>
-                      </div>
-                      <p>{knockoutShareRows.length} participantes</p>
-                    </div>
-                    <div className="shareActions">
-                      <button
-                        className="primaryAction"
-                        disabled={knockoutShareStatus === "working" || knockoutShareRows.length === 0}
-                        onClick={shareKnockoutCard}
-                        type="button"
-                      >
-                        {knockoutShareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
-                        Compartir
-                      </button>
-                      <button
-                        className="primaryAction light"
-                        disabled={knockoutShareStatus === "working" || knockoutShareRows.length === 0}
-                        onClick={downloadKnockoutShareCard}
-                        type="button"
-                      >
-                        <Download size={18} aria-hidden="true" />
-                        Descargar PNG
-                      </button>
-                    </div>
-                    {knockoutShareMessage ? <p className="shareMessage" aria-live="polite">{knockoutShareMessage}</p> : null}
-                  </section>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="emptyState">Todavia no hay cruces de eliminatorias para mostrar.</div>
-          )}
-        </section>
-      </section>
-
-      <details className="groupPhaseFold pronosticosGroupFold">
-        <summary>
-          <span>Grupos</span>
-          <strong>Ver fase de grupos</strong>
-        </summary>
-
-      <section className="roundStrip" aria-label="Fechas de pronosticos">
-        {([1, 2, 3] as MatchRound[]).map((round) => (
-          <button
-            className={activeRound === round ? "roundTab active" : "roundTab"}
-            key={round}
-            onClick={() => {
-              setActiveRound(round);
-              setSelectedMatchId(matches.find((match) => match.round === round)?.id ?? selectedMatchId);
-            }}
-            type="button"
-          >
-            <span>{roundLabels[round]}</span>
-            <strong>{matches.filter((match) => match.round === round).length} partidos</strong>
-          </button>
-        ))}
-      </section>
-
-      <section className="predictionExplorer">
-        <aside className="matchPicker" aria-label="Partidos">
-          {roundMatches.map((match) => (
-            <button
-              className={selectedMatch.id === match.id ? "matchPick active" : "matchPick"}
-              key={match.id}
-              onClick={() => setSelectedMatchId(match.id)}
-              type="button"
-            >
-              <span>#{match.order} · Grupo {match.groupId}</span>
-              <strong><TeamBadge compact team={match.home} /> vs <TeamBadge compact team={match.away} /></strong>
-            </button>
-          ))}
-        </aside>
-
-        <section className="predictionInsight">
-          <div className="matchFocus">
-            <span>Grupo {selectedMatch.groupId} · {selectedMatch.exactScore ? "Marcador exacto" : "1X2"}</span>
-            <h2><TeamBadge team={selectedMatch.home} /> <b>vs</b> <TeamBadge team={selectedMatch.away} /></h2>
-            <div className="matchResultLine">
-              <p>Resultado oficial: <strong>{resultLabel(selectedResult)}</strong></p>
-              {selectedHighlightUrl ? (
-                <button className="matchVideoButton" type="button" onClick={() => setShowGoalVideo((current) => !current)}>
-                  <PlayCircle size={18} aria-hidden="true" />
-                  {showGoalVideo ? "Ocultar resumen" : "Resumen de goles"}
-                </button>
-              ) : null}
-            </div>
-            {hasGoalScorers ? (
-              <div className="goalScorerStrip" aria-label="Goles del partido">
-                {homeScorersLabel ? (
-                  <p>
-                    <TeamBadge compact team={selectedMatch.home} />
-                    <span>{homeScorersLabel}</span>
-                  </p>
-                ) : null}
-                {awayScorersLabel ? (
-                  <p>
-                    <TeamBadge compact team={selectedMatch.away} />
-                    <span>{awayScorersLabel}</span>
-                  </p>
-                ) : null}
-              </div>
-            ) : selectedResult ? (
-              <p className="goalScorerEmpty">Goleadores: sin datos cargados.</p>
-            ) : null}
-          </div>
-
-          {showGoalVideo && selectedHighlightUrl ? (
-            <section className="matchVideoPanel" aria-label="Resumen de goles">
-              <div>
-                <PlayCircle size={20} aria-hidden="true" />
-                <strong>Resumen de goles</strong>
-              </div>
-              {selectedEmbedUrl ? (
-                <iframe
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  src={selectedEmbedUrl}
-                  title={`Resumen ${selectedMatch.home} vs ${selectedMatch.away}`}
-                />
-              ) : (
-                <a href={selectedHighlightUrl} rel="noreferrer" target="_blank">
-                  <ExternalLink size={18} aria-hidden="true" />
-                  Abrir resumen
-                </a>
-              )}
-            </section>
-          ) : null}
-
-          <div className="pollGrid" aria-label="Porcentajes del partido">
-            {choiceOrder.map((choice) => {
-              const count = aggregates.outcomes[choice];
-              const pct = percent(count, totalParticipants);
-              return (
-                <article className="pollCard" key={choice}>
-                  <div>
-                    <span>{outcomeLabel(choice, selectedMatch)}</span>
-                    <strong>{pct}%</strong>
-                  </div>
-                  <i style={{ width: `${pct}%` }} />
-                  <small>{count}/{totalParticipants} participantes</small>
-                </article>
-              );
-            })}
-          </div>
-
-          <section className="scoreCloud">
-            <div>
-              <BarChart3 size={20} aria-hidden="true" />
-              <strong>Marcadores mas repetidos</strong>
-            </div>
-            {aggregates.topScores.length > 0 ? (
-              <ul>
-                {aggregates.topScores.map((item) => (
-                  <li key={item.score}><span>{item.score}</span><b>{item.count}</b></li>
-                ))}
-              </ul>
-            ) : (
-              <p>Este partido se juega por 1X2, sin marcador exacto.</p>
-            )}
-          </section>
-
-          {selectedHighlights.length > 0 ? (
-            <section className="highlightPanel" aria-label="Predicciones destacadas">
-              <strong>Predicciones destacadas</strong>
-              {selectedHighlights.map((highlight) => <p key={highlight}>{highlight}</p>)}
-            </section>
-          ) : null}
-        </section>
-      </section>
-
-      <section className="compactPredictionList">
-        <div className="tableNote compactPredictionHeader">
-          <strong>Detalle individual</strong>
-          <div className="selectedMatchBar" aria-label="Partido seleccionado">
-            <span>#{selectedMatch.order}</span>
-            <strong><TeamBadge compact team={selectedMatch.home} /> vs <TeamBadge compact team={selectedMatch.away} /></strong>
-          </div>
+      {/* ANUNCIO OFICIAL PROXIMAMENTE */}
+      <section className="historyTablePanel" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", padding: "24px" }}>
+        <div className="panelHeader">
+          <p className="eyebrow" style={{ background: "#ef4444", color: "#fff", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "4px 10px", borderRadius: "12px", fontSize: "0.8rem" }}>
+            🔥 PRÓXIMAMENTE APERTURA DE PRONÓSTICOS
+          </p>
+          <h2 style={{ fontSize: "1.6rem", margin: "10px 0 6px", fontWeight: 900, color: "#0f172a" }}>
+            Mapa de Partidos & Carga de Pronósticos
+          </h2>
+          <p style={{ fontSize: "1.05rem", color: "#334155", lineHeight: "1.5" }}>
+            Aquí podrás seguir en vivo los marcadores, tendencias, porcentajes de aciertos y pronósticos jugada por jugada de cada participante para la Copa "Se mató Pavón".
+          </p>
         </div>
-        <div className="compactPredictionRows">
-          {predictionRows.map((row) => (
-            <article className="compactPredictionRow" key={row.submission.id}>
-              <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
-              <strong>{row.submission.name}</strong>
-              <span>{row.label}</span>
-            </article>
-          ))}
-          {predictionRows.length === 0 ? <div className="emptyState">No hay pronosticos para mostrar.</div> : null}
-        </div>
-      </section>
 
-      <section className="groupPredictionPanel">
-        <div className="tableNote compactPredictionHeader">
-          <strong>Pronosticos de grupos</strong>
-          <span>Top 2 que puso cada participante para el grupo seleccionado.</span>
-        </div>
-        <div className="groupTabs" role="group" aria-label="Elegir grupo">
-          {groups.map((group) => (
-            <button
-              className={selectedGroup.id === group.id ? "active" : ""}
-              key={group.id}
-              onClick={() => setSelectedGroupId(group.id)}
-              type="button"
-            >
-              Grupo {group.id}
-            </button>
-          ))}
-        </div>
-        <div className="groupFocusBar">
-          <span>Grupo {selectedGroup.id}</span>
-          <strong>{selectedGroup.teams.map((team) => team).join(" · ")}</strong>
-        </div>
-        <div className="compactPredictionRows">
-          {groupPredictionRows.map((row) => (
-            <article className="compactPredictionRow groupPredictionRow" key={row.submission.id}>
-              <span className="compactPredictionPosition">{row.position ? `${row.position})` : "-"}</span>
-              <strong>{row.submission.name}</strong>
-              <span>{row.label}</span>
-            </article>
-          ))}
-          {groupPredictionRows.length === 0 ? <div className="emptyState">No hay pronosticos de grupos para mostrar.</div> : null}
-        </div>
-      </section>
-
-      <section className="statsPanel" aria-label="Estadisticas de la fecha">
-        <div className="tableNote">
-          <strong>Estadisticas de {roundLabels[activeRound]}</strong>
-          <span>Resumen automatico de tendencias y aciertos de la fecha seleccionada.</span>
-        </div>
-        <div className="statsGrid">
-          <article>
-            <span>Resultado mas elegido</span>
-            <strong>{roundStats.mostPicked?.label ?? "Sin datos"}</strong>
-            <small>{roundStats.mostPicked ? `${roundStats.mostPicked.count}/${roundStats.mostPicked.total} participantes` : "-"}</small>
+        <div className="reportCardsGrid" style={{ marginTop: "16px" }}>
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>🌎</span>
+              <h3>COPA SUDAMERICANA</h3>
+              <span className="reportPts" style={{ background: "#e0f2fe", color: "#0369a1" }}>Semifinales + Final</span>
+            </header>
+            <p>Marcadores exactos y ganadores de cruces de ida y vuelta.</p>
           </article>
-          <article>
-            <span>Mas arriesgado</span>
-            <strong>{roundStats.risky?.different ? roundStats.risky.name : "Sin diferencias"}</strong>
-            <small>{roundStats.risky?.different ? `${roundStats.risky.different} picks contra la mayoria` : "Todos fueron parecidos"}</small>
+
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>🏆</span>
+              <h3>COPA LIBERTADORES</h3>
+              <span className="reportPts" style={{ background: "#fef08a", color: "#854d0e" }}>Semifinales + Final</span>
+            </header>
+            <p>Pronósticos para la gloria continental sudamericana.</p>
           </article>
-          <article>
-            <span>Exactos acertados</span>
-            <strong>{roundStats.exactRate === null ? "Pendiente" : `${roundStats.exactRate}%`}</strong>
-            <small>{roundStats.exactTotal > 0 ? `${roundStats.exactHits}/${roundStats.exactTotal} marcadores` : "Faltan resultados oficiales"}</small>
+
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>🇦🇷</span>
+              <h3>COPA ARGENTINA</h3>
+              <span className="reportPts" style={{ background: "#dcfce7", color: "#15803d" }}>Fase Eliminatoria</span>
+            </header>
+            <p>Partidos mano a mano a todo o nada en canchas neutrales.</p>
           </article>
-          <article>
-            <span>Partido mas errado</span>
-            <strong>{roundStats.hardest?.label ?? "Pendiente"}</strong>
-            <small>{roundStats.hardest ? `${roundStats.hardest.missed}/${roundStats.hardest.total} erraron ganador` : "Faltan resultados oficiales"}</small>
+
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>⚽</span>
+              <h3>COPA DE LA LIGA</h3>
+              <span className="reportPts" style={{ background: "#ffedd5", color: "#c2410c" }}>Fase Final</span>
+            </header>
+            <p>Cruces decisivos del torneo local argentino.</p>
           </article>
         </div>
-      </section>
 
-
-      <section className="shareInlinePanel">
-        <div className="tableNote">
-          <strong>Tarjeta para compartir</strong>
-          <span>Imagen por dia con los participantes y sus pronosticos.</span>
-        </div>
-        <div className="shareDaySelector" role="group" aria-label="Elegir dia para compartir">
-          {dayLabels.map((day) => (
-            <button className={shareDay === day ? "active" : ""} key={day} onClick={() => setShareDay(day)} type="button">
-              {day}
-            </button>
-          ))}
-        </div>
-        <div className="shareCardPreview">
-          <div>
-            <span>{shareDay}</span>
-            <strong>{shareDayMatches.map((match) => `#${match.order}`).join(" · ")}</strong>
+        <div style={{ marginTop: "24px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", paddingTop: "16px", borderTop: "2px dashed #cbd5e1" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="historyBadge championTag" style={{ fontSize: "0.9rem", padding: "8px 14px", fontWeight: 800 }}>
+              ⏳ Estado: Formulario de Carga Próximamente
+            </span>
           </div>
-          <p>{shareRows.length} participantes · {shareDayMatches.length} partidos</p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <a className="primaryAction light" href="/campeones" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              🏆 Ver Histórico y Medallero
+            </a>
+            <a className="primaryAction light" href="/recopa" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              ⚔️ Ir a la Recopa Fiss Kahl
+            </a>
+          </div>
         </div>
-        <div className="shareActions">
-          <button className="primaryAction" disabled={shareStatus === "working" || shareRows.length === 0} onClick={shareCard} type="button">
-            {shareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
-            Compartir
-          </button>
-          <button className="primaryAction light" disabled={shareStatus === "working" || shareRows.length === 0} onClick={downloadShareCard} type="button">
-            <Download size={18} aria-hidden="true" />
-            Descargar PNG
-          </button>
-        </div>
-        {shareMessage ? <p className="shareMessage" aria-live="polite">{shareMessage}</p> : null}
       </section>
-
-      </details>
-
     </div>
   );
 }
