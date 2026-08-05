@@ -159,62 +159,115 @@ export default function CampeonesPage() {
                 <p className="eyebrow">Posiciones Oficiales</p>
                 <h3>{currentEdition.title} ({currentEdition.year})</h3>
               </div>
-
               {currentEdition.table && currentEdition.table.length > 0 ? (
                 <div className="tableWrapper">
-                  <table className="recopaTable historyTable">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Participante</th>
-                        <th>Puntos</th>
-                        <th>Jugados</th>
-                        <th>Ganados</th>
-                        <th>Perdidos</th>
-                        <th>Exactos</th>
-                        <th>Goles</th>
-                        <th>Grupos</th>
-                        <th>Aciertos</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentEdition.table.map((row) => (
-                        <tr
-                          key={`${row.pos}-${row.participant}`}
-                          className={
-                            row.badge === "champion"
-                              ? "championRow"
-                              : row.badge === "runner-up"
-                              ? "runnerUpRow"
-                              : row.badge === "relegated"
-                              ? "relegatedRow"
-                              : ""
-                          }
-                        >
-                          <td className="posCell">
-                            {row.badge === "champion" ? (
-                              <Trophy size={18} className="goldTrophy" />
-                            ) : row.badge === "runner-up" ? (
-                              <Medal size={18} className="silverMedal" />
-                            ) : (
-                              row.pos
-                            )}
-                          </td>
-                          <td className="participantCell">
-                            <strong>{row.participant}</strong>
-                          </td>
-                          <td className="pointsCell">{row.points}</td>
-                          <td>{row.played}</td>
-                          <td>{row.won}</td>
-                          <td>{row.lost}</td>
-                          <td>{row.exactHits}</td>
-                          <td>{row.goals}</td>
-                          <td>{row.groups}</td>
-                          <td>{row.totalHits}</td>
+                  {currentEdition.table[0]?.played !== undefined ? (
+                    <table className="recopaTable historyTable">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Participante</th>
+                          <th>Puntos</th>
+                          <th>Jugados</th>
+                          <th>Ganados</th>
+                          <th>Perdidos</th>
+                          <th>Exactos</th>
+                          <th>Goles</th>
+                          <th>Grupos</th>
+                          <th>Aciertos</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {currentEdition.table.map((row) => (
+                          <tr
+                            key={`${row.pos}-${row.participant}`}
+                            className={
+                              row.badge === "champion"
+                                ? "championRow"
+                                : row.badge === "runner-up"
+                                ? "runnerUpRow"
+                                : row.badge === "relegated"
+                                ? "relegatedRow"
+                                : ""
+                            }
+                          >
+                            <td className="posCell">
+                              {row.badge === "champion" ? (
+                                <Trophy size={18} className="goldTrophy" />
+                              ) : row.badge === "runner-up" ? (
+                                <Medal size={18} className="silverMedal" />
+                              ) : (
+                                row.pos
+                              )}
+                            </td>
+                            <td className="participantCell">
+                              <strong>{row.participant}</strong>
+                            </td>
+                            <td className="pointsCell">{row.points}</td>
+                            <td>{row.played}</td>
+                            <td>{row.won}</td>
+                            <td>{row.lost}</td>
+                            <td>{row.exactHits}</td>
+                            <td>{row.goals}</td>
+                            <td>{row.groups}</td>
+                            <td>{row.totalHits}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <table className="recopaTable historyTable">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Participante</th>
+                          <th>Puntos</th>
+                          <th>Distinción</th>
+                          <th style={{ textAlign: "left" }}>Análisis & Comentario Oficial</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentEdition.table.map((row) => (
+                          <tr
+                            key={`${row.pos}-${row.participant}`}
+                            className={
+                              row.badge === "champion"
+                                ? "championRow"
+                                : row.badge === "runner-up"
+                                ? "runnerUpRow"
+                                : row.badge === "relegated"
+                                ? "relegatedRow"
+                                : ""
+                            }
+                          >
+                            <td className="posCell">
+                              {row.badge === "champion" ? (
+                                <Trophy size={18} className="goldTrophy" />
+                              ) : row.badge === "runner-up" ? (
+                                <Medal size={18} className="silverMedal" />
+                              ) : (
+                                row.pos
+                              )}
+                            </td>
+                            <td className="participantCell">
+                              <strong>{row.participant}</strong>
+                            </td>
+                            <td className="pointsCell">{row.points} pts</td>
+                            <td>
+                              {row.badge === "champion" && <span className="historyBadge championTag">🏆 Campeón</span>}
+                              {row.badge === "runner-up" && <span className="historyBadge runnerTag">🥈 Subcampeón</span>}
+                              {row.badge === "podium" && <span className="historyBadge podiumTag">🥉 Podio</span>}
+                              {row.badge === "relegated" && <span className="historyBadge relegatedTag">🔻 Descendido</span>}
+                              {!row.badge && <span className="historyBadge defaultTag">Competidor</span>}
+                            </td>
+                            <td style={{ fontSize: "0.88rem", color: "#334155", fontStyle: "italic", textAlign: "left", lineHeight: "1.4" }}>
+                              "{row.notes}"
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               ) : (
                 <div className="emptyTableNotice" style={{ padding: "24px", textAlign: "center", background: "#f8fafc", borderRadius: "8px", border: "1px dashed #cbd5e1" }}>
@@ -231,19 +284,19 @@ export default function CampeonesPage() {
           /* PALMARÉS & ACCUMULATED ALL-TIME TABLE */
           <section className="palmaresPanel" style={{ marginTop: "16px" }}>
             <div className="panelHeader">
-              <p className="eyebrow">Tabla Histórica Acumulada</p>
-              <h2>Palmarés Oficial de Copa Kahl</h2>
-              <p>Conteo histórico total de títulos cosechados en todas las ediciones.</p>
+              <p className="eyebrow">Cuadro de Honor</p>
+              <h2>Palmarés Histórico de Campeones</h2>
+              <p>Historial unificado de títulos conseguidos por cada participante en todas las ediciones jugadas.</p>
             </div>
 
             <div className="tableWrapper">
               <table className="recopaTable palmaresTable">
                 <thead>
                   <tr>
-                    <th>Pos</th>
-                    <th>Jugador Leyenda</th>
-                    <th>Títulos 🏆</th>
+                    <th>#</th>
+                    <th>Jugador</th>
                     <th>Copas Ganadas</th>
+                    <th>Títulos Obtenidos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -274,17 +327,29 @@ export default function CampeonesPage() {
       <section style={{ marginTop: "24px", display: "grid", gap: "16px" }}>
         <section className="relegationPanel" aria-label="Descendidos">
           <div>
-            <p className="eyebrow">Descendidos de Edición Reciente</p>
+            <p className="eyebrow">Historial de Perdedores</p>
             <h2>B Nacional</h2>
-            <p>Estos tres arrancan mirando la Copa Kahl desde abajo.</p>
+            <p>Los participantes que perdieron la categoría en las distintas ediciones.</p>
           </div>
-          <div className="relegatedList">
-            {relegated.map((name) => (
-              <span key={name}>
-                <ShieldAlert size={18} aria-hidden="true" />
-                {name}
-              </span>
-            ))}
+          <div className="relegatedList" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Kahl 2026:</span>
+              {["Fer", "Maxi", "Nahuel"].map((name) => (
+                <span key={name}>
+                  <ShieldAlert size={18} aria-hidden="true" />
+                  {name}
+                </span>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
+              <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Chiqui Bauch 2025:</span>
+              {["Javi", "Buda (Matías Nicolas)"].map((name) => (
+                <span key={name}>
+                  <ShieldAlert size={18} aria-hidden="true" />
+                  {name}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 

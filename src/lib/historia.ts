@@ -10,13 +10,13 @@ export type HistoricalEdition = {
     pos: number;
     participant: string;
     points: number;
-    played: number;
-    won: number;
-    lost: number;
-    exactHits: number;
-    goals: number;
-    groups: string;
-    totalHits: number;
+    played?: number;
+    won?: number;
+    lost?: number;
+    exactHits?: number;
+    goals?: number;
+    groups?: string;
+    totalHits?: number;
     notes?: string;
     badge?: "champion" | "runner-up" | "podium" | "relegated";
   }>;
@@ -54,8 +54,100 @@ export const historicalEditions: HistoricalEdition[] = [
     title: "Copa Chiqui Bauch",
     year: "2025",
     champion: "Gonza Fiss",
-    description: "Edición mítica donde se consagró campeón Gonza Fiss.",
+    runnerUp: "Mono Andrés",
+    description: "Tabla final del torneo y análisis oficial de los participantes.",
     image: "/kahl-assets/campeon-gonza-fiss.jpeg",
+    table: [
+      {
+        pos: 1,
+        participant: "Gonza Fiss",
+        points: 17,
+        badge: "champion",
+        notes: "El único que entendió el juego. Campeón, capitán y dueño absoluto del torneo. Levantó la copa con una mano y con la otra sostenía la pija del Fiss. Igual que no se agrande mucho porque ganó un prode, no la Libertadores.",
+      },
+      {
+        pos: 2,
+        participant: "Mono Andrés",
+        points: 14,
+        badge: "runner-up",
+        notes: "Otra vez segundo, como hoy. Ya no es mala suerte, es identidad. Tiene cosas de mono, sí: instinto, fuerza y cero capacidad para cerrar una final. Subcampeón dos veces, el Boca del grupo.",
+      },
+      {
+        pos: 3,
+        participant: "Tony",
+        points: 14,
+        badge: "podium",
+        notes: "La jugó calladito, sin hacer ruido, sin vender humo… y casi les roba el torneo a todos. Perfil bajo pero puñalero. No ganó porque le faltó un poquito de maldad y otro poquito de fútbol.",
+      },
+      {
+        pos: 4,
+        participant: "Maxi",
+        points: 13,
+        notes: "El peleador oficial del torneo. No sabemos si vino a jugar el prode o a cagarse a piñas con la tabla. Quedó cerca, pero como siempre: mucho huevo, poca precisión.",
+      },
+      {
+        pos: 5,
+        participant: "Ale Bauch",
+        points: 13,
+        notes: "Llegó agrandado, hablando como si ya tuviera la copa en la vitrina. Se veía campeón, se sentía campeón, se peinaba como campeón… (si tuviese pelo) y terminó mirando la vuelta olímpica por televisión. Humildad, Ale, humildad.",
+      },
+      {
+        pos: 6,
+        participant: "Nico",
+        points: 11,
+        notes: "Se metió por la ventana en los últimos partidos. Nadie sabe cómo llegó ahí, ni él mismo. Apareció al final como esos suplentes que entran al minuto 88 y piden patear el penal.",
+      },
+      {
+        pos: 7,
+        participant: "Fernando",
+        points: 11,
+        notes: "Árbitro de profesión, jugador de prode por accidente. Que se dedique a cobrar offside, porque para pronosticar fútbol viene complicado. Con el silbato capaz suma más que con los resultados.",
+      },
+      {
+        pos: 8,
+        participant: "Zino",
+        points: 10,
+        notes: "El hermano espiritual de Gonza, pero versión “me faltó actualizar el Excel”. Arrancó con ilusión y terminó haciendo cuentas para no quedar tan abajo. Buen intento, pero el apellido no gana solo.",
+      },
+      {
+        pos: 9,
+        participant: "Fer",
+        points: 10,
+        notes: "Fer es Fer. Un boludo querido, pero boludo al fin. Hizo 10 puntos, que es exactamente el número ideal para decir: “participé, rompí las bolas y me fui”.",
+      },
+      {
+        pos: 10,
+        participant: "Enzo",
+        points: 10,
+        notes: "Jugador de tierra brava, carácter fuerte, negro y pronósticos flojitos. Metió 10 puntos con más garra que claridad. Le puso presencia al torneo, pero la pelota y el prode todavía le piden documento.",
+      },
+      {
+        pos: 11,
+        participant: "Nahuel",
+        points: 9,
+        notes: "Previo subcampeón y uno de los mejores jugadores… pero esta vez vino en modo turista. Una campaña decepcionante para alguien que sabe jugar. Se esperaba pelea por la copa y terminó peleando con Miguel en la mitad de tabla.",
+      },
+      {
+        pos: 12,
+        participant: "Miguel",
+        points: 9,
+        notes: "El pecho frío del torneo. Iba primero hasta los cuartos y después se congeló como heladera sin luz. Tenía todo para salir campeón y decidió hacer cosplay de fracaso deportivo. Durísimo.",
+      },
+      {
+        pos: 13,
+        participant: "Javi",
+        points: 6,
+        badge: "relegated",
+        notes: "El campeón anterior convertido en desastre nacional. Pasó de levantar la copa fiss a irse al descenso como equipo fundido, papelón histórico. Lo de Javi no fue una mala campaña: fue una investigación judicial.",
+      },
+      {
+        pos: 14,
+        participant: "Buda (Matías Nicolas)",
+        points: 4,
+        badge: "relegated",
+        notes: "Buda, hermano, dejá el fútbol. Dedicate a los postres, a seguir comiendo tranquilo y a opinar desde la mesa dulce. Cuatro puntos es menos campaña que equipo desafiliado. El prode no es lo tuyo, pero el flan capaz sí.",
+      },
+    ],
   },
   {
     id: "copa-fiss",
