@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Award, CheckCircle2, ChevronRight, Clock, Flame, Loader2, Lock, Save, ShieldAlert, Swords, Trophy, UserCheck } from "lucide-react";
+import { Award, CheckCircle2, ChevronRight, Clock, Flame, Loader2, Lock, LogIn, LogOut, Save, ShieldAlert, Swords, Trophy, UserCheck } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
 import {
@@ -36,11 +36,15 @@ export default function RecopaPage() {
   // Submit prediction state
   const [selectedParticipant, setSelectedParticipant] = useState<RecopaParticipantId>("Gonza el + Fachero.");
   const [pin, setPin] = useState("");
-  const [predictions, setPredictions] = useState<Record<string, { homeGoals: string; awayGoals: string }>>(() =>
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+
+  const [predictions, setPredictions] = useState<Record<string, { homeGoals: string; awayGoals: string; goalScorer: string }>>(() =>
     recopaMatches.reduce((acc, m) => {
-      acc[m.id] = { homeGoals: "", awayGoals: "" };
+      acc[m.id] = { homeGoals: "", awayGoals: "", goalScorer: "" };
       return acc;
-    }, {} as Record<string, { homeGoals: string; awayGoals: string }>),
+    }, {} as Record<string, { homeGoals: string; awayGoals: string; goalScorer: string }>),
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -87,29 +91,48 @@ export default function RecopaPage() {
     void loadRecopaData();
   }, []);
 
-  // When changing selected participant in prediction form, load existing predictions if available
-  useEffect(() => {
-    if (!data?.submissions) return;
-    const existing = data.submissions.find((s) => s.participant === selectedParticipant);
-    if (existing?.predictions) {
+  async function handleVerifyAccess(e: React.FormEvent) {
+    e.preventDefault();
+    setVerifying(true);
+    setVerifyError("");
+    setSubmitMessage(null);
+
+    try {
+      const res = await fetch("/api/recopa/verify-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: selectedParticipant, pin }),
+      });
+
+      const body = await readJsonResponse<{
+        ok?: boolean;
+        predictions?: RecopaScorePrediction[];
+        error?: string;
+      }>(res);
+
+      if (!res.ok || !body.ok || body.error) {
+        throw new Error(body.error ?? "No se pudo acceder. Verificá tu nombre y PIN.");
+      }
+
+      // Populate predictions for the verified participant
       const draft = recopaMatches.reduce((acc, m) => {
-        const pred = existing.predictions.find((p) => p.matchId === m.id);
+        const pred = body.predictions?.find((p) => p.matchId === m.id);
         acc[m.id] = {
           homeGoals: pred ? String(pred.homeGoals) : "",
           awayGoals: pred ? String(pred.awayGoals) : "",
+          goalScorer: pred?.goalScorer ?? "",
         };
         return acc;
-      }, {} as Record<string, { homeGoals: string; awayGoals: string }>);
+      }, {} as Record<string, { homeGoals: string; awayGoals: string; goalScorer: string }>);
+
       setPredictions(draft);
-    } else {
-      setPredictions(
-        recopaMatches.reduce((acc, m) => {
-          acc[m.id] = { homeGoals: "", awayGoals: "" };
-          return acc;
-        }, {} as Record<string, { homeGoals: string; awayGoals: string }>),
-      );
+      setIsUnlocked(true);
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : "Error al acceder.");
+    } finally {
+      setVerifying(false);
     }
-  }, [selectedParticipant, data]);
+  }
 
   async function handleSubmitPredictions(e: React.FormEvent) {
     e.preventDefault();
@@ -120,6 +143,7 @@ export default function RecopaPage() {
       matchId: m.id,
       homeGoals: Number(predictions[m.id]?.homeGoals ?? 0),
       awayGoals: Number(predictions[m.id]?.awayGoals ?? 0),
+      goalScorer: predictions[m.id]?.goalScorer?.trim() || undefined,
     }));
 
     try {
@@ -128,7 +152,7 @@ export default function RecopaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: selectedParticipant,
-          pin: pin || undefined,
+          pin,
           predictions: formattedPredictions,
         }),
       });
@@ -389,7 +413,12 @@ export default function RecopaPage() {
                           <div className={`predRow ${gonzaBreak?.verdict === "exact" ? "exactHit" : gonzaBreak?.verdict === "winner" ? "winnerHit" : ""}`}>
                             <div className="predUser">
                               <img src="/kahl-assets/campeon-gonza-fiss.jpeg" alt="" className="predAvatar" />
-                              <span>Gonza el + Fachero.</span>
+                              <div className="userMetaStack">
+                                <span>Gonza el + Fachero.</span>
+                                {gonzaBreak?.prediction?.goalScorer ? (
+                                  <small className="scorerText">⚽ Goleador: {gonzaBreak.prediction.goalScorer}</small>
+                                ) : null}
+                              </div>
                             </div>
                             <div className="predScore">
                               {gonzaBreak?.prediction ? (
@@ -415,7 +444,12 @@ export default function RecopaPage() {
                           <div className={`predRow ${javiBreak?.verdict === "exact" ? "exactHit" : javiBreak?.verdict === "winner" ? "winnerHit" : ""}`}>
                             <div className="predUser">
                               <img src="/kahl-assets/campeon-javi.jpeg" alt="" className="predAvatar" />
-                              <span>Javier</span>
+                              <div className="userMetaStack">
+                                <span>Javier</span>
+                                {javiBreak?.prediction?.goalScorer ? (
+                                  <small className="scorerText">⚽ Goleador: {javiBreak.prediction.goalScorer}</small>
+                                ) : null}
+                              </div>
                             </div>
                             <div className="predScore">
                               {javiBreak?.prediction ? (
@@ -448,129 +482,185 @@ export default function RecopaPage() {
           {/* TAB 2: CARGAR / EDITAR PRONOSTICO */}
           {activeTab === "cargar" && (
             <section className="formPanel">
-              <div className="panelHeader">
-                <p className="eyebrow">Participantes Habilitados</p>
-                <h2>Seleccioná quién sos para guardar el prode</h2>
-                <p>Unicamente <strong>Gonza el + Fachero.</strong> y <strong>Javier</strong> tienen permitido participar.</p>
-              </div>
+              {!isUnlocked ? (
+                /* LOGIN GATE FIRST */
+                <form onSubmit={handleVerifyAccess} className="recopaAuthGate">
+                  <div className="panelHeader">
+                    <p className="eyebrow">Acceso Participantes Recopa</p>
+                    <h2>Ingresá con tu usuario y PIN para habilitar la carga</h2>
+                    <p>Misma lógica y seguridad que en Pronósticos: seleccioná quién sos e ingresá tu PIN personal.</p>
+                  </div>
 
-              {submitMessage && (
-                <div className={submitMessage.type === "success" ? "recopaAlert success" : "recopaAlert error"}>
-                  {submitMessage.type === "success" ? <CheckCircle2 size={20} /> : <ShieldAlert size={20} />}
-                  <span>{submitMessage.text}</span>
-                </div>
-              )}
+                  {verifyError && (
+                    <div className="recopaAlert error">
+                      <ShieldAlert size={20} />
+                      <span>{verifyError}</span>
+                    </div>
+                  )}
 
-              <form onSubmit={handleSubmitPredictions} className="recopaForm">
-                {/* Participant Selector */}
-                <div className="participantSelector">
-                  <label className="selectorLabel">¿Quién ingresa el pronóstico?</label>
-                  <div className="selectorButtons">
+                  {/* Participant Selector */}
+                  <div className="participantSelector">
+                    <label className="selectorLabel">¿Quién ingresa a la Recopa?</label>
+                    <div className="selectorButtons">
+                      <button
+                        type="button"
+                        className={`participantOption ${selectedParticipant === "Gonza el + Fachero." ? "selected" : ""}`}
+                        onClick={() => setSelectedParticipant("Gonza el + Fachero.")}
+                      >
+                        <img src="/kahl-assets/campeon-gonza-fiss.jpeg" alt="Gonza el + Fachero." />
+                        <div>
+                          <strong>Gonza el + Fachero.</strong>
+                          <small>Campeón Copa Chiqui Bauch</small>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`participantOption ${selectedParticipant === "Javier" ? "selected" : ""}`}
+                        onClick={() => setSelectedParticipant("Javier")}
+                      >
+                        <img src="/kahl-assets/campeon-javi.jpeg" alt="Javier" />
+                        <div>
+                          <strong>Javier</strong>
+                          <small>Campeón Copa Fiss</small>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* PIN Field */}
+                  <div className="pinFieldContainer">
+                    <label htmlFor="recopaPin">
+                      <Lock size={16} /> PIN de seguridad de {selectedParticipant}
+                    </label>
+                    <input
+                      id="recopaPin"
+                      type="password"
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value)}
+                      placeholder="Tu PIN personal (4 a 10 números)"
+                      maxLength={10}
+                      required
+                    />
+                    <small>Usá el mismo PIN con el que te registraste y administrás tus pronósticos.</small>
+                  </div>
+
+                  <button type="submit" className="primaryAction" disabled={verifying}>
+                    {verifying ? <Loader2 className="spin" size={18} /> : <LogIn size={18} />}
+                    Acceder a Cargar Pronóstico
+                  </button>
+                </form>
+              ) : (
+                /* UNLOCKED PREDICTION FORM */
+                <div>
+                  <div className="activeUserBanner">
+                    <div className="activeUserInfo">
+                      <UserCheck size={20} className="checkIcon" />
+                      <span>Sesión iniciada como: <strong>{selectedParticipant}</strong></span>
+                    </div>
                     <button
                       type="button"
-                      className={`participantOption ${selectedParticipant === "Gonza el + Fachero." ? "selected" : ""}`}
-                      onClick={() => setSelectedParticipant("Gonza el + Fachero.")}
+                      className="primaryAction light small"
+                      onClick={() => {
+                        setIsUnlocked(false);
+                        setPin("");
+                      }}
                     >
-                      <img src="/kahl-assets/campeon-gonza-fiss.jpeg" alt="Gonza el + Fachero." />
-                      <div>
-                        <strong>Gonza el + Fachero.</strong>
-                        <small>Campeón Copa Chiqui Bauch</small>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`participantOption ${selectedParticipant === "Javier" ? "selected" : ""}`}
-                      onClick={() => setSelectedParticipant("Javier")}
-                    >
-                      <img src="/kahl-assets/campeon-javi.jpeg" alt="Javier" />
-                      <div>
-                        <strong>Javier</strong>
-                        <small>Campeón Copa Fiss</small>
-                      </div>
+                      <LogOut size={16} /> Cambiar Participante
                     </button>
                   </div>
+
+                  {submitMessage && (
+                    <div className={submitMessage.type === "success" ? "recopaAlert success" : "recopaAlert error"}>
+                      {submitMessage.type === "success" ? <CheckCircle2 size={20} /> : <ShieldAlert size={20} />}
+                      <span>{submitMessage.text}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmitPredictions} className="recopaForm">
+                    <div className="matchesFormList">
+                      <h3>Cargá tus marcadores y goleadores para los 6 partidos:</h3>
+
+                      {recopaMatches.map((match) => (
+                        <article key={match.id} className="recopaInputCard">
+                          <div className="cardMeta">
+                            <span className="cardOrder">Partido #{match.order}</span>
+                            <span className="cardKickoff">{match.dateLabel} - {match.kickoffTime} hs</span>
+                          </div>
+
+                          <div className="cardMatchRow">
+                            <div className="teamSide home">
+                              <TeamBadge team={match.home} />
+                            </div>
+
+                            <div className="scoreInputsGroup">
+                              <input
+                                type="number"
+                                min="0"
+                                max="30"
+                                value={predictions[match.id]?.homeGoals ?? ""}
+                                onChange={(e) =>
+                                  setPredictions({
+                                    ...predictions,
+                                    [match.id]: { ...predictions[match.id], homeGoals: e.target.value },
+                                  })
+                                }
+                                placeholder="0"
+                                required
+                              />
+                              <span className="dash">-</span>
+                              <input
+                                type="number"
+                                min="0"
+                                max="30"
+                                value={predictions[match.id]?.awayGoals ?? ""}
+                                onChange={(e) =>
+                                  setPredictions({
+                                    ...predictions,
+                                    [match.id]: { ...predictions[match.id], awayGoals: e.target.value },
+                                  })
+                                }
+                                placeholder="0"
+                                required
+                              />
+                            </div>
+
+                            <div className="teamSide away">
+                              <TeamBadge team={match.away} />
+                            </div>
+                          </div>
+
+                          {/* Goalscorer Input Field */}
+                          <div className="scorerInputField">
+                            <label htmlFor={`scorer-${match.id}`}>
+                              ⚽ Goleador del partido (escribilo a mano):
+                            </label>
+                            <input
+                              id={`scorer-${match.id}`}
+                              type="text"
+                              value={predictions[match.id]?.goalScorer ?? ""}
+                              onChange={(e) =>
+                                setPredictions({
+                                  ...predictions,
+                                  [match.id]: { ...predictions[match.id], goalScorer: e.target.value },
+                                })
+                              }
+                              placeholder="Ej: Borja, Cavani, Merentiel, etc."
+                            />
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+
+                    <div className="formActions">
+                      <button type="submit" className="primaryAction" disabled={submitting}>
+                        {submitting ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                        Guardar Pronóstico de {selectedParticipant}
+                      </button>
+                    </div>
+                  </form>
                 </div>
-
-                {/* PIN Security linked to main prode */}
-                <div className="pinFieldContainer">
-                  <label htmlFor="recopaPin">
-                    <Lock size={16} /> PIN de seguridad (ingresá tu mismo PIN de Pronósticos)
-                  </label>
-                  <input
-                    id="recopaPin"
-                    type="password"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value)}
-                    placeholder="Tu PIN personal (4 a 10 números)"
-                    maxLength={10}
-                  />
-                  <small>Accedé con el mismo PIN con el que te registraste y administrás tus pronósticos.</small>
-                </div>
-
-                {/* Matches Form List */}
-                <div className="matchesFormList">
-                  <h3>Cargá tus marcadores para los 6 partidos:</h3>
-
-                  {recopaMatches.map((match) => (
-                    <article key={match.id} className="recopaInputCard">
-                      <div className="cardMeta">
-                        <span className="cardOrder">Partido #{match.order}</span>
-                        <span className="cardKickoff">{match.dateLabel} - {match.kickoffTime} hs</span>
-                      </div>
-
-                      <div className="cardMatchRow">
-                        <div className="teamSide home">
-                          <TeamBadge team={match.home} />
-                        </div>
-
-                        <div className="scoreInputsGroup">
-                          <input
-                            type="number"
-                            min="0"
-                            max="30"
-                            value={predictions[match.id]?.homeGoals ?? ""}
-                            onChange={(e) =>
-                              setPredictions({
-                                ...predictions,
-                                [match.id]: { ...predictions[match.id], homeGoals: e.target.value },
-                              })
-                            }
-                            placeholder="0"
-                            required
-                          />
-                          <span className="dash">-</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="30"
-                            value={predictions[match.id]?.awayGoals ?? ""}
-                            onChange={(e) =>
-                              setPredictions({
-                                ...predictions,
-                                [match.id]: { ...predictions[match.id], awayGoals: e.target.value },
-                              })
-                            }
-                            placeholder="0"
-                            required
-                          />
-                        </div>
-
-                        <div className="teamSide away">
-                          <TeamBadge team={match.away} />
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="formActions">
-                  <button type="submit" className="primaryAction" disabled={submitting}>
-                    {submitting ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-                    Guardar Pronóstico de {selectedParticipant}
-                  </button>
-                </div>
-              </form>
+              )}
             </section>
           )}
 

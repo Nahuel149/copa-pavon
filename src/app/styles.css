@@ -7026,4 +7026,90 @@ tbody tr.relegationRow:hover {
   background: #362003;
 }
 
+.recopaAuthGate {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.activeUserBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: #e0f2fe;
+  border: 2px solid #0284c7;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #0369a1;
+}
+
+.activeUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+}
+
+.activeUserInfo .checkIcon {
+  color: #0284c7;
+}
+
+.scorerInputField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.scorerInputField label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #475569;
+}
+
+.scorerInputField input {
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.userMetaStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scorerText {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+:root[data-theme="dark"] .activeUserBanner {
+  background: #0c4a6e;
+  border-color: #38bdf8;
+  color: #e0f2fe;
+}
+
+:root[data-theme="dark"] .scorerInputField label {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .scorerInputField input {
+  background: #111;
+  color: #fff;
+  border-color: #555;
+}
+
+:root[data-theme="dark"] .scorerText {
+  color: #38bdf8;
+}
+
+
 

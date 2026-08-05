@@ -50,8 +50,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Los goles tienen que ser un número entre 0 y 30." }, { status: 400 });
       }
 
+      const goalScorer = typeof raw.goalScorer === "string" ? raw.goalScorer.trim().replace(/\s+/g, " ") : "";
+
       seenMatchIds.add(matchId);
-      cleanPredictions.push({ matchId, homeGoals, awayGoals });
+      cleanPredictions.push({
+        matchId,
+        homeGoals,
+        awayGoals,
+        ...(goalScorer ? { goalScorer } : {}),
+      });
     }
 
     if (cleanPredictions.length !== recopaMatches.length) {

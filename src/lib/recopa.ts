@@ -94,6 +94,7 @@ export type RecopaScorePrediction = {
   matchId: string;
   homeGoals: number;
   awayGoals: number;
+  goalScorer?: string;
 };
 
 export type RecopaSubmission = {
