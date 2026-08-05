@@ -131,15 +131,18 @@ export default function HistoriaPage() {
                       <th>Participante</th>
                       <th>Puntos</th>
                       <th>Jugados</th>
-                      <th>Exactos (+3)</th>
-                      <th>Ganadores (+1)</th>
-                      <th>Distinción / Estado</th>
+                      <th>Ganados</th>
+                      <th>Perdidos</th>
+                      <th>Exactos</th>
+                      <th>Goles</th>
+                      <th>Grupos</th>
+                      <th>Aciertos</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentEdition.table.map((row) => (
                       <tr
-                        key={row.participant}
+                        key={`${row.pos}-${row.participant}`}
                         className={
                           row.badge === "champion"
                             ? "championRow"
@@ -162,17 +165,14 @@ export default function HistoriaPage() {
                         <td className="participantCell">
                           <strong>{row.participant}</strong>
                         </td>
-                        <td className="pointsCell">{row.points} pts</td>
+                        <td className="pointsCell">{row.points}</td>
                         <td>{row.played}</td>
+                        <td>{row.won}</td>
+                        <td>{row.lost}</td>
                         <td>{row.exactHits}</td>
-                        <td>{row.winnerHits}</td>
-                        <td>
-                          {row.badge === "champion" && <span className="historyBadge championTag">🏆 Campeón</span>}
-                          {row.badge === "runner-up" && <span className="historyBadge runnerTag">🥈 Subcampeón</span>}
-                          {row.badge === "podium" && <span className="historyBadge podiumTag">🥉 Podio</span>}
-                          {row.badge === "relegated" && <span className="historyBadge relegatedTag">🔻 Descendido</span>}
-                          {!row.badge && <span className="historyBadge defaultTag">Competidor</span>}
-                        </td>
+                        <td>{row.goals}</td>
+                        <td>{row.groups}</td>
+                        <td>{row.totalHits}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -11,8 +11,12 @@ export type HistoricalEdition = {
     participant: string;
     points: number;
     played: number;
+    won: number;
+    lost: number;
     exactHits: number;
-    winnerHits: number;
+    goals: number;
+    groups: string;
+    totalHits: number;
     notes?: string;
     badge?: "champion" | "runner-up" | "podium" | "relegated";
   }>;
@@ -21,23 +25,28 @@ export type HistoricalEdition = {
 export const historicalEditions: HistoricalEdition[] = [
   {
     id: "copa-kahl-2026",
-    title: "Copa Kahl - Mundial 2026",
+    title: "Copa Kahl",
     year: "2026",
-    champion: "Gonza Fiss",
+    champion: "Gonza el + Fachero.",
     runnerUp: "Nicolas Gonzalez",
-    description: "La edición consagratoria de la Copa Kahl disputada durante la cita mundialista.",
+    description: "Tabla oficial de posiciones de la Copa Kahl.",
     image: "/kahl-assets/campeon-gonza-fiss.jpeg",
     table: [
-      { pos: 1, participant: "Gonza el + Fachero.", points: 162, played: 104, exactHits: 10, winnerHits: 71, badge: "champion", notes: "CAMPEÓN" },
-      { pos: 2, participant: "Nicolas Gonzalez", points: 157, played: 104, exactHits: 10, winnerHits: 65, badge: "runner-up", notes: "Subcampeón" },
-      { pos: 3, participant: "Miguel", points: 157, played: 104, exactHits: 6, winnerHits: 72, badge: "podium", notes: "Tercer Puesto" },
-      { pos: 4, participant: "Ale Bauce", points: 153, played: 104, exactHits: 8, winnerHits: 66, badge: "podium" },
-      { pos: 5, participant: "Zino", points: 152, played: 104, exactHits: 8, winnerHits: 69 },
-      { pos: 6, participant: "Javier", points: 148, played: 104, exactHits: 7, winnerHits: 66 },
-      { pos: 7, participant: "El Buda", points: 144, played: 104, exactHits: 6, winnerHits: 64 },
-      { pos: 8, participant: "Fer", points: 132, played: 104, exactHits: 5, winnerHits: 58, badge: "relegated", notes: "Descendido a B Nacional" },
-      { pos: 9, participant: "Maxi", points: 128, played: 104, exactHits: 4, winnerHits: 56, badge: "relegated", notes: "Descendido a B Nacional" },
-      { pos: 10, participant: "Nahuel", points: 121, played: 104, exactHits: 3, winnerHits: 52, badge: "relegated", notes: "Descendido a B Nacional" },
+      { pos: 1, participant: "Gonza el + Fachero.", points: 162, played: 104, won: 71, lost: 33, exactHits: 10, goals: 17, groups: "7/12", totalHits: 105, badge: "champion", notes: "CAMPEÓN" },
+      { pos: 2, participant: "Nicolas Gonzalez", points: 157, played: 104, won: 65, lost: 39, exactHits: 10, goals: 14, groups: "9/12", totalHits: 98, badge: "runner-up", notes: "Subcampeón" },
+      { pos: 3, participant: "Miguel (El Buda)", points: 157, played: 104, won: 72, lost: 32, exactHits: 6, goals: 15, groups: "9/12", totalHits: 102, badge: "podium", notes: "Tercer Puesto" },
+      { pos: 4, participant: "Ale Bauce", points: 153, played: 104, won: 66, lost: 38, exactHits: 8, goals: 15, groups: "6/12", totalHits: 95 },
+      { pos: 5, participant: "Zino", points: 152, played: 104, won: 69, lost: 35, exactHits: 8, goals: 14, groups: "8/12", totalHits: 99 },
+      { pos: 6, participant: "Lautaro", points: 150, played: 100, won: 64, lost: 36, exactHits: 7, goals: 17, groups: "7/12", totalHits: 95 },
+      { pos: 7, participant: "Javier", points: 150, played: 104, won: 66, lost: 38, exactHits: 6, goals: 12, groups: "5/12", totalHits: 89 },
+      { pos: 8, participant: "Enzo", points: 147, played: 104, won: 65, lost: 39, exactHits: 11, goals: 14, groups: "7/12", totalHits: 97 },
+      { pos: 9, participant: "Matías N...", points: 147, played: 104, won: 58, lost: 46, exactHits: 4, goals: 13, groups: "7/12", totalHits: 82 },
+      { pos: 10, participant: "Tony", points: 142, played: 104, won: 66, lost: 38, exactHits: 9, goals: 14, groups: "5/12", totalHits: 94 },
+      { pos: 11, participant: "Lautaro", points: 136, played: 104, won: 65, lost: 39, exactHits: 6, goals: 14, groups: "6/12", totalHits: 91 },
+      { pos: 12, participant: "Andres", points: 135, played: 104, won: 62, lost: 42, exactHits: 5, goals: 9, groups: "8/12", totalHits: 84 },
+      { pos: 13, participant: "Nahuel", points: 129, played: 104, won: 56, lost: 48, exactHits: 5, goals: 9, groups: "9/12", totalHits: 79, badge: "relegated", notes: "Descendido a B Nacional" },
+      { pos: 14, participant: "Maxi", points: 124, played: 102, won: 64, lost: 38, exactHits: 6, goals: 13, groups: "3/12", totalHits: 86, badge: "relegated", notes: "Descendido a B Nacional" },
+      { pos: 15, participant: "Fer", points: 118, played: 104, won: 55, lost: 49, exactHits: 3, goals: 11, groups: "6/12", totalHits: 75, badge: "relegated", notes: "Descendido a B Nacional" },
     ],
   },
   {
@@ -65,6 +74,6 @@ export type AllTimeRecord = {
 };
 
 export const allTimePalmares: AllTimeRecord[] = [
-  { participant: "Gonza Fiss / Gonza el + Fachero.", titles: 2, trophies: ["Copa Chiqui Bauch", "Copa Kahl 2026"] },
+  { participant: "Gonza Fiss / Gonza el + Fachero.", titles: 2, trophies: ["Copa Chiqui Bauch", "Copa Kahl"] },
   { participant: "Javi / Javier", titles: 1, trophies: ["Copa Fiss"] },
 ];
