@@ -6001,7 +6001,9 @@ tbody tr.relegationRow:hover {
 
 .recopaHero {
   background:
-    linear-gradient(90deg, rgba(5, 5, 5, 0.72), rgba(5, 5, 5, 0.2)),
+    linear-gradient(90deg, rgba(5, 5, 5, 0.78), rgba(5, 5, 5, 0.26) 55%, rgba(5, 5, 5, 0.54)),
+    linear-gradient(0deg, rgba(5, 5, 5, 0.18), rgba(5, 5, 5, 0.18)),
+    url("/kahl-assets/copa-kahl.jpeg") center 46% / cover no-repeat,
     linear-gradient(135deg, #d4af37 0%, #b8860b 40%, #8b0000 100%);
   display: flex;
   flex-direction: column;
@@ -6047,6 +6049,7 @@ tbody tr.relegationRow:hover {
   height: 64px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center 20%;
   border: 3px solid var(--ink);
 }
 
@@ -6459,6 +6462,7 @@ tbody tr.relegationRow:hover {
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center 20%;
   border: 2px solid var(--ink);
 }
 
