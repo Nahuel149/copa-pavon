@@ -17,6 +17,7 @@ export type HistoricalEdition = {
     goals?: number;
     groups?: string;
     totalHits?: number;
+    streak?: string;
     notes?: string;
     badge?: "champion" | "runner-up" | "podium" | "relegated";
   }>;
@@ -154,8 +155,19 @@ export const historicalEditions: HistoricalEdition[] = [
     title: "Copa Fiss",
     year: "2024",
     champion: "Javi",
-    description: "La edición inagural conquistada por Javi.",
+    runnerUp: "Nahuel",
+    description: "La edición inaugural de la historia del prode, conquistada por Javier tras una ajustada definición.",
     image: "/kahl-assets/campeon-javi.jpeg",
+    table: [
+      { pos: 1, participant: "Javier", points: 42, streak: "3-2", badge: "champion", notes: "CAMPEÓN" },
+      { pos: 2, participant: "Nahuel", points: 40, streak: "3-2", badge: "runner-up", notes: "Subcampeón" },
+      { pos: 3, participant: "Ale Bauch", points: 36, streak: "3-2", badge: "podium", notes: "Tercer Puesto" },
+      { pos: 4, participant: "Enzo", points: 36, streak: "3-2" },
+      { pos: 5, participant: "Diego", points: 30, streak: "2-3" },
+      { pos: 6, participant: "Andres", points: 26, streak: "3-2" },
+      { pos: 7, participant: "Miguel", points: 24, streak: "3-2", badge: "relegated", notes: "Descendido a B Nacional" },
+      { pos: 8, participant: "Gonza", points: 24, streak: "2-3", badge: "relegated", notes: "Descendido a B Nacional" },
+    ],
   },
 ];
 

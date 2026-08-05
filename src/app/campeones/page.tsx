@@ -215,6 +215,60 @@ export default function CampeonesPage() {
                         ))}
                       </tbody>
                     </table>
+                  ) : currentEdition.table[0]?.streak !== undefined ? (
+                    <table className="recopaTable historyTable">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Participante</th>
+                          <th>Puntos</th>
+                          <th>Racha</th>
+                          <th>Distinción / Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentEdition.table.map((row) => (
+                          <tr
+                            key={`${row.pos}-${row.participant}`}
+                            className={
+                              row.badge === "champion"
+                                ? "championRow"
+                                : row.badge === "runner-up"
+                                ? "runnerUpRow"
+                                : row.badge === "relegated"
+                                ? "relegatedRow"
+                                : ""
+                            }
+                          >
+                            <td className="posCell">
+                              {row.badge === "champion" ? (
+                                <Trophy size={18} className="goldTrophy" />
+                              ) : row.badge === "runner-up" ? (
+                                <Medal size={18} className="silverMedal" />
+                              ) : (
+                                row.pos
+                              )}
+                            </td>
+                            <td className="participantCell">
+                              <strong>{row.participant}</strong>
+                            </td>
+                            <td className="pointsCell">{row.points} pts</td>
+                            <td>
+                              <span className="historyBadge defaultTag" style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #7dd3fc" }}>
+                                ⚡ {row.streak}
+                              </span>
+                            </td>
+                            <td>
+                              {row.badge === "champion" && <span className="historyBadge championTag">🏆 Campeón</span>}
+                              {row.badge === "runner-up" && <span className="historyBadge runnerTag">🥈 Subcampeón</span>}
+                              {row.badge === "podium" && <span className="historyBadge podiumTag">🥉 Podio</span>}
+                              {row.badge === "relegated" && <span className="historyBadge relegatedTag">🔻 Descendido</span>}
+                              {!row.badge && <span className="historyBadge defaultTag">Competidor</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   ) : (
                     <table className="recopaTable historyTable">
                       <thead>
@@ -344,6 +398,15 @@ export default function CampeonesPage() {
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
               <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Chiqui Bauch 2025:</span>
               {["Javi", "Buda (Matías Nicolas)"].map((name) => (
+                <span key={name}>
+                  <ShieldAlert size={18} aria-hidden="true" />
+                  {name}
+                </span>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
+              <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Fiss 2024:</span>
+              {["Miguel", "Gonza"].map((name) => (
                 <span key={name}>
                   <ShieldAlert size={18} aria-hidden="true" />
                   {name}
