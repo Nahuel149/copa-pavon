@@ -50,11 +50,11 @@ export default function RecopaPage() {
   const [submitMessage, setSubmitMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Admin results state
-  const [resultsDraft, setResultsDraft] = useState<Record<string, { homeGoals: string; awayGoals: string }>>(() =>
+  const [resultsDraft, setResultsDraft] = useState<Record<string, { homeGoals: string; awayGoals: string; scorerNames: string }>>(() =>
     recopaMatches.reduce((acc, m) => {
-      acc[m.id] = { homeGoals: "", awayGoals: "" };
+      acc[m.id] = { homeGoals: "", awayGoals: "", scorerNames: "" };
       return acc;
-    }, {} as Record<string, { homeGoals: string; awayGoals: string }>),
+    }, {} as Record<string, { homeGoals: string; awayGoals: string; scorerNames: string }>),
   );
   const [savingResults, setSavingResults] = useState(false);
   const [resultsMessage, setResultsMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -75,7 +75,11 @@ export default function RecopaPage() {
         setResultsDraft((prev) => {
           const next = { ...prev };
           for (const r of body.results) {
-            next[r.matchId] = { homeGoals: String(r.homeGoals), awayGoals: String(r.awayGoals) };
+            next[r.matchId] = {
+              homeGoals: String(r.homeGoals),
+              awayGoals: String(r.awayGoals),
+              scorerNames: r.scorerNames ? r.scorerNames.join(", ") : "",
+            };
           }
           return next;
         });
@@ -182,6 +186,9 @@ export default function RecopaPage() {
         matchId: m.id,
         homeGoals: Number(resultsDraft[m.id].homeGoals),
         awayGoals: Number(resultsDraft[m.id].awayGoals),
+        scorerNames: resultsDraft[m.id].scorerNames.trim()
+          ? resultsDraft[m.id].scorerNames.split(",").map((s) => s.trim()).filter(Boolean)
+          : undefined,
       }));
 
     try {
@@ -254,12 +261,16 @@ export default function RecopaPage() {
         </div>
       </section>
 
-      {/* Exclusive notice */}
+      {/* Rules Notice */}
       <section className="recopaNotice">
         <ShieldAlert size={20} className="noticeIcon" aria-hidden="true" />
         <div>
-          <strong>Aviso de Participación Exclusiva</strong>
-          <p>En esta Recopa compiten exclusivamente <strong>Gonza el + Fachero.</strong> y <strong>Javier</strong>. El resto de los usuarios no pueden realizar pronósticos en esta copa.</p>
+          <strong>Reglamento de Puntaje Recopa Fiss Kahl</strong>
+          <p>
+            • <strong>3 puntos</strong> por acertar el resultado exacto. <br />
+            • <strong>1 punto</strong> por acertar el ganador o empate (no exacto). <br />
+            • <strong>1 punto extra</strong> por acertar cualquier goleador del partido.
+          </p>
         </div>
       </section>
 
@@ -324,6 +335,7 @@ export default function RecopaPage() {
                         <th>Puntos</th>
                         <th>Exactos (+3)</th>
                         <th>Ganadores (+1)</th>
+                        <th>Goleadores (+1)</th>
                         <th>Estado</th>
                       </tr>
                     </thead>
@@ -346,6 +358,7 @@ export default function RecopaPage() {
                               <td className="pointsCell">{standing.totalPoints} pts</td>
                               <td>{standing.exactHits}</td>
                               <td>{standing.winnerHits}</td>
+                              <td>{standing.scorerHits}</td>
                               <td>
                                 {standing.submission ? (
                                   <span className="statusTag loaded">Pronóstico cargado</span>
@@ -399,9 +412,16 @@ export default function RecopaPage() {
                         <div className="officialResultBox">
                           <small>Resultado Oficial:</small>
                           {result ? (
-                            <strong className="officialScore">
-                              {result.homeGoals} - {result.awayGoals}
-                            </strong>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                              <strong className="officialScore">
+                                {result.homeGoals} - {result.awayGoals}
+                              </strong>
+                              {result.scorerNames && result.scorerNames.length > 0 && (
+                                <small style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                                  ⚽ {result.scorerNames.join(", ")}
+                                </small>
+                              )}
+                            </div>
                           ) : (
                             <span className="pendingResult">Por jugarse</span>
                           )}
@@ -416,7 +436,7 @@ export default function RecopaPage() {
                               <div className="userMetaStack">
                                 <span>Gonza el + Fachero.</span>
                                 {gonzaBreak?.prediction?.goalScorer ? (
-                                  <small className="scorerText">⚽ Goleador: {gonzaBreak.prediction.goalScorer}</small>
+                                  <small className="scorerText">⚽ {gonzaBreak.prediction.goalScorer}</small>
                                 ) : null}
                               </div>
                             </div>
@@ -431,9 +451,14 @@ export default function RecopaPage() {
                             </div>
                             <div className="predPoints">
                               {result ? (
-                                <span className={`ptsTag ${gonzaBreak?.verdict}`}>
-                                  +{gonzaBreak?.points ?? 0} pts
-                                </span>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                                  <span className={`ptsTag ${gonzaBreak?.verdict}`}>
+                                    +{gonzaBreak?.points ?? 0} pts
+                                  </span>
+                                  {gonzaBreak?.scorerHit && (
+                                    <small style={{ fontSize: "0.65rem", fontWeight: 800, color: "#16a34a" }}>⚽ +1 Goleador</small>
+                                  )}
+                                </div>
                               ) : (
                                 <span className="ptsTag pending">?</span>
                               )}
@@ -447,7 +472,7 @@ export default function RecopaPage() {
                               <div className="userMetaStack">
                                 <span>Javier</span>
                                 {javiBreak?.prediction?.goalScorer ? (
-                                  <small className="scorerText">⚽ Goleador: {javiBreak.prediction.goalScorer}</small>
+                                  <small className="scorerText">⚽ {javiBreak.prediction.goalScorer}</small>
                                 ) : null}
                               </div>
                             </div>
@@ -462,9 +487,14 @@ export default function RecopaPage() {
                             </div>
                             <div className="predPoints">
                               {result ? (
-                                <span className={`ptsTag ${javiBreak?.verdict}`}>
-                                  +{javiBreak?.points ?? 0} pts
-                                </span>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                                  <span className={`ptsTag ${javiBreak?.verdict}`}>
+                                    +{javiBreak?.points ?? 0} pts
+                                  </span>
+                                  {javiBreak?.scorerHit && (
+                                    <small style={{ fontSize: "0.65rem", fontWeight: 800, color: "#16a34a" }}>⚽ +1 Goleador</small>
+                                  )}
+                                </div>
                               ) : (
                                 <span className="ptsTag pending">?</span>
                               )}
@@ -670,7 +700,7 @@ export default function RecopaPage() {
               <div className="panelHeader">
                 <p className="eyebrow">Administración Recopa</p>
                 <h2>Cargar Resultados Reales de los Partidos</h2>
-                <p>Completá los goles reales de cada encuentro para calcular los puntos en tiempo real.</p>
+                <p>Completá los goles reales y goleadores de cada encuentro para calcular los puntos en tiempo real.</p>
               </div>
 
               {resultsMessage && (
@@ -727,6 +757,25 @@ export default function RecopaPage() {
                         <div className="teamSide away">
                           <TeamBadge team={match.away} />
                         </div>
+                      </div>
+
+                      {/* Official Scorer Input Field */}
+                      <div className="scorerInputField">
+                        <label htmlFor={`admin-scorer-${match.id}`}>
+                          ⚽ Goleadores reales del partido (separados por coma):
+                        </label>
+                        <input
+                          id={`admin-scorer-${match.id}`}
+                          type="text"
+                          value={resultsDraft[match.id]?.scorerNames ?? ""}
+                          onChange={(e) =>
+                            setResultsDraft({
+                              ...resultsDraft,
+                              [match.id]: { ...resultsDraft[match.id], scorerNames: e.target.value },
+                            })
+                          }
+                          placeholder="Ej: Borja, Solari"
+                        />
                       </div>
                     </article>
                   ))}

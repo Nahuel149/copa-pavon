@@ -108,6 +108,7 @@ export type RecopaMatchResult = {
   matchId: string;
   homeGoals: number;
   awayGoals: number;
+  scorerNames?: string[];
 };
 
 export type RecopaStore = {
@@ -138,27 +139,65 @@ export function getOutcome(homeGoals: number, awayGoals: number): "home" | "away
   return "draw";
 }
 
+export function normalizeRecopaScorer(name?: string) {
+  if (!name) return "";
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function matchRecopaScorer(predScorer?: string, officialScorers?: string[]): boolean {
+  const normPred = normalizeRecopaScorer(predScorer);
+  if (!normPred || normPred.length < 2 || !officialScorers || officialScorers.length === 0) {
+    return false;
+  }
+
+  return officialScorers.some((off) => {
+    const normOff = normalizeRecopaScorer(off);
+    if (!normOff) return false;
+    return normOff.includes(normPred) || normPred.includes(normOff);
+  });
+}
+
 export function scoreRecopaPrediction(
   prediction: RecopaScorePrediction | undefined,
   result: RecopaMatchResult | undefined,
-): { points: number; verdict: RecopaVerdict } {
+): { points: number; basePoints: number; scorerPoints: number; verdict: RecopaVerdict; scorerHit: boolean } {
   if (!prediction || !result) {
-    return { points: 0, verdict: "miss" };
+    return { points: 0, basePoints: 0, scorerPoints: 0, verdict: "miss", scorerHit: false };
   }
 
   const exact = prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals;
+  let basePoints = 0;
+  let verdict: RecopaVerdict = "miss";
+
   if (exact) {
-    return { points: 3, verdict: "exact" };
+    basePoints = 3;
+    verdict = "exact";
+  } else {
+    const predOutcome = getOutcome(prediction.homeGoals, prediction.awayGoals);
+    const resOutcome = getOutcome(result.homeGoals, result.awayGoals);
+    if (predOutcome === resOutcome) {
+      basePoints = 1;
+      verdict = "winner";
+    }
   }
 
-  const predOutcome = getOutcome(prediction.homeGoals, prediction.awayGoals);
-  const resOutcome = getOutcome(result.homeGoals, result.awayGoals);
+  const scorerHit = matchRecopaScorer(prediction.goalScorer, result.scorerNames);
+  const scorerPoints = scorerHit ? 1 : 0;
 
-  if (predOutcome === resOutcome) {
-    return { points: 1, verdict: "winner" };
-  }
-
-  return { points: 0, verdict: "miss" };
+  return {
+    points: basePoints + scorerPoints,
+    basePoints,
+    scorerPoints,
+    verdict,
+    scorerHit,
+  };
 }
 
 export type RecopaStanding = {
@@ -167,6 +206,7 @@ export type RecopaStanding = {
   totalPoints: number;
   exactHits: number;
   winnerHits: number;
+  scorerHits: number;
   matchesPlayed: number;
   matchBreakdown: Record<
     string,
@@ -174,7 +214,10 @@ export type RecopaStanding = {
       prediction?: RecopaScorePrediction;
       result?: RecopaMatchResult;
       points: number;
+      basePoints: number;
+      scorerPoints: number;
       verdict: RecopaVerdict;
+      scorerHit: boolean;
     }
   >;
 };
@@ -189,6 +232,7 @@ export function buildRecopaStandings(store: RecopaStore): RecopaStanding[] {
     let totalPoints = 0;
     let exactHits = 0;
     let winnerHits = 0;
+    let scorerHits = 0;
     let matchesPlayed = 0;
 
     const matchBreakdown: RecopaStanding["matchBreakdown"] = {};
@@ -197,20 +241,24 @@ export function buildRecopaStandings(store: RecopaStore): RecopaStanding[] {
       const pred = predictionsMap.get(match.id);
       const res = resultsMap.get(match.id);
 
-      const { points, verdict } = scoreRecopaPrediction(pred, res);
+      const { points, basePoints, scorerPoints, verdict, scorerHit } = scoreRecopaPrediction(pred, res);
 
       if (res) {
         matchesPlayed += 1;
         totalPoints += points;
         if (verdict === "exact") exactHits += 1;
         if (verdict === "winner") winnerHits += 1;
+        if (scorerHit) scorerHits += 1;
       }
 
       matchBreakdown[match.id] = {
         prediction: pred,
         result: res,
         points,
+        basePoints,
+        scorerPoints,
         verdict,
+        scorerHit,
       };
     }
 
@@ -220,6 +268,7 @@ export function buildRecopaStandings(store: RecopaStore): RecopaStanding[] {
       totalPoints,
       exactHits,
       winnerHits,
+      scorerHits,
       matchesPlayed,
       matchBreakdown,
     };

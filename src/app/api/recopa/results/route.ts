@@ -19,7 +19,18 @@ export async function POST(request: Request) {
       if (!recopaMatches.some((m) => m.id === matchId)) continue;
 
       if (Number.isInteger(homeGoals) && Number.isInteger(awayGoals) && homeGoals >= 0 && awayGoals >= 0) {
-        cleanResults.push({ matchId, homeGoals, awayGoals });
+        const scorerNamesRaw = Array.isArray(raw.scorerNames)
+          ? raw.scorerNames.map((s: unknown) => String(s).trim()).filter(Boolean)
+          : typeof raw.scorerNames === "string"
+          ? raw.scorerNames.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [];
+
+        cleanResults.push({
+          matchId,
+          homeGoals,
+          awayGoals,
+          ...(scorerNamesRaw.length > 0 ? { scorerNames: scorerNamesRaw } : {}),
+        });
       }
     }
 
