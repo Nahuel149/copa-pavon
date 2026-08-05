@@ -40,7 +40,7 @@ export const historicalEditions: HistoricalEdition[] = [
       { pos: 6, participant: "Lautaro", points: 150, played: 100, won: 64, lost: 36, exactHits: 7, goals: 17, groups: "7/12", totalHits: 95 },
       { pos: 7, participant: "Javier", points: 150, played: 104, won: 66, lost: 38, exactHits: 6, goals: 12, groups: "5/12", totalHits: 89 },
       { pos: 8, participant: "Enzo", points: 147, played: 104, won: 65, lost: 39, exactHits: 11, goals: 14, groups: "7/12", totalHits: 97 },
-      { pos: 9, participant: "Matías N...", points: 147, played: 104, won: 58, lost: 46, exactHits: 4, goals: 13, groups: "7/12", totalHits: 82 },
+      { pos: 9, participant: "Matías N.", points: 147, played: 104, won: 58, lost: 46, exactHits: 4, goals: 13, groups: "7/12", totalHits: 82 },
       { pos: 10, participant: "Tony", points: 142, played: 104, won: 66, lost: 38, exactHits: 9, goals: 14, groups: "5/12", totalHits: 94 },
       { pos: 11, participant: "Lautaro", points: 136, played: 104, won: 65, lost: 39, exactHits: 6, goals: 14, groups: "6/12", totalHits: 91 },
       { pos: 12, participant: "Andres", points: 135, played: 104, won: 62, lost: 42, exactHits: 5, goals: 9, groups: "8/12", totalHits: 84 },
