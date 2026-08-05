@@ -18,6 +18,7 @@ import {
   type KnockoutStage,
   type MatchRound,
 } from "@/lib/matches";
+import { recopaMatches } from "@/lib/recopa";
 import {
   buildStandings,
   serializeKnockoutPrediction,
@@ -309,6 +310,10 @@ export default function AdminPage() {
   const [resetParticipantPin, setResetParticipantPin] = useState("");
   const [resetPinStatus, setResetPinStatus] = useState<"idle" | "saving">("idle");
   const [resetPinMessage, setResetPinMessage] = useState("");
+  const [recopaAdminData, setRecopaAdminData] = useState<{
+    submissions?: Array<{ participant: string; predictions: Array<{ matchId: string; homeGoals: number; awayGoals: number; goalScorer?: string }> }>;
+    results?: Array<{ matchId: string; homeGoals: number; awayGoals: number; scorerNames?: string[] }>;
+  } | null>(null);
 
   const results = useMemo(
     () => buildResultsPayload(matchDraft, groupDraft, knockoutFixtures, knockoutDraft, manualAdjustments),
@@ -351,6 +356,12 @@ export default function AdminPage() {
       fetch("/api/settings", { headers, cache: "no-store" }),
       fetch("/api/admin-audit", { headers, cache: "no-store" }),
     ]);
+
+    // Also fetch Recopa data for admin view
+    fetch("/api/recopa", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setRecopaAdminData(data))
+      .catch(() => {});
 
     if (!submissionResponse.ok || !resultsResponse.ok || !settingsResponse.ok || !auditResponse.ok) {
       const body = await readJsonResponse<SubmissionsResponse | SettingsResponse>(
@@ -777,6 +788,60 @@ export default function AdminPage() {
           {showAllSubmissions ? "Ocultar todos" : "Ver todos los envíos"}
         </button>
       </section>
+
+      <details className="adminFold" open>
+        <summary>⚔️ Recopa Fiss Kahl (Gonza el + Fachero. vs Javier)</summary>
+        <section className="sectionHeader">
+          <p className="eyebrow">Recopa Fiss Kahl</p>
+          <h2>Pronósticos de los Participantes Habilitados</h2>
+          <p>Revisión de los marcadores y goleadores cargados por Gonza el + Fachero. y Javier para los 6 partidos.</p>
+        </section>
+
+        <section className="resultGrid" aria-label="Pronósticos Recopa">
+          {recopaMatches.map((match) => {
+            const gonzaSub = recopaAdminData?.submissions?.find((s) => s.participant === "Gonza el + Fachero.");
+            const javiSub = recopaAdminData?.submissions?.find((s) => s.participant === "Javier");
+            const gonzaPred = gonzaSub?.predictions?.find((p) => p.matchId === match.id);
+            const javiPred = javiSub?.predictions?.find((p) => p.matchId === match.id);
+            const result = recopaAdminData?.results?.find((r) => r.matchId === match.id);
+
+            return (
+              <article className="resultCard" key={match.id} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <span>#{match.order} - {match.home} vs {match.away} ({match.dateLabel} {match.kickoffTime} hs)</span>
+                {result ? (
+                  <small style={{ color: "#16a34a", fontWeight: 800 }}>
+                    Oficial: {result.homeGoals} - {result.awayGoals} {result.scorerNames?.length ? `(⚽ ${result.scorerNames.join(", ")})` : ""}
+                  </small>
+                ) : (
+                  <small style={{ color: "#64748b" }}>Pendiente de juego</small>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px", fontSize: "0.85rem" }}>
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                    <strong style={{ color: "#1e293b" }}>Gonza el + Fachero.:</strong>{" "}
+                    {gonzaPred ? (
+                      <span style={{ fontWeight: 800, color: "#2563eb" }}>{gonzaPred.homeGoals} - {gonzaPred.awayGoals}</span>
+                    ) : (
+                      <span style={{ color: "#94a3b8" }}>Sin cargar</span>
+                    )}
+                    {gonzaPred?.goalScorer ? <span style={{ color: "#0284c7", fontWeight: 700, marginLeft: "6px" }}>⚽ {gonzaPred.goalScorer}</span> : null}
+                  </div>
+
+                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                    <strong style={{ color: "#1e293b" }}>Javier:</strong>{" "}
+                    {javiPred ? (
+                      <span style={{ fontWeight: 800, color: "#2563eb" }}>{javiPred.homeGoals} - {javiPred.awayGoals}</span>
+                    ) : (
+                      <span style={{ color: "#94a3b8" }}>Sin cargar</span>
+                    )}
+                    {javiPred?.goalScorer ? <span style={{ color: "#0284c7", fontWeight: 700, marginLeft: "6px" }}>⚽ {javiPred.goalScorer}</span> : null}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      </details>
 
       <details className="adminFold" open>
         <summary>Resultados de eliminatorias</summary>

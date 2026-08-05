@@ -179,6 +179,8 @@ export default function RecopaPage() {
     }
   }
 
+  const [adminPin, setAdminPin] = useState("");
+
   async function handleSaveResults(e: React.FormEvent) {
     e.preventDefault();
     setSavingResults(true);
@@ -198,8 +200,11 @@ export default function RecopaPage() {
     try {
       const res = await fetch("/api/recopa/results", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ results: formattedResults }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(adminPin ? { "x-prode-admin-pin": adminPin } : {}),
+        },
+        body: JSON.stringify({ results: formattedResults, pin: adminPin }),
       });
 
       const body = await readJsonResponse<{ message?: string; error?: string }>(res);
@@ -749,6 +754,23 @@ export default function RecopaPage() {
               )}
 
               <form onSubmit={handleSaveResults} className="recopaForm">
+                {/* Admin PIN Field */}
+                <div className="pinFieldContainer" style={{ marginBottom: "20px" }}>
+                  <label htmlFor="recopaAdminPin">
+                    <Lock size={16} /> PIN de Administrador (requerido para guardar)
+                  </label>
+                  <input
+                    id="recopaAdminPin"
+                    type="password"
+                    value={adminPin}
+                    onChange={(e) => setAdminPin(e.target.value)}
+                    placeholder="Ingresá el PIN de admin"
+                    maxLength={10}
+                    required
+                  />
+                  <small>Carga protegida. Se requiere PIN de administración para actualizar resultados oficiales.</small>
+                </div>
+
                 <div className="matchesFormList">
                   {recopaMatches.map((match) => (
                     <article key={match.id} className="recopaInputCard adminCard">
