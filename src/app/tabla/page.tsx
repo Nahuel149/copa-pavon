@@ -812,380 +812,78 @@ export default function TablaPage() {
     <div className="pageStack">
       <section className="heroBand tableHero standingsHero">
         <div>
-          <p className="eyebrow">Tabla</p>
-          <h1>Posiciones del prode.</h1>
+          <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
+            PRÓXIMAMENTE 🏆
+          </p>
+          <h1>Copa "Se mató Pavón"</h1>
           <p className="heroCopy">
-            Puntaje acumulado por 1X2, marcadores exactos, grupos y eliminatorias. Se recalcula con los resultados
-            oficiales cargados en admin.
+            La nueva edición oficial de la Copa Kahl para las definiciones más calientes del fútbol argentino y sudamericano. ¡Prepará tus pronósticos!
           </p>
         </div>
-        <div className="tableRefresh">
-          <span>{data.updatedAt ? `Actualizada ${formatArgentinaTime(data.updatedAt)}` : "Actualizando..."}</span>
-          <button className="primaryAction light" onClick={loadStandings} type="button">
-            <RefreshCw className={status === "loading" ? "spin" : ""} size={18} aria-hidden="true" />
-            Actualizar
-          </button>
+      </section>
+
+      {/* ANUNCIO OFICIAL PROXIMAMENTE */}
+      <section className="historyTablePanel" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", padding: "24px" }}>
+        <div className="panelHeader">
+          <p className="eyebrow" style={{ background: "#ef4444", color: "#fff", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "4px 10px", borderRadius: "12px", fontSize: "0.8rem" }}>
+            🔥 Edición Confirmada
+          </p>
+          <h2 style={{ fontSize: "1.6rem", margin: "10px 0 6px", fontWeight: 900, color: "#0f172a" }}>
+            Competencias que disputan la Copa "Se mató Pavón"
+          </h2>
+          <p style={{ fontSize: "1.05rem", color: "#334155", lineHeight: "1.5" }}>
+            Esta nueva copa unificará los pronósticos de las fases decisivas y finales de cuatro competiciones estelares:
+          </p>
         </div>
-      </section>
 
-      {error ? <section className="errorPanel" aria-live="polite">{error}</section> : null}
+        <div className="reportCardsGrid" style={{ marginTop: "16px" }}>
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>🌎</span>
+              <h3>COPA SUDAMERICANA</h3>
+              <span className="reportPts" style={{ background: "#e0f2fe", color: "#0369a1" }}>Semifinales + Final</span>
+            </header>
+            <p>Partidos de ida y vuelta de semifinales y la gran definición por el título sudamericano.</p>
+          </article>
 
-      <section className="tableShell">
-        <table className="standingsTable publicStandingsTable">
-          <colgroup>
-            <col className="standingPositionCol" />
-            <col className="standingPlayerCol" />
-            <col className="standingPointsCol" />
-            <col className="standingMetricCol" />
-            <col className="standingMetricCol" />
-            <col className="standingMetricCol" />
-            <col className="standingExactCol" />
-            <col className="standingMetricCol" />
-            <col className="standingGroupExactCol" />
-            <col className="standingMetricCol" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>{sortButton("position", "#")}</th>
-              <th>{sortButton("name", "Participante")}</th>
-              <th className="pointsHeader">{sortButton("points", "Puntos")}</th>
-              <th>{sortButton("played", "Jugados")}</th>
-              <th>{sortButton("wins", "Ganados")}</th>
-              <th>{sortButton("losses", "Perdidos")}</th>
-              <th>{sortButton("exacts", "Exactos")}</th>
-              <th>{sortButton("scorers", "Goles")}</th>
-              <th>{sortButton("groups", "Grupos")}</th>
-              <th>{sortButton("totalHits", "Aciertos")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedRows.map((row, index) => {
-              const isLeader = index === 0;
-              const isRelegation = sortedRows.length > 1 && index >= sortedRows.length - relegationCount;
-              return (
-                <Fragment key={row.submissionId}>
-                  <tr className={isLeader ? "leaderRow" : isRelegation ? "relegationRow" : ""}>
-                    <td data-label="Posicion">
-                      <span className="positionCell">
-                        <b>{index + 1}</b>
-                        <span className={movementClass(row.submissionId)}>{movementLabel(row.submissionId)}</span>
-                      </span>
-                    </td>
-                    <td className="playerCell" data-label="Participante">
-                      <button className="tableButton inlineButton" onClick={() => setExpandedPlayerId(expandedPlayerId === row.submissionId ? null : row.submissionId)} title={row.name} type="button">
-                        {shortParticipantName(row.name)}
-                      </button>
-                    </td>
-                    <td className="pointsCell" data-label="Puntos"><strong>{row.totalPoints}</strong></td>
-                    <td data-label="Jugados">{row.predictionMatchesPlayed}</td>
-                    <td data-label="Ganados">{row.predictionWins}</td>
-                    <td data-label="Perdidos">{row.predictionLosses}</td>
-                    <td data-label="Exactos">{row.exactHits + row.knockoutExactHits}</td>
-                    <td data-label="Goleadores">{row.knockoutScorerHits}</td>
-                    <td data-label="Grupos exactos">{row.groupHits}/{data.decidedGroups}</td>
-                    <td data-label="Aciertos totales">{totalHits(row)}</td>
-                  </tr>
-                  {expandedPlayerId === row.submissionId ? (
-                    <tr className="detailRow">
-                      <td colSpan={10}>
-                        <div className="playerPointPanel">
-                          <div className="playerPointSummary">
-                            <div>
-                              <span>Detalle de puntos</span>
-                              <strong>{row.name}</strong>
-                            </div>
-                            <div>
-                              <span>Total</span>
-                              <strong>{row.totalPoints}</strong>
-                            </div>
-                          </div>
-                          <div className="pointBreakdown compact">
-                            {pointDetailCards(row).map((card) => (
-                              <article key={card.label}>
-                                <div>
-                                  <span>{card.label}</span>
-                                  <strong>{card.value}</strong>
-                                </div>
-                                <p>{card.help}</p>
-                                <small>{card.meta}</small>
-                              </article>
-                            ))}
-                          </div>
-                          {row.pointAudit.length > 0 ? (
-                            <details className="pointAuditDisclosure">
-                              <summary>Ver jugada por jugada ({row.pointAudit.length})</summary>
-                              <div className="pointAuditList">
-                                {row.pointAudit.map((entry) => (
-                                  <article className={`pointAuditEntry ${entry.verdict}`} key={`${row.submissionId}-${entry.id}`}>
-                                    <div>
-                                      <strong>{entry.label}</strong>
-                                      <span>{entry.prediction} / oficial {entry.official}</span>
-                                    </div>
-                                    <b>{entry.points > 0 ? `+${entry.points}` : "0"}</b>
-                                  </article>
-                                ))}
-                              </div>
-                            </details>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
-                </Fragment>
-              );
-            })}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={10}>La tabla aparece cuando haya envios guardados.</td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </section>
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>🏆</span>
+              <h3>COPA LIBERTADORES</h3>
+              <span className="reportPts" style={{ background: "#fef08a", color: "#854d0e" }}>Semifinales + Final</span>
+            </header>
+            <p>Los 4 mejores del continente definiendo a la gloria eterna.</p>
+          </article>
 
-      {data.dailyRecap || dateHighlights.length > 0 ? (
-        <section className="dailyRecap" aria-label="Resumen y premios de la fecha">
-          <div className="tableNote">
-            <div>
-              <strong>Resumen y premios de la fecha</strong>
-              <span>
-                {data.dailyRecap
-                  ? `${data.dailyRecap.dateLabel} · ${data.dailyRecap.matchesPlayed} partidos con resultado.`
-                  : "Se completa cuando haya resultados oficiales."}
-              </span>
-            </div>
-            <Trophy size={24} aria-hidden="true" />
-          </div>
-          {data.dailyRecap ? (
-            <div className="dailyResultStrip">
-              {data.dailyRecap.matches.map((match) => (
-                <article key={match.matchId}>
-                  <span>{match.label}</span>
-                  <strong>{match.score}</strong>
-                  <small>{match.source === "manual" ? "Confirmado por admin" : "Fuente automatica"}</small>
-                </article>
-              ))}
-            </div>
-          ) : null}
-          <div className="summaryAwardGrid">
-            {dateHighlights.map((highlight) => (
-              <article className="awardPill" key={highlight.label}>
-                <span>{highlight.label}</span>
-                <strong>{highlight.value}</strong>
-                <small>{highlight.detail}</small>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>🇦🇷</span>
+              <h3>COPA ARGENTINA</h3>
+              <span className="reportPts" style={{ background: "#dcfce7", color: "#15803d" }}>Fase Eliminatoria</span>
+            </header>
+            <p>Cruces mano a mano a todo o nada en canchas neutrales del fútbol argentino.</p>
+          </article>
 
-      <details className="raceGraph raceGraphDisclosure" aria-label="Evolucion de posiciones por fecha">
-        <summary>
-          <div>
-            <strong>Carrera por la punta</strong>
-          </div>
-          <b>Ver grafico</b>
-        </summary>
-        <div className="tableNote">
-          <div>
-            <strong>Carrera por la punta</strong>
-            <span>
-              {selectedGraphSnapshot
-                ? `Hasta ${selectedGraphSnapshot.label}: ${selectedGraphSnapshot.title}.`
-                : "Cada corte suma una fecha con resultados oficiales cargados."}{" "}
-              Cuanto mas arriba esta la linea, mejor ubicacion.
+          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+            <header>
+              <span style={{ fontSize: "1.6rem" }}>⚽</span>
+              <h3>COPA DE LA LIGA</h3>
+              <span className="reportPts" style={{ background: "#ffedd5", color: "#c2410c" }}>Fase Final</span>
+            </header>
+            <p>Los playoffs decisivos de la Primera División del fútbol argentino.</p>
+          </article>
+        </div>
+
+        <div style={{ marginTop: "24px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", paddingTop: "16px", borderTop: "2px dashed #cbd5e1" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className="historyBadge championTag" style={{ fontSize: "0.9rem", padding: "8px 14px", fontWeight: 800 }}>
+              ⏳ Estado: Carga de pronósticos Próximamente
             </span>
           </div>
-          {fullGraphHistory.length > 0 ? (
-            <div className="raceCutSelector" role="group" aria-label="Elegir corte del grafico">
-              {fullGraphHistory.map((entry, index) => (
-                <button
-                  className={graphHistoryLimit === index + 1 ? "active" : ""}
-                  key={entry.label}
-                  onClick={() => setHistoryLimit(index + 1)}
-                  type="button"
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          {fullGraphHistory.length > 0 ? (
-            <div className="raceQuickFilters" aria-label="Filtros del grafico">
-              <button
-                className={graphDisplayLimit === 5 ? "active" : ""}
-                onClick={() => {
-                  setGraphDisplayLimit(5);
-                  setHiddenGraphIds([]);
-                }}
-                type="button"
-              >
-                Top 5
-              </button>
-              <button
-                className={graphDisplayLimit === 0 ? "active" : ""}
-                onClick={() => {
-                  setGraphDisplayLimit(0);
-                  setHiddenGraphIds([]);
-                }}
-                type="button"
-              >
-                Ver todos
-              </button>
-              <button className="light" onClick={() => setHiddenGraphIds([])} type="button">
-                Limpiar seleccion
-              </button>
-            </div>
-          ) : null}
+          <a className="primaryAction light" href="/campeones" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            🏆 Ver Historial de Copas y Campeones
+          </a>
         </div>
-        {graphRows.length > 0 ? (
-          <div className="raceGraphBody">
-            <div className="raceGraphCanvas">
-              <svg viewBox={`0 0 ${graphWidth} ${graphHeight}`} role="img" aria-label="Grafico de posiciones por fecha">
-                <rect x="0" y="0" width={graphWidth} height={graphHeight} rx="0" />
-                {positionMarkers.map((position) => {
-                  const point = graphPoint(0, position);
-                  return (
-                    <g className="raceGridLine" key={position}>
-                      <line x1={graphPadX} x2={graphWidth - graphPadX} y1={point.y} y2={point.y} />
-                      <text x="16" y={point.y + 5}>
-                        #{position}
-                      </text>
-                    </g>
-                  );
-                })}
-                {graphHistory.map((entry, index) => {
-                  const point = graphPoint(index, maxPosition);
-                  return (
-                    <g className="raceTurnLine" key={entry.label}>
-                      <line x1={point.x} x2={point.x} y1={graphPadTop} y2={graphPadTop + graphInnerHeight} />
-                      <text x={point.x} y={graphHeight - 18}>
-                        {entry.label}
-                      </text>
-                    </g>
-                  );
-                })}
-                {visibleGraphRows.map((row, index) => {
-                  const color = colorForSubmission(row.submissionId, index);
-                  const points = linePoints(row.submissionId);
-                  if (!points) return null;
-                  return (
-                    <g className="raceLineGroup" key={row.submissionId}>
-                      <polyline points={points} style={{ stroke: color }} />
-                      {graphHistory.map((entry, entryIndex) => {
-                        const position = entry.positions.find((item) => item.submissionId === row.submissionId)?.position;
-                        if (!position) return null;
-                        const point = graphPoint(entryIndex, position);
-                        const snapshotRow = entry.positions.find((item) => item.submissionId === row.submissionId);
-                        return (
-                          <circle cx={point.x} cy={point.y} fill={color} key={`${row.submissionId}-${entry.label}`} r="4.5">
-                            <title>{`${row.name} · ${entry.label}: #${position}, ${snapshotRow?.points ?? 0} pts`}</title>
-                          </circle>
-                        );
-                      })}
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-            <ol className="raceLegend" aria-label={`Posiciones hasta ${selectedGraphSnapshot?.label ?? "el corte elegido"}`}>
-              {graphRows.map((row, index) => (
-                <li className={hiddenGraphIds.includes(row.submissionId) ? "muted" : ""} key={row.submissionId}>
-                  <button
-                    aria-pressed={!hiddenGraphIds.includes(row.submissionId)}
-                    onClick={() => toggleGraphParticipant(row.submissionId)}
-                    type="button"
-                  >
-                    <i style={{ background: colorForSubmission(row.submissionId, index) }} />
-                  <span>{row.position}</span>
-                  <strong>{row.name}</strong>
-                  <b>{row.points} pts</b>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
-        ) : (
-          <div className="emptyState">El grafico aparece cuando haya participantes guardados.</div>
-        )}
-      </details>
-
-      <details className="knockoutMiniTableDisclosure" aria-label="Tabla solo de eliminatorias">
-        <summary>
-          <div>
-            <strong>Tabla eliminatorias</strong>
-            <span>{data.playedKnockoutMatches} cruces con resultado.</span>
-          </div>
-          <span className="knockoutMiniActions">
-            <b>Ver tabla</b>
-            <button
-              disabled={knockoutRows.length === 0 || shareStatus === "working"}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                void shareKnockoutStandingsImage();
-              }}
-              type="button"
-            >
-              {shareStatus === "working" ? <Loader2 className="spin" size={15} aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
-              Compartir
-            </button>
-          </span>
-        </summary>
-        <div className="knockoutMiniTableWrap">
-          <table className="standingsTable knockoutMiniTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Participante</th>
-                <th>Puntos</th>
-                <th>Jug.</th>
-                <th>Exactos</th>
-                <th>Clasif.</th>
-                <th>Goles</th>
-              </tr>
-            </thead>
-            <tbody>
-              {knockoutRows.map((row, index) => (
-                <tr key={row.submissionId}>
-                  <td>{index + 1}</td>
-                  <td title={row.name}>{shortParticipantName(row.name)}</td>
-                  <td className="pointsCell"><strong>{row.knockoutPoints}</strong></td>
-                  <td>{row.knockoutPlayed}</td>
-                  <td>{row.knockoutExactHits}</td>
-                  <td>{row.knockoutWinnerHits}</td>
-                  <td>{row.knockoutScorerHits}</td>
-                </tr>
-              ))}
-              {knockoutRows.length === 0 ? (
-                <tr>
-                  <td colSpan={7}>Aparece cuando haya cruces de eliminatorias cargados.</td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </details>
-
-      <section className="shareInlinePanel standingsSharePanel" aria-label="Compartir tabla actual">
-        <div className="shareCardPreview">
-          <div>
-            <strong>Compartir tabla</strong>
-            <p>{rows.length} participantes · {playedWorldCupMatches}/{worldCupTotalMatches} partidos con resultado.</p>
-          </div>
-          <Trophy size={28} aria-hidden="true" />
-        </div>
-        <div className="shareActions">
-          <button className="primaryAction" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
-            {shareStatus === "working" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
-            Compartir tabla
-          </button>
-          <button className="primaryAction light" disabled={rows.length === 0 || shareStatus === "working"} onClick={shareStandingsImage} type="button">
-            <Download size={18} aria-hidden="true" />
-            Descargar imagen
-          </button>
-        </div>
-        {shareMessage ? <p className="shareMessage">{shareMessage}</p> : null}
       </section>
 
       <section className="commentsPanel" aria-label="Comentarios">
