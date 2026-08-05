@@ -24,10 +24,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="shell">
           <header className="masthead">
             <Link className="brand" href="/tabla">
-              <span className="brandMark">CK</span>
+              <span className="brandMark">RFK</span>
               <span>
-                <strong>Copa Kahl</strong>
-                <small>Prode Mundial 2026</small>
+                <strong>Recopa Fiss Kahl</strong>
+                <small>Prode Copa de la Liga 2026</small>
               </span>
             </Link>
             <MainNavigation />
