@@ -16,7 +16,7 @@ const champions = [
 
 const totalTrophies = champions.reduce((total, c) => total + c.trophies.length, 0);
 
-const relegated = ["Javi", "El Buda", "Miguel"];
+const relegated = ["Fer", "Maxi", "Nahuel"];
 const thirdDivision = [{ name: "Ale con Pelo", note: "Suspendido para jugar las próximas 3 copas" }];
 
 export default function CampeonesPage() {
