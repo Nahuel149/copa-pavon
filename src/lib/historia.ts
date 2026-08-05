@@ -71,7 +71,7 @@ export const historicalEditions: HistoricalEdition[] = [
         participant: "Mono Andrés",
         points: 14,
         badge: "runner-up",
-        notes: "Otra vez segundo, como hoy. Ya no es mala suerte, es identidad. Tiene cosas de mono, sí: instinto, fuerza y cero capacidad para cerrar una final. Subcampeón dos veces, el Boca del grupo.",
+        notes: "Otra vez segundo, como hoy. Ya no es mala suerte, es identidad. Tiene cosas de mono, sí: instinto, fuerza y cero capacidad para cerrar una final. Cebollita, el Boca del grupo.",
       },
       {
         pos: 3,
