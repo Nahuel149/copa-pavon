@@ -7117,5 +7117,170 @@ tbody tr.relegationRow:hover {
   color: #38bdf8;
 }
 
+/* Report Section & Card Styles */
+.historyReportPanel {
+  background: #fff;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reportCardsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.reportCard {
+  background: #fffdf0;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reportCard header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+}
+
+.reportCard h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.reportPos {
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.reportPts {
+  font-weight: 900;
+  font-size: 0.9rem;
+  background: #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--ink);
+  color: #1e293b;
+}
+
+.reportCard p {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #1e293b;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.reportFooter {
+  margin-top: 8px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  border-top: 2px dashed #cbd5e1;
+  padding-top: 10px;
+  font-size: 1rem !important;
+}
+
+.reportCard.gold {
+  background: #fffbeb;
+  border-color: #d97706;
+}
+
+.reportCard.gold header {
+  border-bottom-color: #b45309;
+}
+
+.reportCard.silver {
+  background: #f8fafc;
+  border-color: #475569;
+}
+
+.reportCard.silver header {
+  border-bottom-color: #334155;
+}
+
+.reportCard.bronze {
+  background: #fff7ed;
+  border-color: #ea580c;
+}
+
+.reportCard.bronze header {
+  border-bottom-color: #c2410c;
+}
+
+.reportCard.relegated {
+  background: #fef2f2;
+  border-color: #b91c1c;
+}
+
+.reportCard.relegated header {
+  border-bottom-color: #991b1b;
+}
+
+.reportCard.disciplinary {
+  background: #faf5ff;
+  border-color: #7e22ce;
+}
+
+.reportCard.disciplinary header {
+  border-bottom-color: #6b21a8;
+}
+
+:root[data-theme="dark"] .historyReportPanel,
+:root[data-theme="dark"] .reportCard {
+  background: #1e1e1e;
+  color: #fff;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .reportCard h3,
+:root[data-theme="dark"] .reportCard p {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .reportCard.gold {
+  background: #2a2400;
+  border-color: #eab308;
+}
+
+:root[data-theme="dark"] .reportCard.silver {
+  background: #1e293b;
+  border-color: #64748b;
+}
+
+:root[data-theme="dark"] .reportCard.bronze {
+  background: #341a06;
+  border-color: #f97316;
+}
+
+:root[data-theme="dark"] .reportCard.relegated {
+  background: #3f1212;
+  border-color: #ef4444;
+}
+
+:root[data-theme="dark"] .falloFinalCard {
+  background: #232010 !important;
+  color: #fff !important;
+  border-color: #eab308 !important;
+}
+
+:root[data-theme="dark"] .falloFinalCard p,
+:root[data-theme="dark"] .falloFinalCard ul {
+  color: #fef08a !important;
+}
+
 
 

@@ -348,7 +348,7 @@ export default function CampeonesPage() {
                 </div>
 
                 <div className="reportCardsGrid">
-                  <article className="reportCard gold">
+                  <article className="reportCard gold" style={{ background: "#fffbeb", border: "3px solid #d97706", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">🥇 1.º</span>
                       <h3>GONZA</h3>
@@ -369,7 +369,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Felicitaciones, Gonza. Levantá la copa rápido antes de que descubran que tampoco sabés cuánto pesa porque siempre las cargó otro. 🐨💧🏆</p>
                   </article>
 
-                  <article className="reportCard silver">
+                  <article className="reportCard silver" style={{ background: "#f8fafc", border: "3px solid #475569", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">🥈 2.º</span>
                       <h3>NICO MONTES</h3>
@@ -384,7 +384,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Le faltaron cinco puntos y un poquito menos de cagazo en la final. Para la próxima puede probar acertando o, al menos, no retirándose del fútbol por fiaca.</p>
                   </article>
 
-                  <article className="reportCard bronze">
+                  <article className="reportCard bronze" style={{ background: "#fff7ed", border: "3px solid #ea580c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">🥉 3.º</span>
                       <h3>MIGUEL</h3>
@@ -402,7 +402,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter"><strong>Felicidades al campeón moral de la vinoteca. 🍷</strong></p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">4.º</span>
                       <h3>ALE BAUCH/GAYCH</h3>
@@ -417,7 +417,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">No ganó la Copa Kahl, pero se llevó una hermosa copa de leche que perdió por llorón antes de llegar a su casa.</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">5.º</span>
                       <h3>ZINO</h3>
@@ -432,7 +432,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Gran torneo del fiscal oficial de la Kahl: se quejó ochenta veces de que no premiaban la regularidad y terminó regularmente sin ganar nada.</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">6.º</span>
                       <h3>LAUTARO FLACO/TARADO</h3>
@@ -447,7 +447,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Metió 17 goleadores y acabó sexto: gran remontada del único concursante cuyo nombre aparecía cortado en la tabla porque ni el servidor estaba seguro de quién carajo era.</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">7.º</span>
                       <h3>JAVI QUE SABE DE FÚTBOL</h3>
@@ -465,7 +465,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Eso sí: dejó una enseñanza fundamental para todos sus alumnos. Tomen agua, porque la gaseosa hace caer el pelo y una mala Copa Kahl hace caer de categoría. 💧</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">8.º</span>
                       <h3>ENZO</h3>
@@ -480,7 +480,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Su teclado vale menos que la opinión de un descendido, pero oficialmente Enzo es el campeón de los chads de mitad de tabla. 🎮</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">9.º</span>
                       <h3>MATÍAS BUDA</h3>
@@ -495,7 +495,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Quedó empatado con Enzo, perdió el desempate y fue enviado a la B Nacional. Mucha lectura de juego, pero la iluminación estaba en otro campeonato.</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">10.º</span>
                       <h3>TONY</h3>
@@ -510,7 +510,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Terminó décimo porque la experiencia sirve para reconocer buena música, no para adivinar qué carajo iba a hacer Cabo Verde.</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">11.º</span>
                       <h3>GORDO LAUTA</h3>
@@ -525,7 +525,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Su frase fue: “El único que se anotó al prode soy yo, vos dormiste”. Efectivamente jugó los 104 partidos. Lamentablemente, por los resultados parece que el que durmió fue él.</p>
                   </article>
 
-                  <article className="reportCard">
+                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">12.º</span>
                       <h3>MONO ANDRÉS</h3>
@@ -540,7 +540,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Por lo menos cumplió su lema de “primero mono que en la B”. No cayó oficialmente, aunque la tabla lo dejó balanceándose peligrosamente sobre la rama.</p>
                   </article>
 
-                  <article className="reportCard relegated">
+                  <article className="reportCard relegated" style={{ background: "#fef2f2", border: "3px solid #b91c1c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">13.º 🔻</span>
                       <h3>NAHUEL</h3>
@@ -561,7 +561,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Gracias por organizar todo, pelado. Con la plata del próximo prode comprate Hair Recovery o, por lo menos, un asesor que sepa pronosticar. 🇯🇵</p>
                   </article>
 
-                  <article className="reportCard relegated">
+                  <article className="reportCard relegated" style={{ background: "#fef2f2", border: "3px solid #b91c1c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">14.º 🔻</span>
                       <h3>MAXI/BAXI</h3>
@@ -576,7 +576,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Tuvo 86 aciertos, más que Nahuel, pero cinco puntos menos. Prueba definitiva de que para entender el reglamento de la Copa Kahl hacía falta un contador, un abogado y acceso al teléfono del organizador.</p>
                   </article>
 
-                  <article className="reportCard relegated">
+                  <article className="reportCard relegated" style={{ background: "#fef2f2", border: "3px solid #b91c1c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">15.º 🔻</span>
                       <h3>FER</h3>
@@ -594,7 +594,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">El verdadero batacazo de la Copa Kahl habría sido que Fer no terminara último.</p>
                   </article>
 
-                  <article className="reportCard disciplinary">
+                  <article className="reportCard disciplinary" style={{ background: "#faf5ff", border: "3px solid #7e22ce", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
                     <header>
                       <span className="reportPos">🚨 SANCIONADO</span>
                       <h3>ALE CON PELO</h3>
