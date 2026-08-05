@@ -19,14 +19,13 @@ import { useState } from "react";
 const primaryItems = [
   { href: "/tabla", label: "Tabla", icon: Table2 },
   { href: "/recopa", label: "Recopa", icon: Swords },
-  { href: "/historia", label: "Historia", icon: History },
+  { href: "/campeones", label: "Campeones & Historia", icon: Award },
   { href: "/pronosticos", label: "Pronosticos", icon: BarChart3 },
   { href: "/eliminatorias", label: "Editar Prode", icon: Brackets },
 ];
 
 const moreItems = [
   { href: "/reglas", label: "Reglas", icon: BookOpenCheck },
-  { href: "/campeones", label: "Campeones", icon: Award },
   { href: "/admin", label: "Admin", icon: LockKeyhole },
 ];
 
