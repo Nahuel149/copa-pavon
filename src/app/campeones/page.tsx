@@ -402,7 +402,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter"><strong>Felicidades al campeón moral de la vinoteca. 🍷</strong></p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">4.º</span>
                       <h3>ALE BAUCH/GAYCH</h3>
@@ -417,7 +417,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">No ganó la Copa Kahl, pero se llevó una hermosa copa de leche que perdió por llorón antes de llegar a su casa.</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">5.º</span>
                       <h3>ZINO</h3>
@@ -432,7 +432,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Gran torneo del fiscal oficial de la Kahl: se quejó ochenta veces de que no premiaban la regularidad y terminó regularmente sin ganar nada.</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">6.º</span>
                       <h3>LAUTARO FLACO/TARADO</h3>
@@ -447,7 +447,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Metió 17 goleadores y acabó sexto: gran remontada del único concursante cuyo nombre aparecía cortado en la tabla porque ni el servidor estaba seguro de quién carajo era.</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">7.º</span>
                       <h3>JAVI QUE SABE DE FÚTBOL</h3>
@@ -465,7 +465,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Eso sí: dejó una enseñanza fundamental para todos sus alumnos. Tomen agua, porque la gaseosa hace caer el pelo y una mala Copa Kahl hace caer de categoría. 💧</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">8.º</span>
                       <h3>ENZO</h3>
@@ -480,7 +480,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Su teclado vale menos que la opinión de un descendido, pero oficialmente Enzo es el campeón de los chads de mitad de tabla. 🎮</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">9.º</span>
                       <h3>MATÍAS BUDA</h3>
@@ -495,7 +495,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Quedó empatado con Enzo, perdió el desempate y fue enviado a la B Nacional. Mucha lectura de juego, pero la iluminación estaba en otro campeonato.</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">10.º</span>
                       <h3>TONY</h3>
@@ -510,7 +510,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Terminó décimo porque la experiencia sirve para reconocer buena música, no para adivinar qué carajo iba a hacer Cabo Verde.</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">11.º</span>
                       <h3>GORDO LAUTA</h3>
@@ -525,7 +525,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Su frase fue: “El único que se anotó al prode soy yo, vos dormiste”. Efectivamente jugó los 104 partidos. Lamentablemente, por los resultados parece que el que durmió fue él.</p>
                   </article>
 
-                  <article className="reportCard" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard">
                     <header>
                       <span className="reportPos">12.º</span>
                       <h3>MONO ANDRÉS</h3>
@@ -607,9 +607,9 @@ export default function CampeonesPage() {
                   </article>
                 </div>
 
-                <div className="falloFinalCard" style={{ marginTop: "20px", padding: "20px", background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)" }}>
+                <div className="falloFinalCard" style={{ marginTop: "20px", padding: "20px", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)" }}>
                   <h3 style={{ margin: "0 0 12px", fontSize: "1.3rem", color: "#b91c1c", textTransform: "uppercase", fontWeight: 900 }}>⚖️ FALLO FINAL</h3>
-                  <ul style={{ margin: 0, paddingLeft: "20px", display: "grid", gap: "8px", fontWeight: 700, color: "#1e293b" }}>
+                  <ul style={{ margin: 0, paddingLeft: "20px", display: "grid", gap: "8px", fontWeight: 700 }}>
                     <li>Gonza: campeón mundial sin acertar al campeón mundial.</li>
                     <li>Nico: cebollita oficial.</li>
                     <li>Miguel: de puntero histórico a borracho de la B.</li>
@@ -619,7 +619,7 @@ export default function CampeonesPage() {
                     <li>Nahuel: organizó la fiesta y terminó lavando los platos en el descenso.</li>
                     <li>Fer: último con autoridad.</li>
                   </ul>
-                  <p style={{ margin: "16px 0 0", fontStyle: "italic", fontWeight: 800, fontSize: "1.05rem", color: "#0f172a" }}>
+                  <p style={{ margin: "16px 0 0", fontStyle: "italic", fontWeight: 800, fontSize: "1.05rem" }}>
                     La Copa Kahl no la ganó el que más sabía de fútbol. La ganó Gonza, que es la demostración científica de esa afirmación. Nos vemos en la próxima edición, si antes el campeón no convierte el trofeo en un curso de Amway. 🏆🐨
                   </p>
                 </div>

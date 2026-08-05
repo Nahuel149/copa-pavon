@@ -823,58 +823,58 @@ export default function TablaPage() {
       </section>
 
       {/* ANUNCIO OFICIAL PROXIMAMENTE */}
-      <section className="historyTablePanel" style={{ background: "#fffdf0", border: "3px solid #111", borderRadius: "12px", padding: "24px" }}>
+      <section className="proximamentePanel" style={{ padding: "24px" }}>
         <div className="panelHeader">
           <p className="eyebrow" style={{ background: "#ef4444", color: "#fff", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "4px 10px", borderRadius: "12px", fontSize: "0.8rem" }}>
             🔥 Edición Confirmada
           </p>
-          <h2 style={{ fontSize: "1.6rem", margin: "10px 0 6px", fontWeight: 900, color: "#0f172a" }}>
-            Competencias que disputan la Copa "Se mató Pavón"
+          <h2 style={{ fontSize: "1.6rem", margin: "10px 0 6px", fontWeight: 900 }}>
+            Competencias que disputan la Copa &quot;Se mató Pavón&quot;
           </h2>
-          <p style={{ fontSize: "1.05rem", color: "#334155", lineHeight: "1.5" }}>
+          <p style={{ fontSize: "1.05rem", lineHeight: "1.5" }}>
             Esta nueva copa unificará los pronósticos de las fases decisivas y finales de cuatro competiciones estelares:
           </p>
         </div>
 
         <div className="reportCardsGrid" style={{ marginTop: "16px" }}>
-          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+          <article className="reportCard proximamenteCard">
             <header>
               <span style={{ fontSize: "1.6rem" }}>🌎</span>
               <h3>COPA SUDAMERICANA</h3>
-              <span className="reportPts" style={{ background: "#e0f2fe", color: "#0369a1" }}>Semifinales + Final</span>
+              <span className="reportPts">Semifinales + Final</span>
             </header>
             <p>Partidos de ida y vuelta de semifinales y la gran definición por el título sudamericano.</p>
           </article>
 
-          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+          <article className="reportCard proximamenteCard">
             <header>
               <span style={{ fontSize: "1.6rem" }}>🏆</span>
               <h3>COPA LIBERTADORES</h3>
-              <span className="reportPts" style={{ background: "#fef08a", color: "#854d0e" }}>Semifinales + Final</span>
+              <span className="reportPts">Semifinales + Final</span>
             </header>
             <p>Los 4 mejores del continente definiendo a la gloria eterna.</p>
           </article>
 
-          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+          <article className="reportCard proximamenteCard">
             <header>
               <span style={{ fontSize: "1.6rem" }}>🇦🇷</span>
               <h3>COPA ARGENTINA</h3>
-              <span className="reportPts" style={{ background: "#dcfce7", color: "#15803d" }}>Fase Eliminatoria</span>
+              <span className="reportPts">Fase Eliminatoria</span>
             </header>
             <p>Cruces mano a mano a todo o nada en canchas neutrales del fútbol argentino.</p>
           </article>
 
-          <article className="reportCard" style={{ background: "#fff", border: "2px solid #111", boxShadow: "3px 3px 0 #111" }}>
+          <article className="reportCard proximamenteCard">
             <header>
               <span style={{ fontSize: "1.6rem" }}>⚽</span>
               <h3>COPA DE LA LIGA</h3>
-              <span className="reportPts" style={{ background: "#ffedd5", color: "#c2410c" }}>Fase Final</span>
+              <span className="reportPts">Fase Final</span>
             </header>
             <p>Los playoffs decisivos de la Primera División del fútbol argentino.</p>
           </article>
         </div>
 
-        <div style={{ marginTop: "24px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", paddingTop: "16px", borderTop: "2px dashed #cbd5e1" }}>
+        <div className="proximamenteFooter">
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span className="historyBadge championTag" style={{ fontSize: "0.9rem", padding: "8px 14px", fontWeight: 800 }}>
               ⏳ Estado: Carga de pronósticos Próximamente

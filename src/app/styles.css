@@ -7271,6 +7271,10 @@ tbody tr.relegationRow:hover {
   border-color: #ef4444;
 }
 
+.falloFinalCard {
+  background: #fffdf0;
+}
+
 :root[data-theme="dark"] .falloFinalCard {
   background: #232010 !important;
   color: #fff !important;
@@ -7282,5 +7286,92 @@ tbody tr.relegationRow:hover {
   color: #fef08a !important;
 }
 
+/* ── Proximamente Panel & Cards (dark mode) ── */
+.proximamentePanel {
+  background: #fffdf0;
+  border: 3px solid #111;
+  border-radius: 12px;
+}
 
+.proximamentePanel h2 {
+  color: #0f172a;
+}
 
+.proximamentePanel p {
+  color: #334155;
+}
+
+.proximamenteCard {
+  background: #fff;
+  border: 2px solid #111;
+  box-shadow: 3px 3px 0 #111;
+}
+
+.proximamenteFooter {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 2px dashed #cbd5e1;
+}
+
+:root[data-theme="dark"] .proximamentePanel {
+  background: var(--panel);
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .proximamentePanel h2 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .proximamentePanel p,
+:root[data-theme="dark"] .proximamentePanel .panelHeader p {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .proximamenteCard {
+  background: var(--paper-strong);
+  border-color: #334155;
+  box-shadow: 3px 3px 0 #0b1a2d;
+}
+
+:root[data-theme="dark"] .proximamenteCard h3 {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .proximamenteCard p {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .proximamenteFooter {
+  border-top-color: #334155;
+}
+
+:root[data-theme="dark"] .reportPts {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #475569;
+}
+
+:root[data-theme="dark"] .reportFooter {
+  color: #e2e8f0 !important;
+  border-top-color: #334155;
+}
+
+:root[data-theme="dark"] .historyTablePanel {
+  background: var(--panel);
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .historyTablePanel h2,
+:root[data-theme="dark"] .historyTablePanel h3 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .historyTablePanel p {
+  color: #94a3b8;
+}
