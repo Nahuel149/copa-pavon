@@ -696,7 +696,7 @@ export default function CampeonesPage() {
           </div>
           <div className="relegatedList" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Kahl 2026:</span>
+              <span style={{ fontWeight: 900, color: "#ffffff", background: "#b91c1c", borderColor: "#7f1d1d", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Kahl 2026:</span>
               {["Fer", "Maxi", "Nahuel"].map((name) => (
                 <span key={name}>
                   <ShieldAlert size={18} aria-hidden="true" />
@@ -705,7 +705,7 @@ export default function CampeonesPage() {
               ))}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
-              <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Chiqui Bauch 2026:</span>
+              <span style={{ fontWeight: 900, color: "#ffffff", background: "#b91c1c", borderColor: "#7f1d1d", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Chiqui Bauch 2026:</span>
               {["Javi", "Buda (Matías Nicolas)"].map((name) => (
                 <span key={name}>
                   <ShieldAlert size={18} aria-hidden="true" />
@@ -714,7 +714,7 @@ export default function CampeonesPage() {
               ))}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
-              <span style={{ fontWeight: 800, color: "#991b1b", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Fiss 2025:</span>
+              <span style={{ fontWeight: 900, color: "#ffffff", background: "#b91c1c", borderColor: "#7f1d1d", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Fiss 2025:</span>
               {["Miguel", "Gonza"].map((name) => (
                 <span key={name}>
                   <ShieldAlert size={18} aria-hidden="true" />
