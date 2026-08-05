@@ -5,6 +5,7 @@ import { Award, CheckCircle2, ChevronRight, Clock, Flame, Loader2, Lock, LogIn, 
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { readJsonResponse } from "@/lib/client-json";
 import {
+  isRecopaEditOpen,
   recopaMatches,
   recopaParticipants,
   type RecopaMatch,
@@ -24,6 +25,9 @@ type RecopaApiResponse = {
   }>;
   results: RecopaMatchResult[];
   standings: RecopaStanding[];
+  editDeadline?: string;
+  editDeadlineLabel?: string;
+  isOpen?: boolean;
   error?: string;
 };
 
@@ -214,6 +218,7 @@ export default function RecopaPage() {
 
   const gonzaStanding = data?.standings.find((s) => s.participant.id === "Gonza el + Fachero.");
   const javiStanding = data?.standings.find((s) => s.participant.id === "Javier");
+  const isEditOpen = data?.isOpen ?? isRecopaEditOpen();
 
   return (
     <div className="pageStack">
@@ -270,6 +275,27 @@ export default function RecopaPage() {
             • <strong>3 puntos</strong> por acertar el resultado exacto. <br />
             • <strong>1 punto</strong> por acertar el ganador o empate (no exacto). <br />
             • <strong>1 punto extra</strong> por acertar cualquier goleador del partido.
+          </p>
+        </div>
+      </section>
+
+      {/* Deadline Notice */}
+      <section className={`recopaNotice ${isEditOpen ? "" : "closedNotice"}`} style={{ marginTop: "10px", borderColor: isEditOpen ? "#0284c7" : "#ef4444", background: isEditOpen ? "#f0f9ff" : "#fef2f2" }}>
+        <Clock size={20} className="noticeIcon" style={{ color: isEditOpen ? "#0284c7" : "#dc2626" }} aria-hidden="true" />
+        <div>
+          <strong style={{ color: isEditOpen ? "#0369a1" : "#991b1b" }}>
+            {isEditOpen ? "⏱️ Plazo Límite de Edición de Pronósticos" : "🔒 Pronósticos Cerrados"}
+          </strong>
+          <p style={{ color: isEditOpen ? "#0c4a6e" : "#7f1d1d" }}>
+            {isEditOpen ? (
+              <>
+                Los pronósticos están abiertos hasta el <strong>Sábado 8 de Agosto a las 14:00 hs (hora Argentina)</strong>, hora del comienzo de Atlético Tucumán vs Sarmiento. Luego de ese horario no se podrán editar.
+              </>
+            ) : (
+              <>
+                El plazo para cargar y modificar pronósticos venció el <strong>Sábado 8 de Agosto a las 14:00 hs</strong>. La edición se encuentra bloqueada.
+              </>
+            )}
           </p>
         </div>
       </section>
@@ -600,6 +626,15 @@ export default function RecopaPage() {
                     </button>
                   </div>
 
+                  {!isEditOpen && (
+                    <div className="recopaAlert error" style={{ marginBottom: "16px" }}>
+                      <Lock size={20} />
+                      <span>
+                        🔒 <strong>Pronósticos Cerrados:</strong> La edición de marcadores finalizó el Sábado 8 de Agosto a las 14:00 hs (comienzo del primer partido).
+                      </span>
+                    </div>
+                  )}
+
                   {submitMessage && (
                     <div className={submitMessage.type === "success" ? "recopaAlert success" : "recopaAlert error"}>
                       {submitMessage.type === "success" ? <CheckCircle2 size={20} /> : <ShieldAlert size={20} />}
@@ -637,6 +672,7 @@ export default function RecopaPage() {
                                 }
                                 placeholder="0"
                                 required
+                                disabled={!isEditOpen}
                               />
                               <span className="dash">-</span>
                               <input
@@ -652,6 +688,7 @@ export default function RecopaPage() {
                                 }
                                 placeholder="0"
                                 required
+                                disabled={!isEditOpen}
                               />
                             </div>
 
@@ -676,6 +713,7 @@ export default function RecopaPage() {
                                 })
                               }
                               placeholder="Ej: Borja, Cavani, Merentiel, etc."
+                              disabled={!isEditOpen}
                             />
                           </div>
                         </article>
@@ -683,9 +721,9 @@ export default function RecopaPage() {
                     </div>
 
                     <div className="formActions">
-                      <button type="submit" className="primaryAction" disabled={submitting}>
+                      <button type="submit" className="primaryAction" disabled={submitting || !isEditOpen}>
                         {submitting ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
-                        Guardar Pronóstico de {selectedParticipant}
+                        {isEditOpen ? `Guardar Pronóstico de ${selectedParticipant}` : "Pronósticos Cerrados"}
                       </button>
                     </div>
                   </form>

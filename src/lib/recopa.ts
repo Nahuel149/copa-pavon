@@ -30,6 +30,14 @@ export const recopaParticipants: RecopaParticipant[] = [
   },
 ];
 
+export const RECOPA_EDIT_DEADLINE_ISO = "2026-08-08T14:00:00-03:00";
+export const RECOPA_EDIT_DEADLINE_LABEL = "Sábado 8 de Agosto - 14:00 hs Argentina (Comienzo de Atlético Tucumán vs Sarmiento)";
+
+export function isRecopaEditOpen(nowMs: number = Date.now()): boolean {
+  const deadlineMs = new Date(RECOPA_EDIT_DEADLINE_ISO).getTime();
+  return nowMs < deadlineMs;
+}
+
 export type RecopaMatch = {
   id: string;
   order: number;
@@ -44,7 +52,7 @@ export const recopaMatches: RecopaMatch[] = [
     id: "recopa-1",
     order: 1,
     dateLabel: "08/08",
-    kickoffTime: "14:45",
+    kickoffTime: "14:00",
     home: "Atlético Tucumán",
     away: "Sarmiento Junín",
   },

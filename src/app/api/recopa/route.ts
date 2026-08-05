@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { buildRecopaStandings, recopaMatches, recopaParticipants } from "@/lib/recopa";
+import {
+  buildRecopaStandings,
+  isRecopaEditOpen,
+  recopaMatches,
+  recopaParticipants,
+  RECOPA_EDIT_DEADLINE_ISO,
+  RECOPA_EDIT_DEADLINE_LABEL,
+} from "@/lib/recopa";
 import { readRecopaStore, writeRecopaStore } from "@/lib/recopa-storage";
 
 export async function GET() {
@@ -14,6 +21,9 @@ export async function GET() {
       submissions: safeSubmissions,
       results: store.results,
       standings,
+      editDeadline: RECOPA_EDIT_DEADLINE_ISO,
+      editDeadlineLabel: RECOPA_EDIT_DEADLINE_LABEL,
+      isOpen: isRecopaEditOpen(),
     });
   } catch (error) {
     return NextResponse.json({ error: "Error al obtener datos de la Recopa." }, { status: 500 });

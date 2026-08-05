@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
-import { canonicalRecopaParticipant, recopaMatches, type RecopaScorePrediction } from "@/lib/recopa";
+import { canonicalRecopaParticipant, isRecopaEditOpen, recopaMatches, type RecopaScorePrediction } from "@/lib/recopa";
 import { saveRecopaPredictions } from "@/lib/recopa-storage";
 
 export async function POST(request: Request) {
   try {
+    if (!isRecopaEditOpen()) {
+      return NextResponse.json(
+        { error: "El plazo para editar pronósticos de la Recopa finalizó el sábado 8 de agosto a las 14:00 hs (hora Argentina). Ya no es posible modificar marcadores." },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "Formato inválido." }, { status: 400 });
