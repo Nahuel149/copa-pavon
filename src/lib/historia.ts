@@ -53,7 +53,7 @@ export const historicalEditions: HistoricalEdition[] = [
   {
     id: "copa-chiqui-bauch",
     title: "Copa Chiqui Bauch",
-    year: "2025",
+    year: "2026",
     champion: "Gonza Fiss",
     runnerUp: "Mono Andrés",
     description: "Tabla final del torneo y análisis oficial de los participantes.",
@@ -153,7 +153,7 @@ export const historicalEditions: HistoricalEdition[] = [
   {
     id: "copa-fiss",
     title: "Copa Fiss",
-    year: "2024",
+    year: "2025",
     champion: "Javi",
     runnerUp: "Nahuel",
     description: "La edición inaugural de la historia del prode, conquistada por Javier tras una ajustada definición.",
@@ -191,7 +191,7 @@ export const allTimePalmares: AllTimeRecord[] = [
     silver: 0,
     bronze: 0,
     medals: [
-      { type: "gold", title: "Copa Chiqui Bauch 2025" },
+      { type: "gold", title: "Copa Chiqui Bauch 2026" },
       { type: "gold", title: "Copa Kahl 2026" },
     ],
   },
@@ -200,7 +200,14 @@ export const allTimePalmares: AllTimeRecord[] = [
     gold: 1,
     silver: 0,
     bronze: 0,
-    medals: [{ type: "gold", title: "Copa Fiss 2024" }],
+    medals: [{ type: "gold", title: "Copa Fiss 2025" }],
+  },
+  {
+    participant: "Nahuel",
+    gold: 0,
+    silver: 1,
+    bronze: 0,
+    medals: [{ type: "silver", title: "Copa Fiss 2025" }],
   },
   {
     participant: "Nicolas Montes",
@@ -214,14 +221,7 @@ export const allTimePalmares: AllTimeRecord[] = [
     gold: 0,
     silver: 1,
     bronze: 0,
-    medals: [{ type: "silver", title: "Copa Chiqui Bauch 2025" }],
-  },
-  {
-    participant: "Nahuel",
-    gold: 0,
-    silver: 1,
-    bronze: 0,
-    medals: [{ type: "silver", title: "Copa Fiss 2024" }],
+    medals: [{ type: "silver", title: "Copa Chiqui Bauch 2026" }],
   },
   {
     participant: "Miguel (El Borracho)",
@@ -235,13 +235,13 @@ export const allTimePalmares: AllTimeRecord[] = [
     gold: 0,
     silver: 0,
     bronze: 1,
-    medals: [{ type: "bronze", title: "Copa Chiqui Bauch 2025" }],
+    medals: [{ type: "bronze", title: "Copa Chiqui Bauch 2026" }],
   },
   {
     participant: "Ale Bauch",
     gold: 0,
     silver: 0,
     bronze: 1,
-    medals: [{ type: "bronze", title: "Copa Fiss 2024" }],
+    medals: [{ type: "bronze", title: "Copa Fiss 2025" }],
   },
 ];
