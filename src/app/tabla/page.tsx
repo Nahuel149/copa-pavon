@@ -817,7 +817,7 @@ export default function TablaPage() {
           </p>
           <h1>Copa "Se mató Pavón"</h1>
           <p className="heroCopy">
-            La nueva edición oficial de la Copa Kahl para las definiciones más calientes del fútbol argentino y sudamericano. ¡Prepará tus pronósticos!
+            La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Prepará tus pronósticos!
           </p>
         </div>
       </section>
