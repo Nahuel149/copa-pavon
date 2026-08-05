@@ -1381,6 +1381,12 @@ a {
   line-height: 0.92;
 }
 
+.championTrophies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .championCard span,
 .relegatedList span {
   display: inline-flex;

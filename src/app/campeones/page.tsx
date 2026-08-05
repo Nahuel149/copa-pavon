@@ -4,15 +4,17 @@ import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 const champions = [
   {
     name: "Javi",
-    trophy: "Copa Fiss",
+    trophies: ["Copa Fiss"],
     image: "/kahl-assets/campeon-javi.jpeg",
   },
   {
     name: "Gonza Fiss",
-    trophy: "Copa Chiqui Bauch",
+    trophies: ["Copa Chiqui Bauch", "Copa Kahl"],
     image: "/kahl-assets/campeon-gonza-fiss.jpeg",
   },
 ];
+
+const totalTrophies = champions.reduce((total, c) => total + c.trophies.length, 0);
 
 const relegated = ["Javi", "El Buda", "Miguel"];
 const thirdDivision = [{ name: "Ale con Pelo", note: "Suspendido para jugar las próximas 3 copas" }];
@@ -28,7 +30,7 @@ export default function CampeonesPage() {
         </div>
         <div className="scoreSeal">
           <Trophy size={34} aria-hidden="true" />
-          <strong>{champions.length}</strong>
+          <strong>{totalTrophies}</strong>
           <span>copas</span>
         </div>
       </section>
@@ -37,15 +39,19 @@ export default function CampeonesPage() {
         {champions.map((champion) => (
           <article className="championCard" key={champion.name}>
             <figure>
-              <img src={champion.image} alt={`Foto de ${champion.name}, campeón de ${champion.trophy}`} />
+              <img src={champion.image} alt={`Foto de ${champion.name}, campeón`} />
             </figure>
             <div>
               <p className="eyebrow">Campeón</p>
               <h2>{champion.name}</h2>
-              <span>
-                <Award size={18} aria-hidden="true" />
-                {champion.trophy}
-              </span>
+              <div className="championTrophies">
+                {champion.trophies.map((trophy) => (
+                  <span key={trophy}>
+                    <Award size={18} aria-hidden="true" />
+                    {trophy}
+                  </span>
+                ))}
+              </div>
             </div>
           </article>
         ))}
