@@ -9,6 +9,7 @@ import {
   ChevronDown,
   LockKeyhole,
   Menu,
+  Swords,
   Table2,
   X,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { useState } from "react";
 
 const primaryItems = [
   { href: "/tabla", label: "Tabla", icon: Table2 },
+  { href: "/recopa", label: "Recopa", icon: Swords },
   { href: "/pronosticos", label: "Pronosticos", icon: BarChart3 },
   { href: "/eliminatorias", label: "Editar Prode", icon: Brackets },
 ];

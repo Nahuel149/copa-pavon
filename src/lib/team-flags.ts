@@ -84,6 +84,27 @@ for (const [alias, canonicalTeam] of Object.entries(flagAliases)) {
   if (flagUrl) flagUrlByTeam.set(normalizeTeamFlagName(alias), flagUrl);
 }
 
+const argentineClubs = [
+  "Atlético Tucumán",
+  "Sarmiento Junín",
+  "Deportivo Riestra",
+  "Estudiantes de La Plata",
+  "Tigre",
+  "River Plate",
+  "Boca Juniors",
+  "Vélez Sarsfield",
+  "Independiente",
+  "Platense",
+  "Instituto",
+  "Gimnasia de Mendoza",
+];
+
+const arFlagUrl = "https://flagcdn.com/w80/ar.png";
+for (const club of argentineClubs) {
+  flagUrlByTeam.set(club, arFlagUrl);
+  flagUrlByTeam.set(normalizeTeamFlagName(club), arFlagUrl);
+}
+
 export function getTeamFlagUrl(team: string) {
   return flagUrlByTeam.get(team) ?? flagUrlByTeam.get(normalizeTeamFlagName(team)) ?? null;
 }

@@ -5988,3 +5988,690 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .scorerRolePill.field {
   background: #0d4a31;
 }
+
+/* ==========================================================================
+   Recopa Fiss Kahl Styles
+   ========================================================================== */
+
+.recopaHero {
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.72), rgba(5, 5, 5, 0.2)),
+    linear-gradient(135deg, #d4af37 0%, #b8860b 40%, #8b0000 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.recopaEyebrow {
+  background: #ffd700 !important;
+  color: #111 !important;
+  border-color: #000 !important;
+}
+
+.recopaVsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.recopaCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 253, 247, 0.95);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  color: var(--ink);
+  transition: transform 0.2s ease;
+}
+
+.recopaCard.leader {
+  border-color: #ffd700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
+  transform: scale(1.03);
+}
+
+.recopaAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--ink);
+}
+
+.recopaParticipantInfo h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+.recopaRole {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #777;
+}
+
+.recopaBadge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 20px;
+  font-weight: 800;
+}
+
+.recopaBadge span {
+  font-size: 1.2rem;
+  color: #ffd700;
+}
+
+.recopaVsBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.flameIcon {
+  color: #ff4500;
+  animation: pulseFlame 1.5s infinite alternate;
+}
+
+@keyframes pulseFlame {
+  0% { transform: scale(1); filter: drop-shadow(0 0 4px #ff4500); }
+  100% { transform: scale(1.2); filter: drop-shadow(0 0 10px #ff8c00); }
+}
+
+.recopaNotice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: #fff8e1;
+  border: 2px solid #ffa000;
+  border-radius: 8px;
+  color: #5d4037;
+}
+
+.recopaNotice .noticeIcon {
+  color: #ffa000;
+  flex-shrink: 0;
+}
+
+.recopaNotice strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #e65100;
+}
+
+.recopaNotice p {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+}
+
+.recopaNavTabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 8px;
+  overflow-x: auto;
+}
+
+.tabItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 8px 8px 0 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabItem:hover {
+  background: #f0f0f0;
+}
+
+.tabItem.active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.recopaTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.recopaTable th,
+.recopaTable td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.recopaTable th {
+  background: #f5f5f5;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #444;
+}
+
+.recopaTable tr.leaderRow {
+  background: #fffde7;
+}
+
+.posCell {
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.goldTrophy {
+  color: #d4af37;
+}
+
+.participantCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.miniAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  object-fit: cover;
+}
+
+.pointsCell {
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #2e7d32;
+}
+
+.statusTag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.statusTag.loaded {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.statusTag.pending {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffe0b2;
+}
+
+.recopaMatchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.recopaMatchCard {
+  background: #fff;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.matchCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.matchTime {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.matchTeamsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.teamItem {
+  flex: 1;
+}
+
+.teamItem.away {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.vsSeparator {
+  font-weight: 900;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.officialResultBox {
+  background: #f8f9fa;
+  border: 1px dashed var(--ink);
+  border-radius: 6px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.officialResultBox small {
+  display: block;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.officialScore {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #111;
+}
+
+.pendingResult {
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+}
+
+.predictionsComparison {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.predRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.predRow.exactHit {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.predRow.winnerHit {
+  background: #f1f8e9;
+  border-color: #8bc34a;
+}
+
+.predUser {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.predAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.predScore {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.noPred {
+  color: #aaa;
+}
+
+.ptsTag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+
+}
+
+.ptsTag.exact {
+  background: #4caf50;
+  color: #fff;
+}
+
+.ptsTag.winner {
+  background: #8bc34a;
+  color: #fff;
+}
+
+.ptsTag.miss {
+  background: #e0e0e0;
+  color: #666;
+}
+
+.ptsTag.pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+/* Form Styles */
+.formPanel {
+  background: #fff;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.participantSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.selectorLabel {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.selectorButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.participantOption {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: #fafafa;
+  border: 3px solid #ccc;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.participantOption:hover {
+  border-color: #888;
+}
+
+.participantOption.selected {
+  background: #eef6ff;
+  border-color: var(--blue, #0284c7);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.3);
+}
+
+.participantOption img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--ink);
+}
+
+.participantOption strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.participantOption small {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.pinFieldContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.pinFieldContainer label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.pinFieldContainer input {
+  max-width: 240px;
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.pinFieldContainer small {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.matchesFormList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recopaInputCard {
+  background: #fafafa;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cardMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.cardMatchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.teamSide {
+  flex: 1;
+}
+
+.teamSide.away {
+  text-align: right;
+}
+
+.scoreInputsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scoreInputsGroup input {
+  width: 56px;
+  height: 48px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 900;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.dash {
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+.recopaAlert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.recopaAlert.success {
+  background: #d1e7dd;
+  color: #0f5132;
+  border: 2px solid #badbcc;
+}
+
+.recopaAlert.error {
+  background: #f8d7da;
+  color: #842029;
+  border: 2px solid #f5c2c7;
+}
+
+/* Dark Mode Overrides for Recopa */
+:root[data-theme="dark"] .recopaCard {
+  background: #1e1e1e;
+  color: #fff;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .recopaNotice {
+  background: #2a2100;
+  border-color: #ffb300;
+  color: #ffe082;
+}
+
+:root[data-theme="dark"] .recopaNotice strong {
+  color: #ffd54f;
+}
+
+:root[data-theme="dark"] .tabItem {
+  background: #252525;
+  color: #fff;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .tabItem.active {
+  background: #fff;
+  color: #000;
+}
+
+:root[data-theme="dark"] .recopaTable {
+  background: #1e1e1e;
+  color: #fff;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .recopaTable th {
+  background: #2a2a2a;
+  color: #ccc;
+}
+
+:root[data-theme="dark"] .recopaTable tr.leaderRow {
+  background: #2c2500;
+}
+
+:root[data-theme="dark"] .recopaMatchCard {
+  background: #1e1e1e;
+  border-color: #444;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .officialResultBox {
+  background: #2a2a2a;
+  border-color: #555;
+}
+
+:root[data-theme="dark"] .officialScore {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .predRow {
+  background: #282828;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .formPanel {
+  background: #1e1e1e;
+  border-color: #444;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .participantOption {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .participantOption.selected {
+  background: #0c3859;
+  border-color: #38bdf8;
+}
+
+:root[data-theme="dark"] .pinFieldContainer {
+  background: #2a2a2a;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .recopaInputCard {
+  background: #282828;
+  border-color: #444;
+}
+
+:root[data-theme="dark"] .scoreInputsGroup input {
+  background: #111;
+  color: #fff;
+  border-color: #555;
+}
+
