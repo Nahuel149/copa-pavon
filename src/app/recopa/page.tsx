@@ -147,6 +147,27 @@ export default function RecopaPage() {
     setSubmitting(true);
     setSubmitMessage(null);
 
+    // Check how many matches have at least one score filled
+    const filled = recopaMatches.filter((m) => {
+      const p = predictions[m.id];
+      return p && (p.homeGoals !== "" || p.awayGoals !== "");
+    });
+    const allEmpty = filled.length === 0;
+    const allFilled = filled.length === recopaMatches.length &&
+      filled.every((m) => {
+        const p = predictions[m.id];
+        return p && p.homeGoals !== "" && p.awayGoals !== "";
+      });
+
+    if (!allEmpty && !allFilled) {
+      setSubmitMessage({
+        type: "error",
+        text: `Completá todos los marcadores o dejá todo vacío. Tenés ${filled.length} de ${recopaMatches.length} partidos cargados.`,
+      });
+      setSubmitting(false);
+      return;
+    }
+
     const formattedPredictions = recopaMatches.map((m) => ({
       matchId: m.id,
       homeGoals: Number(predictions[m.id]?.homeGoals ?? 0),
