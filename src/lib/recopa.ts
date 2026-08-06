@@ -33,9 +33,17 @@ export const recopaParticipants: RecopaParticipant[] = [
 export const RECOPA_EDIT_DEADLINE_ISO = "2026-08-08T14:00:00-03:00";
 export const RECOPA_EDIT_DEADLINE_LABEL = "Sábado 8 de Agosto - 14:00 hs Argentina (Comienzo de Atlético Tucumán vs Sarmiento)";
 
+export const RECOPA_REVEAL_DEADLINE_ISO = "2026-08-08T13:00:00-03:00";
+export const RECOPA_REVEAL_DEADLINE_LABEL = "Sábado 8 de Agosto - 13:00 hs Argentina (1 hora antes del primer partido)";
+
 export function isRecopaEditOpen(nowMs: number = Date.now()): boolean {
   const deadlineMs = new Date(RECOPA_EDIT_DEADLINE_ISO).getTime();
   return nowMs < deadlineMs;
+}
+
+export function areRecopaPredictionsRevealed(nowMs: number = Date.now()): boolean {
+  const revealMs = new Date(RECOPA_REVEAL_DEADLINE_ISO).getTime();
+  return nowMs >= revealMs;
 }
 
 export type RecopaMatch = {
@@ -208,6 +216,18 @@ export function scoreRecopaPrediction(
   };
 }
 
+export type RecopaMatchBreakdownItem = {
+  prediction?: RecopaScorePrediction;
+  hasPrediction: boolean;
+  isRevealed: boolean;
+  result?: RecopaMatchResult;
+  points: number;
+  basePoints: number;
+  scorerPoints: number;
+  verdict: RecopaVerdict;
+  scorerHit: boolean;
+};
+
 export type RecopaStanding = {
   participant: RecopaParticipant;
   submission?: RecopaSubmission;
@@ -216,21 +236,13 @@ export type RecopaStanding = {
   winnerHits: number;
   scorerHits: number;
   matchesPlayed: number;
-  matchBreakdown: Record<
-    string,
-    {
-      prediction?: RecopaScorePrediction;
-      result?: RecopaMatchResult;
-      points: number;
-      basePoints: number;
-      scorerPoints: number;
-      verdict: RecopaVerdict;
-      scorerHit: boolean;
-    }
-  >;
+  matchBreakdown: Record<string, RecopaMatchBreakdownItem>;
 };
 
-export function buildRecopaStandings(store: RecopaStore): RecopaStanding[] {
+export function buildRecopaStandings(
+  store: RecopaStore,
+  revealPredictions: boolean = areRecopaPredictionsRevealed(),
+): RecopaStanding[] {
   const resultsMap = new Map(store.results.map((r) => [r.matchId, r]));
 
   return recopaParticipants.map((participant) => {
@@ -260,7 +272,9 @@ export function buildRecopaStandings(store: RecopaStore): RecopaStanding[] {
       }
 
       matchBreakdown[match.id] = {
-        prediction: pred,
+        prediction: revealPredictions ? pred : undefined,
+        hasPrediction: Boolean(pred),
+        isRevealed: revealPredictions,
         result: res,
         points,
         basePoints,

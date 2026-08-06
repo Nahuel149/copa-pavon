@@ -27,7 +27,10 @@ type RecopaApiResponse = {
   standings: RecopaStanding[];
   editDeadline?: string;
   editDeadlineLabel?: string;
+  revealDeadline?: string;
+  revealDeadlineLabel?: string;
   isOpen?: boolean;
+  isRevealed?: boolean;
   error?: string;
 };
 
@@ -433,6 +436,27 @@ export default function RecopaPage() {
                   <h2>Liga Profesional Argentina - 6 Partidos</h2>
                 </div>
 
+                {!data?.isRevealed && (
+                  <div
+                    style={{
+                      marginBottom: "18px",
+                      background: "rgba(59, 130, 246, 0.12)",
+                      border: "1.5px solid #3b82f6",
+                      borderRadius: "10px",
+                      padding: "12px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      color: "#e2e8f0",
+                    }}
+                  >
+                    <Lock size={20} style={{ color: "#60a5fa", flexShrink: 0 }} />
+                    <span style={{ fontSize: "0.92rem", lineHeight: "1.4" }}>
+                      <strong style={{ color: "#93c5fd" }}>Pronósticos ocultos:</strong> Los marcadores cargados por cada participante permanecen ocultos con 🔒 hasta <strong>1 hora antes del primer partido</strong> (Sábado 8 de Agosto a las 13:00 hs Argentina).
+                    </span>
+                  </div>
+                )}
+
                 <div className="recopaMatchesGrid">
                   {recopaMatches.map((match) => {
                     const gonzaBreak = gonzaStanding?.matchBreakdown[match.id];
@@ -487,16 +511,18 @@ export default function RecopaPage() {
                               <img src="/kahl-assets/campeon-gonza-fiss.jpeg" alt="" className="predAvatar" />
                               <div className="userMetaStack">
                                 <span>Gonza el + Fachero.</span>
-                                {gonzaBreak?.prediction?.goalScorer ? (
+                                {gonzaBreak?.isRevealed && gonzaBreak?.prediction?.goalScorer ? (
                                   <small className="scorerText">⚽ {gonzaBreak.prediction.goalScorer}</small>
                                 ) : null}
                               </div>
                             </div>
                             <div className="predScore">
-                              {gonzaBreak?.prediction ? (
+                              {gonzaBreak?.isRevealed && gonzaBreak?.prediction ? (
                                 <strong>
                                   {gonzaBreak.prediction.homeGoals} - {gonzaBreak.prediction.awayGoals}
                                 </strong>
+                              ) : gonzaBreak?.hasPrediction ? (
+                                <span className="noPred" style={{ fontSize: "1.1rem" }} title="Pronóstico cargado - Oculto hasta 1h antes del 1º partido">🔒</span>
                               ) : (
                                 <span className="noPred">-</span>
                               )}
@@ -523,16 +549,18 @@ export default function RecopaPage() {
                               <img src="/kahl-assets/campeon-javi.jpeg" alt="" className="predAvatar" />
                               <div className="userMetaStack">
                                 <span>Javier</span>
-                                {javiBreak?.prediction?.goalScorer ? (
+                                {javiBreak?.isRevealed && javiBreak?.prediction?.goalScorer ? (
                                   <small className="scorerText">⚽ {javiBreak.prediction.goalScorer}</small>
                                 ) : null}
                               </div>
                             </div>
                             <div className="predScore">
-                              {javiBreak?.prediction ? (
+                              {javiBreak?.isRevealed && javiBreak?.prediction ? (
                                 <strong>
                                   {javiBreak.prediction.homeGoals} - {javiBreak.prediction.awayGoals}
                                 </strong>
+                              ) : javiBreak?.hasPrediction ? (
+                                <span className="noPred" style={{ fontSize: "1.1rem" }} title="Pronóstico cargado - Oculto hasta 1h antes del 1º partido">🔒</span>
                               ) : (
                                 <span className="noPred">-</span>
                               )}

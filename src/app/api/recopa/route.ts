@@ -1,19 +1,29 @@
 import { NextResponse } from "next/server";
 import {
+  areRecopaPredictionsRevealed,
   buildRecopaStandings,
   isRecopaEditOpen,
   recopaMatches,
   recopaParticipants,
   RECOPA_EDIT_DEADLINE_ISO,
   RECOPA_EDIT_DEADLINE_LABEL,
+  RECOPA_REVEAL_DEADLINE_ISO,
+  RECOPA_REVEAL_DEADLINE_LABEL,
 } from "@/lib/recopa";
 import { readRecopaStore, writeRecopaStore } from "@/lib/recopa-storage";
 
 export async function GET() {
   try {
     const store = await readRecopaStore();
-    const safeSubmissions = store.submissions.map(({ pinHash: _pinHash, ...s }) => s);
-    const standings = buildRecopaStandings(store);
+    const isRevealed = areRecopaPredictionsRevealed();
+
+    const safeSubmissions = store.submissions.map(({ pinHash: _pinHash, predictions, ...s }) => ({
+      ...s,
+      predictions: isRevealed ? predictions : [],
+      hasPredictions: predictions.length > 0,
+    }));
+
+    const standings = buildRecopaStandings(store, isRevealed);
 
     return NextResponse.json({
       matches: recopaMatches,
@@ -23,7 +33,10 @@ export async function GET() {
       standings,
       editDeadline: RECOPA_EDIT_DEADLINE_ISO,
       editDeadlineLabel: RECOPA_EDIT_DEADLINE_LABEL,
+      revealDeadline: RECOPA_REVEAL_DEADLINE_ISO,
+      revealDeadlineLabel: RECOPA_REVEAL_DEADLINE_LABEL,
       isOpen: isRecopaEditOpen(),
+      isRevealed,
     });
   } catch (error) {
     return NextResponse.json({ error: "Error al obtener datos de la Recopa." }, { status: 500 });
