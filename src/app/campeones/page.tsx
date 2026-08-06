@@ -324,12 +324,12 @@ export default function CampeonesPage() {
                   )}
                 </div>
               ) : (
-                <div className="emptyTableNotice" style={{ padding: "24px", textAlign: "center", background: "#f8fafc", borderRadius: "8px", border: "1px dashed #cbd5e1" }}>
-                  <History size={28} style={{ color: "#64748b", marginBottom: "8px" }} />
-                  <p style={{ margin: 0, fontWeight: 700, color: "#475569" }}>
+                <div className="emptyTableNotice">
+                  <History size={28} style={{ marginBottom: "8px" }} />
+                  <p style={{ margin: 0, fontWeight: 700 }}>
                     La tabla completa de posiciones de la {currentEdition.title} no está disponible.
                   </p>
-                  <small style={{ color: "#94a3b8" }}>Solo se encuentra registrado el campeón oficial de esta edición.</small>
+                  <small>Solo se encuentra registrado el campeón oficial de esta edición.</small>
                 </div>
               )}
             </section>
@@ -348,7 +348,7 @@ export default function CampeonesPage() {
                 </div>
 
                 <div className="reportCardsGrid">
-                  <article className="reportCard gold" style={{ background: "#fffbeb", border: "3px solid #d97706", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard gold">
                     <header>
                       <span className="reportPos">🥇 1.º</span>
                       <h3>GONZA</h3>
@@ -369,7 +369,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Felicitaciones, Gonza. Levantá la copa rápido antes de que descubran que tampoco sabés cuánto pesa porque siempre las cargó otro. 🐨💧🏆</p>
                   </article>
 
-                  <article className="reportCard silver" style={{ background: "#f8fafc", border: "3px solid #475569", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard silver">
                     <header>
                       <span className="reportPos">🥈 2.º</span>
                       <h3>NICO MONTES</h3>
@@ -384,7 +384,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Le faltaron cinco puntos y un poquito menos de cagazo en la final. Para la próxima puede probar acertando o, al menos, no retirándose del fútbol por fiaca.</p>
                   </article>
 
-                  <article className="reportCard bronze" style={{ background: "#fff7ed", border: "3px solid #ea580c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard bronze">
                     <header>
                       <span className="reportPos">🥉 3.º</span>
                       <h3>MIGUEL</h3>
@@ -540,7 +540,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Por lo menos cumplió su lema de “primero mono que en la B”. No cayó oficialmente, aunque la tabla lo dejó balanceándose peligrosamente sobre la rama.</p>
                   </article>
 
-                  <article className="reportCard relegated" style={{ background: "#fef2f2", border: "3px solid #b91c1c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard relegated">
                     <header>
                       <span className="reportPos">13.º 🔻</span>
                       <h3>NAHUEL</h3>
@@ -561,7 +561,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Gracias por organizar todo, pelado. Con la plata del próximo prode comprate Hair Recovery o, por lo menos, un asesor que sepa pronosticar. 🇯🇵</p>
                   </article>
 
-                  <article className="reportCard relegated" style={{ background: "#fef2f2", border: "3px solid #b91c1c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard relegated">
                     <header>
                       <span className="reportPos">14.º 🔻</span>
                       <h3>MAXI/BAXI</h3>
@@ -576,7 +576,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">Tuvo 86 aciertos, más que Nahuel, pero cinco puntos menos. Prueba definitiva de que para entender el reglamento de la Copa Kahl hacía falta un contador, un abogado y acceso al teléfono del organizador.</p>
                   </article>
 
-                  <article className="reportCard relegated" style={{ background: "#fef2f2", border: "3px solid #b91c1c", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard relegated">
                     <header>
                       <span className="reportPos">15.º 🔻</span>
                       <h3>FER</h3>
@@ -594,7 +594,7 @@ export default function CampeonesPage() {
                     <p className="reportFooter">El verdadero batacazo de la Copa Kahl habría sido que Fer no terminara último.</p>
                   </article>
 
-                  <article className="reportCard disciplinary" style={{ background: "#faf5ff", border: "3px solid #7e22ce", borderRadius: "12px", boxShadow: "var(--shadow)", padding: "20px" }}>
+                  <article className="reportCard disciplinary">
                     <header>
                       <span className="reportPos">🚨 SANCIONADO</span>
                       <h3>ALE CON PELO</h3>
@@ -607,7 +607,7 @@ export default function CampeonesPage() {
                   </article>
                 </div>
 
-                <div className="falloFinalCard" style={{ marginTop: "20px", padding: "20px", border: "3px solid #111", borderRadius: "12px", boxShadow: "var(--shadow)" }}>
+                <div className="falloFinalCard" style={{ marginTop: "20px" }}>
                   <h3 style={{ margin: "0 0 12px", fontSize: "1.3rem", color: "#b91c1c", textTransform: "uppercase", fontWeight: 900 }}>⚖️ FALLO FINAL</h3>
                   <ul style={{ margin: 0, paddingLeft: "20px", display: "grid", gap: "8px", fontWeight: 700 }}>
                     <li>Gonza: campeón mundial sin acertar al campeón mundial.</li>

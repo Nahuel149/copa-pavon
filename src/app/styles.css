@@ -7271,8 +7271,18 @@ tbody tr.relegationRow:hover {
   border-color: #ef4444;
 }
 
+:root[data-theme="dark"] .reportCard.disciplinary {
+  background: #1f0a38;
+  border-color: #a855f7;
+}
+
 .falloFinalCard {
   background: #fffdf0;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  color: #1e293b;
 }
 
 :root[data-theme="dark"] .falloFinalCard {
@@ -7289,8 +7299,9 @@ tbody tr.relegationRow:hover {
 /* ── Proximamente Panel & Cards (dark mode) ── */
 .proximamentePanel {
   background: #fffdf0;
-  border: 3px solid #111;
+  border: 3px solid var(--ink);
   border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
 .proximamentePanel h2 {
@@ -7303,8 +7314,8 @@ tbody tr.relegationRow:hover {
 
 .proximamenteCard {
   background: #fff;
-  border: 2px solid #111;
-  box-shadow: 3px 3px 0 #111;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
 }
 
 .proximamenteFooter {
@@ -7362,11 +7373,6 @@ tbody tr.relegationRow:hover {
   border-top-color: #334155;
 }
 
-:root[data-theme="dark"] .historyTablePanel {
-  background: var(--panel);
-  border-color: #334155;
-}
-
 :root[data-theme="dark"] .historyTablePanel h2,
 :root[data-theme="dark"] .historyTablePanel h3 {
   color: #f1f5f9;
@@ -7375,3 +7381,28 @@ tbody tr.relegationRow:hover {
 :root[data-theme="dark"] .historyTablePanel p {
   color: #94a3b8;
 }
+
+/* ── Empty Table Notice ── */
+.emptyTableNotice {
+  padding: 24px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  color: #475569;
+}
+
+.emptyTableNotice small {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .emptyTableNotice {
+  background: var(--paper-strong);
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .emptyTableNotice small {
+  color: #64748b;
+}
+
