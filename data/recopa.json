@@ -1,0 +1,46 @@
+{
+  "submissions": [
+    {
+      "participant": "Gonza el + Fachero.",
+      "updatedAt": "2026-08-09T08:00:00.000Z",
+      "predictions": [
+        {
+          "matchId": "recopa-1",
+          "homeGoals": 0,
+          "awayGoals": 0
+        },
+        {
+          "matchId": "recopa-2",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "goalScorer": "Carrillo"
+        },
+        {
+          "matchId": "recopa-3",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "goalScorer": "Correa"
+        },
+        {
+          "matchId": "recopa-4",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "goalScorer": "Merentiel"
+        },
+        {
+          "matchId": "recopa-5",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "goalScorer": "Abaldo"
+        },
+        {
+          "matchId": "recopa-6",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "goalScorer": "Alex Luna"
+        }
+      ]
+    }
+  ],
+  "results": []
+}

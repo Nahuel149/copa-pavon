@@ -34,10 +34,34 @@ async function getMongoCollection(): Promise<Collection<Document> | null> {
   return db.collection<Document>(recopaCollectionName);
 }
 
+export const gonzaSeedSubmission = {
+  participant: "Gonza el + Fachero." as const,
+  updatedAt: "2026-08-09T08:00:00.000Z",
+  predictions: [
+    { matchId: "recopa-1", homeGoals: 0, awayGoals: 0 },
+    { matchId: "recopa-2", homeGoals: 1, awayGoals: 1, goalScorer: "Carrillo" },
+    { matchId: "recopa-3", homeGoals: 1, awayGoals: 2, goalScorer: "Correa" },
+    { matchId: "recopa-4", homeGoals: 2, awayGoals: 1, goalScorer: "Merentiel" },
+    { matchId: "recopa-5", homeGoals: 2, awayGoals: 0, goalScorer: "Abaldo" },
+    { matchId: "recopa-6", homeGoals: 3, awayGoals: 0, goalScorer: "Alex Luna" },
+  ],
+};
+
 const defaultStore: RecopaStore = {
-  submissions: [],
+  submissions: [gonzaSeedSubmission],
   results: [],
 };
+
+function ensureSeedSubmissions(store: RecopaStore): RecopaStore {
+  const hasGonza = store.submissions.some((s) => s.participant === "Gonza el + Fachero.");
+  if (!hasGonza) {
+    return {
+      ...store,
+      submissions: [gonzaSeedSubmission, ...store.submissions],
+    };
+  }
+  return store;
+}
 
 async function ensureRecopaFile() {
   await fs.mkdir(dataDir, { recursive: true });
@@ -52,23 +76,25 @@ export async function readRecopaStore(): Promise<RecopaStore> {
   const collection = await getMongoCollection();
   if (collection) {
     const doc = await collection.findOne({ _id: recopaDocumentId } as Document);
-    if (!doc) return defaultStore;
-    return {
+    if (!doc) return ensureSeedSubmissions(defaultStore);
+    const store: RecopaStore = {
       submissions: Array.isArray(doc.submissions) ? doc.submissions : [],
       results: Array.isArray(doc.results) ? doc.results : [],
     };
+    return ensureSeedSubmissions(store);
   }
 
   await ensureRecopaFile();
   try {
     const raw = await fs.readFile(recopaFilePath, "utf8");
     const parsed = JSON.parse(raw) as Partial<RecopaStore>;
-    return {
+    const store: RecopaStore = {
       submissions: Array.isArray(parsed.submissions) ? parsed.submissions : [],
       results: Array.isArray(parsed.results) ? parsed.results : [],
     };
+    return ensureSeedSubmissions(store);
   } catch {
-    return defaultStore;
+    return ensureSeedSubmissions(defaultStore);
   }
 }
 
