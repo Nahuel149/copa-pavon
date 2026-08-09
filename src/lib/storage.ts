@@ -510,19 +510,37 @@ function cleanComment(comment: Document | TablaComment | StoredTablaComment): Ta
   return safeComment;
 }
 
+const defaultWelcomeComments: TablaComment[] = [
+  {
+    id: "welcome-init-1",
+    name: "Organización Fiss Kahl",
+    comment: "¡Bienvenidos al Prode 2026! Espacio abierto para dejar pálpitos, gastadas y reclamos oficiales.",
+    createdAt: "2026-08-01T12:00:00.000Z",
+    reactions: normalizeTablaCommentReactions({ "😍": 3, "👍": 5, "😂": 2 }),
+    replies: [],
+  },
+];
+
 export async function readTablaComments(limit?: number) {
+  let comments: TablaComment[] = [];
   const collections = await getMongoCollections();
   if (collections) {
     const query = collections.comments.find({}).sort({ createdAt: -1 });
-    const comments = typeof limit === "number" ? await query.limit(limit).toArray() : await query.toArray();
-    return comments.map(cleanComment).filter((comment) => comment.name && comment.comment);
+    const docs = typeof limit === "number" ? await query.limit(limit).toArray() : await query.toArray();
+    comments = docs.map(cleanComment).filter((comment) => comment.name && comment.comment);
+  } else {
+    await ensureCommentsFile();
+    const raw = await fs.readFile(commentsPath, "utf8");
+    const store = JSON.parse(raw) as { comments?: TablaComment[] };
+    const list = (Array.isArray(store.comments) ? store.comments : []).map(cleanComment).filter((comment) => comment.name && comment.comment);
+    comments = typeof limit === "number" ? list.slice(0, limit) : list;
   }
 
-  await ensureCommentsFile();
-  const raw = await fs.readFile(commentsPath, "utf8");
-  const store = JSON.parse(raw) as { comments?: TablaComment[] };
-  const comments = (Array.isArray(store.comments) ? store.comments : []).map(cleanComment).filter((comment) => comment.name && comment.comment);
-  return typeof limit === "number" ? comments.slice(0, limit) : comments;
+  if (comments.length === 0) {
+    return defaultWelcomeComments;
+  }
+
+  return comments;
 }
 
 export async function appendTablaComment(input: { name: string; comment: string }) {
