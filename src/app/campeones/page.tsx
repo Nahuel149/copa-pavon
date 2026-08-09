@@ -201,8 +201,10 @@ export default function CampeonesPage() {
                                 row.pos
                               )}
                             </td>
-                            <td className="participantCell">
-                              <strong>{row.participant}</strong>
+                            <td>
+                              <div className="participantCell">
+                                <strong>{row.participant}</strong>
+                              </div>
                             </td>
                             <td className="pointsCell">{row.points}</td>
                             <td>{row.played}</td>
@@ -250,8 +252,10 @@ export default function CampeonesPage() {
                                 row.pos
                               )}
                             </td>
-                            <td className="participantCell">
-                              <strong>{row.participant}</strong>
+                            <td>
+                              <div className="participantCell">
+                                <strong>{row.participant}</strong>
+                              </div>
                             </td>
                             <td className="pointsCell">{row.points} pts</td>
                             <td>
@@ -304,8 +308,10 @@ export default function CampeonesPage() {
                                 row.pos
                               )}
                             </td>
-                            <td className="participantCell">
-                              <strong>{row.participant}</strong>
+                            <td>
+                              <div className="participantCell">
+                                <strong>{row.participant}</strong>
+                              </div>
                             </td>
                             <td className="pointsCell">{row.points} pts</td>
                             <td>
@@ -659,8 +665,10 @@ export default function CampeonesPage() {
                           idx + 1
                         )}
                       </td>
-                      <td className="participantCell">
-                        <strong>{player.participant}</strong>
+                      <td>
+                        <div className="participantCell">
+                          <strong>{player.participant}</strong>
+                        </div>
                       </td>
                       <td className="pointsCell" style={{ color: "#d97706", fontWeight: 900 }}>{player.gold}</td>
                       <td className="pointsCell" style={{ color: "#475569", fontWeight: 900 }}>{player.silver}</td>

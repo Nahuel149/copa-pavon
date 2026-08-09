@@ -6207,21 +6207,20 @@ tbody tr.relegationRow:hover {
   gap: 10px;
 }
 
-td.participantCell,
-th.participantCell {
-  display: table-cell;
-  vertical-align: middle;
-}
-
 .historyTable th,
-.historyTable td {
+.historyTable td,
+.palmaresTable th,
+.palmaresTable td {
   text-align: center;
   vertical-align: middle;
 }
 
 .historyTable th:nth-child(2),
-.historyTable td.participantCell,
-.historyTable td:nth-child(2) {
+.historyTable td:nth-child(2),
+.palmaresTable th:nth-child(2),
+.palmaresTable td:nth-child(2),
+.palmaresTable th:nth-child(6),
+.palmaresTable td:nth-child(6) {
   text-align: left;
 }
 

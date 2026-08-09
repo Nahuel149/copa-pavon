@@ -405,9 +405,11 @@ export default function RecopaPage() {
                               <td className="posCell">
                                 {isLeader ? <Trophy size={18} className="goldTrophy" /> : index + 1}
                               </td>
-                              <td className="participantCell">
-                                <img src={standing.participant.image} alt="" className="miniAvatar" />
-                                <strong>{standing.participant.fullName}</strong>
+                              <td>
+                                <div className="participantCell">
+                                  <img src={standing.participant.image} alt="" className="miniAvatar" />
+                                  <strong>{standing.participant.fullName}</strong>
+                                </div>
                               </td>
                               <td>{standing.participant.title}</td>
                               <td className="pointsCell">{standing.totalPoints} pts</td>
