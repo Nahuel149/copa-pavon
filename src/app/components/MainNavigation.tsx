@@ -18,12 +18,12 @@ import { useState } from "react";
 
 const primaryItems = [
   { href: "/tabla", label: "Tabla", icon: Table2 },
-  { href: "/campeones", label: "Campeones & Historia", icon: Award },
   { href: "/pronosticos", label: "Pronosticos", icon: BarChart3 },
-  { href: "/eliminatorias", label: "Editar Prode", icon: Brackets },
+  { href: "/editar_prode", label: "Editar Prode", icon: Brackets },
 ];
 
 const moreItems = [
+  { href: "/campeones", label: "Campeones & Historia", icon: Award },
   { href: "/reglas", label: "Reglas", icon: BookOpenCheck },
   { href: "/admin", label: "Admin", icon: LockKeyhole },
 ];

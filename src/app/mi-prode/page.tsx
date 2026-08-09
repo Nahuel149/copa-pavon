@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function MiProdeRedirectPage() {
-  redirect("/eliminatorias");
+  redirect("/editar_prode");
 }

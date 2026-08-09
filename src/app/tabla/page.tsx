@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { ChevronDown, Download, Loader2, MessageSquare, RefreshCw, Send, Share2, SmilePlus, Trophy } from "lucide-react";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -174,6 +175,10 @@ export default function TablaPage() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, CommentReplyDraft>>({});
   const [replySaving, setReplySaving] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: "position", direction: "asc" });
+  const [regName, setRegName] = useState("");
+  const [regPin, setRegPin] = useState("");
+  const [regStatus, setRegStatus] = useState<"idle" | "saving" | "done">("idle");
+  const [regMessage, setRegMessage] = useState("");
   const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
   const sortedRows = useMemo(() => {
     const originalPositionById = new Map(rows.map((row, index) => [row.submissionId, index + 1]));
@@ -654,6 +659,33 @@ export default function TablaPage() {
     }
   }
 
+  async function registerParticipant(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (regStatus === "saving") return;
+
+    setRegStatus("saving");
+    setRegMessage("");
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: regName, pin: regPin }),
+      });
+      const body = await readJsonResponse<{ ok?: boolean; name?: string; errors?: string[] }>(response);
+      if (!response.ok || !body.ok) {
+        throw new Error(body.errors?.[0] ?? "No se pudo crear el participante.");
+      }
+
+      setRegStatus("done");
+      setRegPin("");
+      setRegMessage(`Listo, ${body.name ?? regName.trim()}. Ya podes entrar a Editar Prode con tu PIN.`);
+      await loadStandings();
+    } catch (registrationError) {
+      setRegStatus("idle");
+      setRegMessage(registrationError instanceof Error ? registrationError.message : "No se pudo crear el participante.");
+    }
+  }
+
   async function loadComments() {
     try {
       const response = await fetch("/api/comments", { cache: "no-store" });
@@ -833,6 +865,53 @@ export default function TablaPage() {
             La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Prepará tus pronósticos!
           </p>
         </div>
+      </section>
+
+      <section className="registrationPanel" aria-labelledby="registration-title">
+        <div className="registrationCopy">
+          <p className="eyebrow">NUEVO PARTICIPANTE</p>
+          <h2 id="registration-title">Anotate a la Copa.</h2>
+          <p>Elegi tu nombre y un PIN de 4 a 10 numeros. Despues usalos para entrar y editar tu prode.</p>
+        </div>
+        <form className="registrationForm" onSubmit={registerParticipant}>
+          <label className="registrationField">
+            <span>Nombre</span>
+            <input
+              autoComplete="nickname"
+              maxLength={40}
+              minLength={2}
+              onChange={(event) => setRegName(event.target.value)}
+              placeholder="Tu nombre"
+              required
+              value={regName}
+            />
+          </label>
+          <label className="registrationField">
+            <span>PIN</span>
+            <input
+              autoComplete="new-password"
+              inputMode="numeric"
+              maxLength={10}
+              minLength={4}
+              onChange={(event) => setRegPin(event.target.value.replace(/\D/g, "").slice(0, 10))}
+              pattern="[0-9]{4,10}"
+              placeholder="4 a 10 numeros"
+              required
+              type="password"
+              value={regPin}
+            />
+          </label>
+          <button className="primaryAction registrationSubmit" disabled={regStatus === "saving"} type="submit">
+            {regStatus === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
+            Anotarme
+          </button>
+        </form>
+        {regMessage ? (
+          <p className={`registrationMessage ${regStatus === "done" ? "successMessage" : "errorMessage"}`} role="status">
+            {regMessage}
+            {regStatus === "done" ? <Link href="/editar_prode">Ir a Editar Prode</Link> : null}
+          </p>
+        ) : null}
       </section>
 
       {/* ANUNCIO OFICIAL PROXIMAMENTE */}

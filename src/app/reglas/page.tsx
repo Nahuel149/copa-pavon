@@ -69,58 +69,24 @@ export default function ReglasPage() {
         ))}
       </section>
 
-      <section className="rulesDetailGrid" aria-label="Detalles importantes">
-        <article>
-          <p className="eyebrow">Fase de grupos</p>
-          <h2>Híbrido por fecha</h2>
-          <p>
-            Hay 10 partidos importantes por fecha con marcador exacto. El resto se juega con 1X2: gana local, empate o
-            gana visitante.
-          </p>
-        </article>
-        <article>
-          <p className="eyebrow">Clasificados</p>
-          <h2>Top 2 por grupo</h2>
-          <p>
-            Se eligen dos equipos por grupo. Si los dos equipos son correctos, sumás 3 puntos. Si acertás uno solo o
-            ninguno, suma 0.
-          </p>
-        </article>
-
-        <article>
-          <p className="eyebrow">Tabla</p>
-          <h2>Acumulado automático</h2>
-          <p>
-            La tabla toma todos los envíos guardados y los compara contra los resultados oficiales cargados en admin.
-            Cada nuevo resultado recalcula totales, desempates y columnas de puntos.
-          </p>
-        </article>
-      </section>
-
       <section className="sectionHeader">
         <p className="eyebrow">Mano a mano</p>
         <h2>Puntos por etapa.</h2>
-        <p>
-          Los partidos mano a mano se juegan con marcador exacto, ganador y goleador. En semifinales se usan los puntos
-          base. En la final los puntos suben para darle más peso al último partido. Cada partido se bloquea 10 minutos
-          antes de empezar.
-        </p>
+        <p>Exacto, ganador y goleador. Cada partido cierra 10 minutos antes de empezar.</p>
       </section>
 
       <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos por etapa">
         <article>
           <span>Semifinales</span>
           <strong>3 / 1 / 1</strong>
-          <p>
-            Exacto: 3 pts. Ganador/acierto: 1 pt. Goleador acertado: 1 pt. Máximo 5 puntos por partido.
-          </p>
+          <p className="scoreRuleLegend">En orden: exacto / ganador / goleador.</p>
+          <p>Máximo 5 puntos por partido.</p>
         </article>
         <article>
           <span>Final</span>
           <strong>5 / 3 / 2</strong>
-          <p>
-            Exacto: 5 pts. Ganador/acierto: 3 pts. Goleador acertado: 2 pts. Máximo 7 puntos en la final.
-          </p>
+          <p className="scoreRuleLegend">En orden: exacto / ganador / goleador.</p>
+          <p>Máximo 7 puntos en la final.</p>
         </article>
       </section>
 

@@ -1330,15 +1330,31 @@ a {
 }
 
 .knockoutScoreGrid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .knockoutScoreGrid article {
-  padding: 18px;
+  min-height: 0;
+  padding: clamp(20px, 3vw, 34px);
 }
 
 .knockoutScoreGrid strong {
-  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-size: clamp(3rem, 7vw, 5.8rem);
+  line-height: 0.9;
+  white-space: nowrap;
+}
+
+.knockoutScoreGrid p {
+  line-height: 1.4;
+}
+
+.knockoutScoreGrid .scoreRuleLegend {
+  margin-top: -2px;
+  color: var(--ink);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .scoreRuleGrid article:nth-child(1) {
@@ -2797,6 +2813,42 @@ a {
   .commentReplySubmit {
     width: 100%;
   }
+}
+
+@media (min-width: 721px) and (max-width: 900px) {
+  .historyTablePanel,
+  .palmaresPanel {
+    overflow: hidden;
+  }
+
+  .historyTable,
+  .palmaresTable {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 0.74rem;
+  }
+
+  .historyTable th,
+  .historyTable td,
+  .palmaresTable th,
+  .palmaresTable td {
+    padding: 8px 5px;
+    overflow-wrap: anywhere;
+  }
+
+  .historyTable th:first-child,
+  .historyTable td:first-child,
+  .palmaresTable th:first-child,
+  .palmaresTable td:first-child { width: 7%; }
+
+  .historyTable th:nth-child(2),
+  .historyTable td:nth-child(2),
+  .palmaresTable th:nth-child(2),
+  .palmaresTable td:nth-child(2) { width: 27%; text-align: left; }
+
+  .historyTable th:nth-child(n+3),
+  .historyTable td:nth-child(n+3) { width: 8.25%; }
 }
 
 .commentsMoreButton {
@@ -6972,6 +7024,248 @@ tbody tr.relegationRow:hover {
   object-position: center 20%;
 }
 
+/* Responsive hardening: keep every public surface inside the viewport. */
+.rulesDetailGrid,
+.draftPanel {
+  display: none !important;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.shell,
+.content,
+.pageStack,
+.pageStack > *,
+.masthead,
+.masthead > *,
+.masthead nav,
+.navItem,
+.navLabel,
+.heroBand,
+.matchGrid,
+.championGrid,
+.matchPicker,
+.predictionExplorer,
+.adminToolbar {
+  min-width: 0;
+  max-width: 100%;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+@media (max-width: 1100px) and (min-width: 721px) {
+  .masthead {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "nav nav";
+  }
+
+  .masthead .brand {
+    grid-area: brand;
+  }
+
+  .masthead .desktopNav {
+    grid-area: nav;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    border-top: 1px solid rgba(5, 5, 5, 0.15);
+    border-left: 0;
+  }
+
+  .masthead .mobileNav {
+    display: none;
+  }
+
+  .masthead .mastActions {
+    grid-area: actions;
+    position: static;
+    padding: 12px 16px;
+  }
+
+  .desktopNav .navItem {
+    min-height: 56px;
+    gap: 5px;
+    padding-inline: 5px;
+    font-size: 0.75rem;
+  }
+
+  .desktopNav .navLabel strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    line-height: 1.05;
+  }
+}
+
+@media (max-width: 720px) {
+  .content {
+    width: 100%;
+    padding-inline: 12px;
+    overflow-x: clip;
+  }
+
+  .pageStack {
+    width: 100%;
+    gap: 20px;
+  }
+
+  .brand {
+    width: 100%;
+    padding-inline: 12px;
+    padding-right: 58px;
+  }
+
+  .brand > span:last-child {
+    min-width: 0;
+  }
+
+  .brand strong,
+  .brand small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .heroBand,
+  .compactHero {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 18px;
+  }
+
+  .heroBand h1,
+  .heroBand p,
+  .sectionHeader h2,
+  .sectionHeader p {
+    overflow-wrap: anywhere;
+  }
+
+  .matchPicker {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+  }
+
+  .matchPick {
+    max-width: 84vw;
+  }
+
+  .adminToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 8px;
+  }
+
+  .adminToolbar > * {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .championGrid,
+  .imageScatter {
+    width: 100%;
+  }
+
+  .championCard,
+  .championCard > div,
+  .championCard figure {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .championCard figure {
+    height: auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+  }
+
+  .championCard figure img,
+  .imageScatter img,
+  .imageScatter .kahlPhoto {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .knockoutComposer,
+  .resultGrid,
+  .predictionGrid,
+  .rulesFlow,
+  .scoreRuleGrid,
+  .matchGrid {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Historical tables stay readable without forcing the page wider than the phone. */
+  .historyTablePanel,
+  .palmaresPanel {
+    padding: 10px;
+    overflow: hidden;
+  }
+
+  .historyTable,
+  .palmaresTable {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 0.68rem;
+  }
+
+  .historyTable th,
+  .historyTable td,
+  .palmaresTable th,
+  .palmaresTable td {
+    padding: 6px 3px;
+    overflow-wrap: anywhere;
+  }
+
+  .historyTable th:first-child,
+  .historyTable td:first-child,
+  .palmaresTable th:first-child,
+  .palmaresTable td:first-child { width: 7%; }
+
+  .historyTable th:nth-child(2),
+  .historyTable td:nth-child(2),
+  .palmaresTable th:nth-child(2),
+  .palmaresTable td:nth-child(2) {
+    width: 29%;
+    text-align: left;
+  }
+
+  .historyTable th:nth-child(n+3),
+  .historyTable td:nth-child(n+3) { width: 8%; }
+
+  .palmaresTable th:nth-child(3),
+  .palmaresTable td:nth-child(3) { width: 32%; }
+
+  .palmaresTable th:nth-child(n+4),
+  .palmaresTable td:nth-child(n+4) { width: 16%; }
+
+  .rulesCallout {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+  }
+
+  .rulesCallout .primaryAction {
+    justify-self: start;
+  }
+}
+
 .editionMeta {
   display: flex;
   flex-direction: column;
@@ -7412,6 +7706,119 @@ tbody tr.relegationRow:hover {
 }
 
 /* ── Proximamente Panel & Cards (dark mode) ── */
+/* Registration panel */
+.registrationPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+  gap: 24px;
+  align-items: end;
+  padding: 24px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.registrationCopy .eyebrow {
+  display: inline-block;
+  margin: 0 0 10px;
+}
+
+.registrationCopy h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+}
+
+.registrationCopy p:not(.eyebrow) {
+  max-width: 520px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.45;
+}
+
+.registrationForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(150px, 0.7fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.registrationField {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.registrationField span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.registrationField input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: var(--paper-strong);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+}
+
+.registrationField input::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.registrationSubmit {
+  min-height: 48px;
+  white-space: nowrap;
+}
+
+.registrationMessage {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  font-weight: 800;
+}
+
+.registrationMessage a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.registrationMessage.successMessage {
+  color: #14532d;
+  background: #dcfce7;
+  border-color: #166534;
+}
+
+.registrationMessage.errorMessage {
+  color: #991b1b;
+  background: #fee2e2;
+  border-color: #b91c1c;
+}
+
+:root[data-theme="dark"] .registrationMessage.successMessage {
+  color: #dcfce7;
+  background: #123c2b;
+  border-color: #66c48a;
+}
+
+:root[data-theme="dark"] .registrationMessage.errorMessage {
+  color: #fecaca;
+  background: #4a1f26;
+  border-color: #ff7f73;
+}
+
 .proximamentePanel {
   background: #fffdf0;
   border: 3px solid var(--ink);
@@ -7521,3 +7928,19 @@ tbody tr.relegationRow:hover {
   color: #64748b;
 }
 
+@media (max-width: 720px) {
+  .registrationPanel {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .registrationForm {
+    grid-template-columns: 1fr;
+  }
+
+  .registrationSubmit {
+    width: 100%;
+    justify-content: center;
+  }
+}
