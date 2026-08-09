@@ -260,7 +260,7 @@ export default function RecopaPage() {
           </p>
           <h1>El Gran Duelo de Campeones.</h1>
           <p className="heroCopy">
-            Copa exclusiva cara a cara entre <strong>Gonza el + Fachero.</strong> (Campeón Copa Chiqui Bauch) y <strong>Javier</strong> (Campeón Copa Fiss).
+            Copa exclusiva cara a cara entre <strong>Gonza el + Fachero.</strong> (Campeón Copa Kahl) y <strong>Javier</strong> (Campeón Copa Fiss).
           </p>
         </div>
 
@@ -269,7 +269,7 @@ export default function RecopaPage() {
           <div className={`recopaCard ${gonzaStanding && javiStanding && gonzaStanding.totalPoints > javiStanding.totalPoints ? "leader" : ""}`}>
             <img src="/kahl-assets/campeon-gonza-fiss.jpeg" alt="Gonza el + Fachero." className="recopaAvatar" />
             <div className="recopaParticipantInfo">
-              <p className="recopaRole">Campeón Chiqui Bauch</p>
+              <p className="recopaRole">Campeón Copa Kahl</p>
               <h3>Gonza el + Fachero.</h3>
               <div className="recopaBadge">
                 <span>{gonzaStanding?.totalPoints ?? 0}</span> <small>pts</small>
@@ -620,7 +620,7 @@ export default function RecopaPage() {
                         <img src="/kahl-assets/campeon-gonza-fiss.jpeg" alt="Gonza el + Fachero." />
                         <div>
                           <strong>Gonza el + Fachero.</strong>
-                          <small>Campeón Copa Chiqui Bauch</small>
+                          <small>Campeón Copa Kahl</small>
                         </div>
                       </button>
 

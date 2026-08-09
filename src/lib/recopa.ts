@@ -16,7 +16,7 @@ export const recopaParticipants: RecopaParticipant[] = [
     id: "Gonza el + Fachero.",
     name: "Gonza el + Fachero.",
     fullName: "Gonza el + Fachero.",
-    title: "Campeón Copa Chiqui Bauch",
+    title: "Campeón Copa Kahl",
     image: "/kahl-assets/campeon-gonza-fiss.jpeg",
     aliases: ["gonza el + fachero.", "gonza el + fachero", "gonza", "gonza fiss", "gonzalo", "gonzalo fiss"],
   },

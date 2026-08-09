@@ -56,7 +56,7 @@ export const historicalEditions: HistoricalEdition[] = [
     year: "2026",
     champion: "Javier",
     runnerUp: "Gonza el + Fachero.",
-    description: "Gran final mano a mano entre los campeones históricos de la Copa Fiss y la Copa Chiqui Bauch.",
+    description: "Gran final mano a mano entre los campeones históricos de la Copa Fiss y la Copa Kahl.",
     image: "/kahl-assets/campeon-javi.jpeg",
     table: [
       { pos: 1, participant: "Javier", points: 8, played: 6, won: 3, lost: 3, exactHits: 2, goals: 1, totalHits: 3, badge: "champion", notes: "CAMPEÓN RECOPA FISS KAHL" },
