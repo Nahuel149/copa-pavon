@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Brackets, ClipboardList, RefreshCw, ShieldCheck } from "lucide-react";
-import { choiceMatches, exactScoreMatches, groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages } from "@/lib/matches";
+import { groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages } from "@/lib/matches";
 
 const ruleSteps = [
   {
@@ -23,18 +23,18 @@ const ruleSteps = [
 const scoringRules = [
   {
     label: "Resultado exacto",
-    points: "2 pts",
-    copy: `${exactScoreMatches.length} partidos de fase de grupos piden marcador exacto. En eliminatorias el valor sube segun la etapa.`,
-  },
-  {
-    label: "Ganador / empate",
-    points: "1 pt",
-    copy: `${choiceMatches.length} partidos de fase de grupos piden elegir local, empate o visitante.`,
-  },
-  {
-    label: "Top 2 de grupo",
     points: "3 pts",
-    copy: "Si acertás los dos clasificados del grupo, suma aunque el orden de 1º y 2º esté invertido.",
+    copy: "Si acertás el marcador exacto del partido, sumás 3 puntos.",
+  },
+  {
+    label: "Ganador / acierto",
+    points: "1 pt",
+    copy: "Si no pegás el exacto pero acertás quién gana (o que empatan), sumás 1 punto.",
+  },
+  {
+    label: "Goleador acertado",
+    points: "1 pt",
+    copy: "Si elegís un goleador y ese jugador convierte en el partido, sumás 1 punto extra.",
   },
 ];
 
