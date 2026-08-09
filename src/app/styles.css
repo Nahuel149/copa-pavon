@@ -6202,9 +6202,27 @@ tbody tr.relegationRow:hover {
 }
 
 .participantCell {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
+}
+
+td.participantCell,
+th.participantCell {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.historyTable th,
+.historyTable td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.historyTable th:nth-child(2),
+.historyTable td.participantCell,
+.historyTable td:nth-child(2) {
+  text-align: left;
 }
 
 .miniAvatar {

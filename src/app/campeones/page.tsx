@@ -28,6 +28,7 @@ export default function CampeonesPage() {
   const [viewMode, setViewMode] = useState<"ediciones" | "palmares">("ediciones");
 
   const currentEdition = historicalEditions.find((e) => e.id === selectedEditionId) ?? historicalEditions[0];
+  const hasGroupsColumn = currentEdition.table?.some((r) => r.groups !== undefined && r.groups !== "");
 
   return (
     <div className="pageStack">
@@ -173,7 +174,7 @@ export default function CampeonesPage() {
                           <th>Perdidos</th>
                           <th>Exactos</th>
                           <th>Goles</th>
-                          <th>Grupos</th>
+                          {hasGroupsColumn && <th>Grupos</th>}
                           <th>Aciertos</th>
                         </tr>
                       </thead>
@@ -209,7 +210,7 @@ export default function CampeonesPage() {
                             <td>{row.lost}</td>
                             <td>{row.exactHits}</td>
                             <td>{row.goals}</td>
-                            <td>{row.groups}</td>
+                            {hasGroupsColumn && <td>{row.groups}</td>}
                             <td>{row.totalHits}</td>
                           </tr>
                         ))}
