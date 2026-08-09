@@ -6,8 +6,8 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "Copa Kahl",
-  description: "Formulario de pronosticos y panel de administracion para Copa Kahl, Prode Mundial 2026.",
+  title: 'Copa "Se mató Pavón"',
+  description: "Formulario de pronósticos y panel de administración para Copa Se mató Pavón, Prode Copas Estelares 2026.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -24,10 +24,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="shell">
           <header className="masthead">
             <Link className="brand" href="/tabla">
-              <span className="brandMark">RFK</span>
+              <span className="brandMark">SMP</span>
               <span>
-                <strong>Recopa Fiss Kahl</strong>
-                <small>Prode Copa de la Liga 2026</small>
+                <strong>Copa &quot;Se mató Pavón&quot;</strong>
+                <small>Prode Copas Estelares 2026</small>
               </span>
             </Link>
             <MainNavigation />
