@@ -703,7 +703,7 @@ export default function PronosticosPage() {
           <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
             PRÓXIMAMENTE 🏆
           </p>
-          <h1>Copa &quot;Se mató Pavón&quot;</h1>
+          <h1>Copa Se mató Pavón</h1>
           <p className="heroCopy">
             Los pronósticos del mapa de partidos, cruces eliminatorios y tendencias se habilitarán próximamente antes del inicio del torneo.
           </p>
@@ -720,7 +720,7 @@ export default function PronosticosPage() {
             Mapa de Partidos & Carga de Pronósticos
           </h2>
           <p style={{ fontSize: "1.05rem", lineHeight: "1.5" }}>
-            Aquí podrás seguir en vivo los marcadores, tendencias, porcentajes de aciertos y pronósticos jugada por jugada de cada participante para la Copa "Se mató Pavón".
+            Aquí podrás seguir en vivo los marcadores, tendencias, porcentajes de aciertos y pronósticos jugada por jugada de cada participante para la Copa Se mató Pavón.
           </p>
         </div>
 

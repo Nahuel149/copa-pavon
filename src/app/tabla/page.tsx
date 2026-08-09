@@ -815,7 +815,7 @@ export default function TablaPage() {
           <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
             PRÓXIMAMENTE 🏆
           </p>
-          <h1>Copa "Se mató Pavón"</h1>
+          <h1>Copa Se mató Pavón</h1>
           <p className="heroCopy">
             La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Prepará tus pronósticos!
           </p>
@@ -829,7 +829,7 @@ export default function TablaPage() {
             🔥 Edición Confirmada
           </p>
           <h2 style={{ fontSize: "1.6rem", margin: "10px 0 6px", fontWeight: 900 }}>
-            Competencias que disputan la Copa &quot;Se mató Pavón&quot;
+            Competencias que disputan la Copa Se mató Pavón
           </h2>
           <p style={{ fontSize: "1.05rem", lineHeight: "1.5" }}>
             Esta nueva copa unificará los pronósticos de las fases decisivas y finales de cuatro competiciones estelares:

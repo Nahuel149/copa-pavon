@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: 'Copa "Se mató Pavón"',
+  title: "Copa Se mató Pavón",
   description: "Formulario de pronósticos y panel de administración para Copa Se mató Pavón, Prode Copas Estelares 2026.",
 };
 
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link className="brand" href="/tabla">
               <span className="brandMark">SMP</span>
               <span>
-                <strong>Copa &quot;Se mató Pavón&quot;</strong>
+                <strong>Copa Se mató Pavón</strong>
                 <small>Prode Copas Estelares 2026</small>
               </span>
             </Link>
