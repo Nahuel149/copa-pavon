@@ -40,7 +40,102 @@
           "goalScorer": "Alex Luna"
         }
       ]
+    },
+    {
+      "participant": "Javier",
+      "updatedAt": "2026-08-08T13:55:00.000Z",
+      "predictions": [
+        {
+          "matchId": "recopa-1",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "goalScorer": "Leandro Diaz"
+        },
+        {
+          "matchId": "recopa-2",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "goalScorer": "Palacios"
+        },
+        {
+          "matchId": "recopa-3",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "goalScorer": "Russo"
+        },
+        {
+          "matchId": "recopa-4",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "goalScorer": "Merentiel"
+        },
+        {
+          "matchId": "recopa-5",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "goalScorer": "Avalos"
+        },
+        {
+          "matchId": "recopa-6",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "goalScorer": "Tissera"
+        }
+      ]
     }
   ],
-  "results": []
+  "results": [
+    {
+      "matchId": "recopa-1",
+      "homeGoals": 1,
+      "awayGoals": 2,
+      "scorerNames": [
+        "Vallejo",
+        "Marabel",
+        "Mavilla"
+      ]
+    },
+    {
+      "matchId": "recopa-2",
+      "homeGoals": 2,
+      "awayGoals": 0,
+      "scorerNames": [
+        "Celiz",
+        "Alonso"
+      ]
+    },
+    {
+      "matchId": "recopa-3",
+      "homeGoals": 1,
+      "awayGoals": 0,
+      "scorerNames": [
+        "Russo"
+      ]
+    },
+    {
+      "matchId": "recopa-4",
+      "homeGoals": 1,
+      "awayGoals": 1,
+      "scorerNames": [
+        "Ascacibar",
+        "Valdes"
+      ]
+    },
+    {
+      "matchId": "recopa-5",
+      "homeGoals": 0,
+      "awayGoals": 1,
+      "scorerNames": [
+        "Mainero"
+      ]
+    },
+    {
+      "matchId": "recopa-6",
+      "homeGoals": 1,
+      "awayGoals": 0,
+      "scorerNames": [
+        "Alex Luna"
+      ]
+    }
+  ]
 }

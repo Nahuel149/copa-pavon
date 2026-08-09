@@ -51,6 +51,19 @@ export const historicalEditions: HistoricalEdition[] = [
     ],
   },
   {
+    id: "recopa-fiss-kahl-2026",
+    title: "Recopa Fiss Kahl",
+    year: "2026",
+    champion: "Javier",
+    runnerUp: "Gonza el + Fachero.",
+    description: "Gran final mano a mano entre los campeones históricos de la Copa Fiss y la Copa Chiqui Bauch.",
+    image: "/kahl-assets/campeon-javi.jpeg",
+    table: [
+      { pos: 1, participant: "Javier", points: 8, played: 6, won: 3, lost: 3, exactHits: 2, goals: 1, totalHits: 3, badge: "champion", notes: "CAMPEÓN RECOPA FISS KAHL" },
+      { pos: 2, participant: "Gonza el + Fachero.", points: 2, played: 6, won: 1, lost: 5, exactHits: 0, goals: 1, totalHits: 2, badge: "runner-up", notes: "Subcampeón Recopa Fiss Kahl" },
+    ],
+  },
+  {
     id: "copa-chiqui-bauch",
     title: "Copa Chiqui Bauch",
     year: "2026",
@@ -186,21 +199,25 @@ export type AllTimeRecord = {
 
 export const allTimePalmares: AllTimeRecord[] = [
   {
-    participant: "Gonza Fiss / Gonza el + Fachero.",
+    participant: "Javi / Javier",
     gold: 2,
     silver: 0,
     bronze: 0,
     medals: [
-      { type: "gold", title: "Copa Chiqui Bauch 2026" },
-      { type: "gold", title: "Copa Kahl 2026" },
+      { type: "gold", title: "Copa Fiss 2025" },
+      { type: "gold", title: "Recopa Fiss Kahl 2026" },
     ],
   },
   {
-    participant: "Javi / Javier",
-    gold: 1,
-    silver: 0,
+    participant: "Gonza Fiss / Gonza el + Fachero.",
+    gold: 2,
+    silver: 1,
     bronze: 0,
-    medals: [{ type: "gold", title: "Copa Fiss 2025" }],
+    medals: [
+      { type: "gold", title: "Copa Chiqui Bauch 2026" },
+      { type: "gold", title: "Copa Kahl 2026" },
+      { type: "silver", title: "Recopa Fiss Kahl 2026" },
+    ],
   },
   {
     participant: "Nahuel",

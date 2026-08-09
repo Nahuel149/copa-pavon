@@ -8,7 +8,7 @@ import { allTimePalmares, historicalEditions } from "@/lib/historia";
 const champions = [
   {
     name: "Javi",
-    trophies: ["Copa Fiss"],
+    trophies: ["Copa Fiss", "Recopa Fiss Kahl"],
     image: "/kahl-assets/campeon-javi.jpeg",
   },
   {

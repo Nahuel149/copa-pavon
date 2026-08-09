@@ -47,20 +47,47 @@ export const gonzaSeedSubmission = {
   ],
 };
 
+export const javiSeedSubmission = {
+  participant: "Javier" as const,
+  updatedAt: "2026-08-08T13:55:00.000Z",
+  predictions: [
+    { matchId: "recopa-1", homeGoals: 2, awayGoals: 0, goalScorer: "Leandro Diaz" },
+    { matchId: "recopa-2", homeGoals: 0, awayGoals: 1, goalScorer: "Palacios" },
+    { matchId: "recopa-3", homeGoals: 1, awayGoals: 0, goalScorer: "Russo" },
+    { matchId: "recopa-4", homeGoals: 1, awayGoals: 1, goalScorer: "Merentiel" },
+    { matchId: "recopa-5", homeGoals: 2, awayGoals: 0, goalScorer: "Avalos" },
+    { matchId: "recopa-6", homeGoals: 2, awayGoals: 0, goalScorer: "Tissera" },
+  ],
+};
+
+export const defaultRecopaResults = [
+  { matchId: "recopa-1", homeGoals: 1, awayGoals: 2, scorerNames: ["Vallejo", "Marabel", "Mavilla"] },
+  { matchId: "recopa-2", homeGoals: 2, awayGoals: 0, scorerNames: ["Celiz", "Alonso"] },
+  { matchId: "recopa-3", homeGoals: 1, awayGoals: 0, scorerNames: ["Russo"] },
+  { matchId: "recopa-4", homeGoals: 1, awayGoals: 1, scorerNames: ["Ascacibar", "Valdes"] },
+  { matchId: "recopa-5", homeGoals: 0, awayGoals: 1, scorerNames: ["Mainero"] },
+  { matchId: "recopa-6", homeGoals: 1, awayGoals: 0, scorerNames: ["Alex Luna"] },
+];
+
 const defaultStore: RecopaStore = {
-  submissions: [gonzaSeedSubmission],
-  results: [],
+  submissions: [gonzaSeedSubmission, javiSeedSubmission],
+  results: defaultRecopaResults,
 };
 
 function ensureSeedSubmissions(store: RecopaStore): RecopaStore {
-  const hasGonza = store.submissions.some((s) => s.participant === "Gonza el + Fachero.");
-  if (!hasGonza) {
-    return {
-      ...store,
-      submissions: [gonzaSeedSubmission, ...store.submissions],
-    };
+  const submissions = [...store.submissions];
+  if (!submissions.some((s) => s.participant === "Gonza el + Fachero.")) {
+    submissions.unshift(gonzaSeedSubmission);
   }
-  return store;
+  if (!submissions.some((s) => s.participant === "Javier")) {
+    submissions.push(javiSeedSubmission);
+  }
+  const results = store.results.length > 0 ? store.results : defaultRecopaResults;
+  return {
+    ...store,
+    submissions,
+    results,
+  };
 }
 
 async function ensureRecopaFile() {
