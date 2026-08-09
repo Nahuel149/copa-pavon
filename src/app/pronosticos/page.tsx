@@ -772,9 +772,6 @@ export default function PronosticosPage() {
             <a className="primaryAction light" href="/campeones" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
               🏆 Ver Histórico y Medallero
             </a>
-            <a className="primaryAction light" href="/recopa" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-              ⚔️ Ir a la Recopa Fiss Kahl
-            </a>
           </div>
         </div>
       </section>

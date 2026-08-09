@@ -15,6 +15,8 @@ import {
   type RecopaStanding,
 } from "@/lib/recopa";
 
+import { redirect } from "next/navigation";
+
 type RecopaApiResponse = {
   matches: RecopaMatch[];
   participants: typeof recopaParticipants;
@@ -35,6 +37,10 @@ type RecopaApiResponse = {
 };
 
 export default function RecopaPage() {
+  redirect("/campeones");
+}
+
+export function _LegacyRecopaPageContent() {
   const [activeTab, setActiveTab] = useState<"tabla" | "cargar" | "resultados">("tabla");
   const [data, setData] = useState<RecopaApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
