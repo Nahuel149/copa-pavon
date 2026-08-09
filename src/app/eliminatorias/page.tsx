@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Loader2, LogIn, Save, Send, Trash2 } from "lucide-react";
+import { CheckCircle2, Loader2, LogIn, Send } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -127,7 +127,7 @@ export default function EliminatoriasPage() {
   const validationMessages = [
     ...(missingName ? ["Poné el mismo nombre que usaste en fase de grupos."] : []),
     ...(fixtures.length === 0 ? ["Todavía no hay cruces eliminatorios cargados desde admin."] : []),
-    ...(missingFixtures > 0 ? [`Faltan ${missingFixtures} marcadores exactos de eliminatorias.`] : []),
+    ...(missingFixtures > 0 ? [`Faltan ${missingFixtures} marcadores exactos.`] : []),
   ];
   const fixturesByStage = useMemo(() => {
     return fixtures.reduce<Record<string, KnockoutFixture[]>>((acc, fixture) => {
@@ -152,10 +152,10 @@ export default function EliminatoriasPage() {
   const importantPanel = (
     <section className="validationPanel dangerPanel" aria-live="polite">
       <p className="eyebrow">Importante</p>
-      <h2>Completá todo el prode de eliminatorias.</h2>
+      <h2>Completá todo el prode de los mano a mano.</h2>
       <p>
         Cada partido se puede editar hasta 10 minutos antes de empezar. Si no completás un partido antes de que cierre,
-        ese partido suma 0 puntos. Si dejás 2 partidos de eliminatorias sin pronosticar cuando ya cerraron, quedás
+        ese partido suma 0 puntos. Si dejás 2 partidos de mano a mano sin pronosticar cuando ya cerraron, quedás
         eliminado del prode.
       </p>
     </section>
@@ -167,40 +167,12 @@ export default function EliminatoriasPage() {
         <p className="eyebrow">Provisorio</p>
         <h2>No pierdas tus cruces.</h2>
         <p>{draftStatus}</p>
-        <p>
-          El guardado provisorio queda solo en este navegador y no cuenta como envío oficial. Para que se cuente, tenés
-          que completar los cruces abiertos y apretar Enviar eliminatorias; después podés volver a entrar y editar los
-          partidos que todavía no cerraron.
-        </p>
-      </div>
-      <div className="draftActions">
-        <button className="primaryAction light" onClick={() => saveDraft()} type="button">
-          <Save size={18} aria-hidden="true" />
-          Guardar provisorio
-        </button>
-        <button className="primaryAction light" onClick={clearDraft} type="button">
-          <Trash2 size={18} aria-hidden="true" />
-          Borrar provisorio
-        </button>
       </div>
     </section>
   );
 
-  const validationPanel =
-    validationMessages.length > 0 ? (
-      <section className="validationPanel" id="knockoutValidationSummary" aria-live="polite">
-        <p className="eyebrow">Antes de enviar</p>
-        <h2>Completá eliminatorias.</h2>
-        <ul>
-          {validationMessages.map((message) => (
-            <li key={message}>{message}</li>
-          ))}
-        </ul>
-      </section>
-    ) : null;
-
   const knockoutRulesPanel = (
-    <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
+    <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de mano a mano">
       {knockoutStages.map((stage) => {
         const scoring = knockoutStageScoring[stage];
         return (
@@ -259,6 +231,14 @@ export default function EliminatoriasPage() {
   }, [draftReady, name, predictions, status]);
 
   useEffect(() => {
+    if (!draftReady || status === "done" || status === "loading") return;
+    const intervalId = window.setInterval(() => {
+      saveDraft("Guardado provisorio automático");
+    }, 30000);
+    return () => window.clearInterval(intervalId);
+  }, [draftReady, status]);
+
+  useEffect(() => {
     if (!shouldWarnBeforeLeaving) return;
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -272,7 +252,7 @@ export default function EliminatoriasPage() {
     if (!shouldWarnBeforeLeaving) return;
     const handlePopState = () => {
       window.history.pushState(null, "", window.location.href);
-      focusSubmitDock("Antes de salir, acordate de apretar Enviar eliminatorias para que cuente.");
+      focusSubmitDock("Antes de salir, acordate de apretar Enviar prode para que cuente.");
     };
     window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", handlePopState);
@@ -287,13 +267,13 @@ export default function EliminatoriasPage() {
       const link = target.closest("a[href]");
       if (!link) return;
       event.preventDefault();
-      focusSubmitDock("Primero revisá el botón Enviar eliminatorias. Si no lo apretás, no cuenta como envío oficial.");
+      focusSubmitDock("Primero revisá el botón Enviar prode. Si no lo apretás, no cuenta como envío oficial.");
     };
     document.addEventListener("click", handleDocumentClick, true);
     return () => document.removeEventListener("click", handleDocumentClick, true);
   }, [shouldWarnBeforeLeaving]);
 
-  function focusSubmitDock(message = "Apretá Enviar eliminatorias para que el prode quede oficial.") {
+  function focusSubmitDock(message = "Apretá Enviar prode para que quede oficial.") {
     setSubmitReminder(message);
     setHighlightSubmit(true);
     window.setTimeout(() => setHighlightSubmit(false), 2400);
@@ -427,7 +407,7 @@ export default function EliminatoriasPage() {
       setName(body.submission.name);
       setPredictions((current) => mergeKnockoutPredictions(fixtures, current, body.submission?.knockoutPredictions ?? []));
       setIsUnlocked(true);
-      setLoginMessage("Acceso validado. Ya podes cargar eliminatorias.");
+      setLoginMessage("Acceso validado. Ya podés cargar los mano a mano.");
     } catch (loginError) {
       setIsUnlocked(false);
       setLoginMessage(loginError instanceof Error ? loginError.message : "No se pudo validar el PIN.");
@@ -624,11 +604,10 @@ export default function EliminatoriasPage() {
         <>
           {importantPanel}
           {draftPanel}
-          {validationPanel}
           <section className="validationPanel">
             <p className="eyebrow">Privado</p>
-            <h2>Ingresa para ver los cruces.</h2>
-            <p>Primero valida tu nombre y PIN. Despues de entrar vas a poder ver y cargar los partidos de eliminatorias.</p>
+            <h2>Ingresá para ver los cruces.</h2>
+            <p>Primero validá tu nombre y PIN. Después de entrar vas a poder ver y cargar los partidos mano a mano.</p>
           </section>
         </>
       ) : (
@@ -736,11 +715,11 @@ export default function EliminatoriasPage() {
         </div>
         <button className="primaryAction" disabled={!canSubmit} type="submit">
           {status === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
-          {canSubmit ? "Enviar eliminatorias" : "Completar para enviar"}
+          {canSubmit ? "Enviar prode" : "Completar para enviar"}
         </button>
       </div>
 
-      {validationPanel}
+
       {closedStageGroups.length > 0 ? (
         <section className="pageStack closedRoundsStack" aria-label="Rondas cerradas">
           {closedStageGroups.map((group) => (
