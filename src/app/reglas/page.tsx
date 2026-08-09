@@ -86,18 +86,7 @@ export default function ReglasPage() {
             ninguno, suma 0.
           </p>
         </article>
-        <article>
-          <p className="eyebrow">Eliminatorias</p>
-          <h2>16avos desde el 28 de junio</h2>
-          <p>
-            Cuando admin cargue los cruces, cada participante completa marcadores exactos. Si no pega exacto pero acierta
-            el ganador/clasificado, tambien suma puntos. Desde 16avos tambien puede elegir un goleador del partido:
-            si ese jugador convierte, suma 1 punto extra. Si deja el goleador vacio, se toma como apuesta a 0-0
-            sin goleadores; si el partido termina asi, tambien suma ese punto. El marcador de eliminatorias cuenta al
-            final de los 120 minutos: si sale empatado y acertaste el marcador exacto pero erraste el clasificado por
-            penales, suma parcial por etapa. Cada partido cierra 10 minutos antes de su horario.
-          </p>
-        </article>
+
         <article>
           <p className="eyebrow">Tabla</p>
           <h2>Acumulado automático</h2>
