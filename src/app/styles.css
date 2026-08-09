@@ -4745,11 +4745,25 @@ tbody tr.relegationRow:hover {
   }
 
   .brand {
-    padding: 12px 16px;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .brandMark {
+    width: 44px;
+    height: 44px;
+    font-size: 0.88rem;
   }
 
   .brand strong {
-    font-size: 1.55rem;
+    font-size: clamp(1.15rem, 4.2vw, 1.45rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .brand small {
+    font-size: 0.7rem;
   }
 
   .navItem {
@@ -4786,7 +4800,7 @@ tbody tr.relegationRow:hover {
 
   .mobileNavPrimary {
     display: grid;
-    grid-template-columns: 0.86fr 1.22fr 1.34fr 46px;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 44px;
   }
 
   .mobileNavPrimary .navItem {
@@ -6222,6 +6236,13 @@ tbody tr.relegationRow:hover {
 .palmaresTable th:nth-child(6),
 .palmaresTable td:nth-child(6) {
   text-align: left;
+}
+
+.tableWrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .miniAvatar {
