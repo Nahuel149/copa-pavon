@@ -14,6 +14,19 @@ function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
 }
 
+function ArgentinaFlagBadge() {
+  return (
+    <span title="Argentina" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "30px", height: "20px", borderRadius: "3px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.25)", background: "#75AADB", boxShadow: "0 1px 3px rgba(0,0,0,0.25)", flexShrink: 0 }}>
+      <svg width="30" height="20" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="30" height="20" fill="#75AADB"/>
+        <rect y="6.66" width="30" height="6.66" fill="#FFFFFF"/>
+        <circle cx="15" cy="10" r="2.3" fill="#F6B40E"/>
+        <path d="M15 6.8L15.4 8.5L16.8 7.7L15.9 9.1L17.7 10L15.9 10.9L16.8 12.3L15.4 11.5L15 13.2L14.6 11.5L13.2 12.3L14.1 10.9L12.3 10L14.1 9.1L13.2 7.7L14.6 8.5Z" fill="#855B14"/>
+      </svg>
+    </span>
+  );
+}
+
 function escapeXml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -823,60 +836,60 @@ export default function TablaPage() {
       </section>
 
       {/* ANUNCIO OFICIAL PROXIMAMENTE */}
-      <section className="proximamentePanel" style={{ padding: "24px" }}>
-        <div className="panelHeader">
-          <p className="eyebrow" style={{ background: "#ef4444", color: "#fff", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "4px 10px", borderRadius: "12px", fontSize: "0.8rem" }}>
+      <section className="proximamentePanel" style={{ padding: "28px 24px", textAlign: "center" }}>
+        <div className="panelHeader" style={{ textAlign: "center" }}>
+          <p className="eyebrow" style={{ background: "#ef4444", color: "#fff", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "5px 14px", borderRadius: "12px", fontSize: "0.85rem", margin: "0 auto 12px" }}>
             🔥 Edición Confirmada
           </p>
-          <h2 style={{ fontSize: "1.6rem", margin: "10px 0 6px", fontWeight: 900 }}>
+          <h2 style={{ fontSize: "1.65rem", margin: "8px 0", fontWeight: 900, textAlign: "center" }}>
             Competencias que disputan la Copa Se mató Pavón
           </h2>
-          <p style={{ fontSize: "1.05rem", lineHeight: "1.5" }}>
+          <p style={{ fontSize: "1.05rem", lineHeight: "1.5", textAlign: "center", maxWidth: "720px", margin: "0 auto 16px" }}>
             Esta nueva copa unificará los pronósticos de las fases decisivas y finales de cuatro competiciones estelares:
           </p>
         </div>
 
-        <div className="reportCardsGrid" style={{ marginTop: "16px" }}>
-          <article className="reportCard proximamenteCard">
-            <header>
+        <div className="reportCardsGrid" style={{ marginTop: "20px" }}>
+          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
+            <header style={{ justifyContent: "center", gap: "10px" }}>
               <span style={{ fontSize: "1.6rem" }}>🌎</span>
-              <h3>COPA SUDAMERICANA</h3>
+              <h3 style={{ margin: 0 }}>COPA SUDAMERICANA</h3>
               <span className="reportPts">Semifinales + Final</span>
             </header>
-            <p>Partidos de ida y vuelta de semifinales y la gran definición por el título sudamericano.</p>
+            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Partidos de ida y vuelta de semifinales y la gran definición por el título sudamericano.</p>
           </article>
 
-          <article className="reportCard proximamenteCard">
-            <header>
+          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
+            <header style={{ justifyContent: "center", gap: "10px" }}>
               <span style={{ fontSize: "1.6rem" }}>🏆</span>
-              <h3>COPA LIBERTADORES</h3>
+              <h3 style={{ margin: 0 }}>COPA LIBERTADORES</h3>
               <span className="reportPts">Semifinales + Final</span>
             </header>
-            <p>Los 4 mejores del continente definiendo a la gloria eterna.</p>
+            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Los 4 mejores del continente definiendo a la gloria eterna.</p>
           </article>
 
-          <article className="reportCard proximamenteCard">
-            <header>
-              <span style={{ fontSize: "1.6rem" }}>🇦🇷</span>
-              <h3>COPA ARGENTINA</h3>
+          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
+            <header style={{ justifyContent: "center", gap: "10px" }}>
+              <ArgentinaFlagBadge />
+              <h3 style={{ margin: 0 }}>COPA ARGENTINA</h3>
               <span className="reportPts">Fase Eliminatoria</span>
             </header>
-            <p>Cruces mano a mano a todo o nada en canchas neutrales del fútbol argentino.</p>
+            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Cruces mano a mano a todo o nada en canchas neutrales del fútbol argentino.</p>
           </article>
 
-          <article className="reportCard proximamenteCard">
-            <header>
+          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
+            <header style={{ justifyContent: "center", gap: "10px" }}>
               <span style={{ fontSize: "1.6rem" }}>⚽</span>
-              <h3>COPA DE LA LIGA</h3>
+              <h3 style={{ margin: 0 }}>COPA DE LA LIGA</h3>
               <span className="reportPts">Fase Final</span>
             </header>
-            <p>Los playoffs decisivos de la Primera División del fútbol argentino.</p>
+            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Los playoffs decisivos de la Primera División del fútbol argentino.</p>
           </article>
         </div>
 
-        <div className="proximamenteFooter">
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span className="historyBadge championTag" style={{ fontSize: "0.9rem", padding: "8px 14px", fontWeight: 800 }}>
+        <div className="proximamenteFooter" style={{ justifyContent: "center", textAlign: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+            <span className="historyBadge championTag" style={{ fontSize: "0.9rem", padding: "8px 16px", fontWeight: 800 }}>
               ⏳ Estado: Carga de pronósticos Próximamente
             </span>
           </div>
