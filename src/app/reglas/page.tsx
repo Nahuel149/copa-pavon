@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Brackets, ClipboardList, RefreshCw, ShieldCheck } from "lucide-react";
-import { groups, knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages } from "@/lib/matches";
+
 
 const ruleSteps = [
   {
@@ -98,36 +98,30 @@ export default function ReglasPage() {
       </section>
 
       <section className="sectionHeader">
-        <p className="eyebrow">Eliminatorias</p>
+        <p className="eyebrow">Mano a mano</p>
         <h2>Puntos por etapa.</h2>
         <p>
-          Los 16avos empiezan el 28 de junio. Desde ahi, cada ronda pesa mas para mantener el prode abierto. El goleador
-          acertado suma 1 punto en 16avos/octavos y +1/+2/+3 desde cuartos segun su rol. Dejarlo vacio equivale a elegir
-          sin goleador, y suma si el partido termina 0-0. En empates tras 120 minutos tambien se elige quien clasifica por penales.
-          Cada partido se bloquea 10 minutos antes de empezar. Si un participante deja 2 partidos de eliminatorias sin
-          pronosticar cuando ya cerraron, queda eliminado de la tabla. La final vale x3: 27 por exacto, 15 por campeon,
-          goleador +3/+6/+9 y batacazo +9; el maximo es 45 y exacto y campeon no se acumulan.
+          Los partidos mano a mano se juegan con marcador exacto, ganador y goleador. En semifinales se usan los puntos
+          base. En la final los puntos suben para darle más peso al último partido. Cada partido se bloquea 10 minutos
+          antes de empezar.
         </p>
       </section>
 
-      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de eliminatorias">
-        {knockoutStages.map((stage) => {
-          const scoring = knockoutStageScoring[stage];
-          return (
-            <article key={stage}>
-              <span>
-                {knockoutStageLabels[stage]}
-                {scoring.bonusMultiplier > 1 ? ` x${scoring.bonusMultiplier}` : ""}
-              </span>
-              <strong>{scoring.exact} / {scoring.winner}</strong>
-              <p>
-                Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha: {knockoutStageSchedule[stage]}.
-                Empate exacto con clasificado errado: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 15 en final.
-                {stage === "FINAL" ? " Goleador +3/+6/+9 y batacazo +9." : ""}
-              </p>
-            </article>
-          );
-        })}
+      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos por etapa">
+        <article>
+          <span>Semifinales</span>
+          <strong>3 / 1 / 1</strong>
+          <p>
+            Exacto: 3 pts. Ganador/acierto: 1 pt. Goleador acertado: 1 pt. Máximo 5 puntos por partido.
+          </p>
+        </article>
+        <article>
+          <span>Final</span>
+          <strong>5 / 3 / 2</strong>
+          <p>
+            Exacto: 5 pts. Ganador/acierto: 3 pts. Goleador acertado: 2 pts. Máximo 7 puntos en la final.
+          </p>
+        </article>
       </section>
 
       <section className="rulesCallout">
@@ -135,8 +129,7 @@ export default function ReglasPage() {
         <div>
           <h2>Importante</h2>
           <p>
-            El envío es definitivo. Antes de mandar, revisá nombre, partidos y grupos. Después podés volver para cargar
-            eliminatorias cuando los cruces estén disponibles.
+            Revisá bien antes de enviar. Después podés volver a editar los partidos que todavía no cerraron.
           </p>
         </div>
         <Link className="primaryAction" href="/tabla">
