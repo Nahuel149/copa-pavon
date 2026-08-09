@@ -25,6 +25,19 @@ export type HistoricalEdition = {
 
 export const historicalEditions: HistoricalEdition[] = [
   {
+    id: "recopa-fiss-kahl-2026",
+    title: "Recopa Fiss Kahl",
+    year: "2026",
+    champion: "Javier",
+    runnerUp: "Gonza el + Fachero.",
+    description: "Gran final mano a mano entre los campeones históricos de la Copa Fiss y la Copa Kahl.",
+    image: "/kahl-assets/campeon-javi.jpeg",
+    table: [
+      { pos: 1, participant: "Javier", points: 8, played: 6, won: 3, lost: 3, exactHits: 2, goals: 1, totalHits: 3, badge: "champion", notes: "CAMPEÓN RECOPA FISS KAHL" },
+      { pos: 2, participant: "Gonza el + Fachero.", points: 2, played: 6, won: 1, lost: 5, exactHits: 0, goals: 1, totalHits: 2, badge: "runner-up", notes: "Subcampeón Recopa Fiss Kahl" },
+    ],
+  },
+  {
     id: "copa-kahl-2026",
     title: "Copa Kahl",
     year: "2026",
@@ -48,19 +61,6 @@ export const historicalEditions: HistoricalEdition[] = [
       { pos: 13, participant: "Nahuel", points: 129, played: 104, won: 56, lost: 48, exactHits: 5, goals: 9, groups: "9/12", totalHits: 79, badge: "relegated", notes: "Descendido a B Nacional" },
       { pos: 14, participant: "Maxi", points: 124, played: 102, won: 64, lost: 38, exactHits: 6, goals: 13, groups: "3/12", totalHits: 86, badge: "relegated", notes: "Descendido a B Nacional" },
       { pos: 15, participant: "Fer", points: 118, played: 104, won: 55, lost: 49, exactHits: 3, goals: 11, groups: "6/12", totalHits: 75, badge: "relegated", notes: "Descendido a B Nacional" },
-    ],
-  },
-  {
-    id: "recopa-fiss-kahl-2026",
-    title: "Recopa Fiss Kahl",
-    year: "2026",
-    champion: "Javier",
-    runnerUp: "Gonza el + Fachero.",
-    description: "Gran final mano a mano entre los campeones históricos de la Copa Fiss y la Copa Kahl.",
-    image: "/kahl-assets/campeon-javi.jpeg",
-    table: [
-      { pos: 1, participant: "Javier", points: 8, played: 6, won: 3, lost: 3, exactHits: 2, goals: 1, totalHits: 3, badge: "champion", notes: "CAMPEÓN RECOPA FISS KAHL" },
-      { pos: 2, participant: "Gonza el + Fachero.", points: 2, played: 6, won: 1, lost: 5, exactHits: 0, goals: 1, totalHits: 2, badge: "runner-up", notes: "Subcampeón Recopa Fiss Kahl" },
     ],
   },
   {

@@ -24,7 +24,7 @@ const relegated = ["Fer", "Maxi", "Nahuel"];
 const thirdDivision = [{ name: "Ale con Pelo", note: "Suspendido para jugar las próximas 3 copas" }];
 
 export default function CampeonesPage() {
-  const [selectedEditionId, setSelectedEditionId] = useState<string>("copa-kahl-2026");
+  const [selectedEditionId, setSelectedEditionId] = useState<string>("recopa-fiss-kahl-2026");
   const [viewMode, setViewMode] = useState<"ediciones" | "palmares">("ediciones");
 
   const currentEdition = historicalEditions.find((e) => e.id === selectedEditionId) ?? historicalEditions[0];
