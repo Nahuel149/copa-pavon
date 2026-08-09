@@ -790,173 +790,6 @@ export default function AdminPage() {
       </section>
 
       <details className="adminFold" open>
-        <summary>⚔️ Recopa Fiss Kahl (Gonza el + Fachero. vs Javier)</summary>
-        <section className="sectionHeader">
-          <p className="eyebrow">Recopa Fiss Kahl</p>
-          <h2>Pronósticos de los Participantes Habilitados</h2>
-          <p>Revisión de los marcadores y goleadores cargados por Gonza el + Fachero. y Javier para los 6 partidos.</p>
-        </section>
-
-        <section className="resultGrid" aria-label="Pronósticos Recopa">
-          {recopaMatches.map((match) => {
-            const gonzaSub = recopaAdminData?.submissions?.find((s) => s.participant === "Gonza el + Fachero.");
-            const javiSub = recopaAdminData?.submissions?.find((s) => s.participant === "Javier");
-            const gonzaPred = gonzaSub?.predictions?.find((p) => p.matchId === match.id);
-            const javiPred = javiSub?.predictions?.find((p) => p.matchId === match.id);
-            const result = recopaAdminData?.results?.find((r) => r.matchId === match.id);
-
-            return (
-              <article className="resultCard" key={match.id} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <span>#{match.order} - {match.home} vs {match.away} ({match.dateLabel} {match.kickoffTime} hs)</span>
-                {result ? (
-                  <small style={{ color: "#16a34a", fontWeight: 800 }}>
-                    Oficial: {result.homeGoals} - {result.awayGoals} {result.scorerNames?.length ? `(⚽ ${result.scorerNames.join(", ")})` : ""}
-                  </small>
-                ) : (
-                  <small style={{ color: "#64748b" }}>Pendiente de juego</small>
-                )}
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px", fontSize: "0.85rem" }}>
-                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
-                    <strong style={{ color: "#1e293b" }}>Gonza el + Fachero.:</strong>{" "}
-                    {gonzaPred ? (
-                      <span style={{ fontWeight: 800, color: "#2563eb" }}>{gonzaPred.homeGoals} - {gonzaPred.awayGoals}</span>
-                    ) : (
-                      <span style={{ color: "#94a3b8" }}>Sin cargar</span>
-                    )}
-                    {gonzaPred?.goalScorer ? <span style={{ color: "#0284c7", fontWeight: 700, marginLeft: "6px" }}>⚽ {gonzaPred.goalScorer}</span> : null}
-                  </div>
-
-                  <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
-                    <strong style={{ color: "#1e293b" }}>Javier:</strong>{" "}
-                    {javiPred ? (
-                      <span style={{ fontWeight: 800, color: "#2563eb" }}>{javiPred.homeGoals} - {javiPred.awayGoals}</span>
-                    ) : (
-                      <span style={{ color: "#94a3b8" }}>Sin cargar</span>
-                    )}
-                    {javiPred?.goalScorer ? <span style={{ color: "#0284c7", fontWeight: 700, marginLeft: "6px" }}>⚽ {javiPred.goalScorer}</span> : null}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </section>
-      </details>
-
-      <details className="adminFold" open>
-        <summary>Resultados de eliminatorias</summary>
-        <section className="sectionHeader">
-          <p className="eyebrow">Resultados</p>
-          <h2>Marcadores reales de eliminatorias.</h2>
-          <p>Carga estos resultados manualmente si la API falla. Si el partido termina empatado tras 120 minutos, elegi el clasificado por penales.</p>
-        </section>
-
-        <section className="resultGrid" aria-label="Resultados eliminatorias">
-          {knockoutFixtures.map((fixture) => {
-            const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
-            return (
-              <article className="resultCard knockoutResult" key={fixture.id}>
-                <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
-                {value.source ? (
-                  <small className={`resultSource ${value.source}`}>
-                    {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
-                    {value.source === "manual" ? "Admin" : "API"}
-                  </small>
-                ) : null}
-                <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
-                <div className="scoreInputs compact">
-                  <label>
-                    <TeamBadge compact team={fixture.home} />
-                    <input inputMode="numeric" value={value.homeGoals} onChange={(event) => setKnockoutResult(fixture.id, "homeGoals", event.target.value)} />
-                  </label>
-                  <b>-</b>
-                  <label>
-                    <TeamBadge compact team={fixture.away} />
-                    <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
-                  </label>
-                </div>
-                {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
-                  <label className="adminTextInput">
-                    <span>Clasificado por penales</span>
-                    <select
-                      value={value.qualifiedTeam ?? ""}
-                      onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
-                    >
-                      <option value="">Elegir</option>
-                      <option value="home">{fixture.home}</option>
-                      <option value="away">{fixture.away}</option>
-                    </select>
-                  </label>
-                ) : null}
-                <label className="adminTextInput">
-                  <span>Goleadores oficiales</span>
-                  <input
-                    value={value.scorerNames ?? ""}
-                    onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
-                    placeholder="Balogun, Messi"
-                  />
-                </label>
-              </article>
-            );
-          })}
-          {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
-        </section>
-      </details>
-
-      <details className="adminFold" open>
-        <summary>Eliminatorias</summary>
-        <section className="sectionHeader">
-          <p className="eyebrow">Cruces</p>
-          <h2>Equipos y horarios estimados.</h2>
-          <p>Estos horarios se usan para mostrar apertura publica y cierre de carga. Son editables desde admin.</p>
-        </section>
-
-        <section className="knockoutComposer">
-          <select value={newFixture.stage} onChange={(event) => setNewFixture((current) => ({ ...current, stage: event.target.value as KnockoutStage }))}>
-            {knockoutStages.map((stage) => (
-              <option key={stage} value={stage}>
-                {knockoutStageLabels[stage]}
-              </option>
-            ))}
-          </select>
-          <input value={newFixture.home} onChange={(event) => setNewFixture((current) => ({ ...current, home: event.target.value }))} placeholder="Equipo A" />
-          <input value={newFixture.away} onChange={(event) => setNewFixture((current) => ({ ...current, away: event.target.value }))} placeholder="Equipo B" />
-          <input
-            type="datetime-local"
-            value={newFixture.kickoffAt}
-            onChange={(event) => setNewFixture((current) => ({ ...current, kickoffAt: event.target.value }))}
-            title="Horario del partido"
-          />
-          <button className="primaryAction light" onClick={addKnockoutFixture} type="button">
-            <Plus size={18} aria-hidden="true" />
-            Agregar cruce
-          </button>
-        </section>
-
-        <section className="resultGrid" aria-label="Cruces eliminatorias">
-          {knockoutFixtures.map((fixture) => (
-            <article className="resultCard knockoutResult" key={fixture.id}>
-              <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
-              <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
-              <label className="adminTextInput">
-                <span>Horario del partido</span>
-                <input
-                  type="datetime-local"
-                  value={isoToArgentinaInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
-                  onChange={(event) => setKnockoutKickoff(fixture.id, event.target.value)}
-                />
-              </label>
-              <button className="tableButton dangerButton" onClick={() => removeKnockoutFixture(fixture.id)} type="button">
-                <Trash2 size={14} aria-hidden="true" />
-                Quitar
-              </button>
-            </article>
-          ))}
-          {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
-        </section>
-      </details>
-
-      <details className="adminFold">
         <summary>Resetear PIN</summary>
         <section className="pinResetPanel">
           <div>
@@ -1024,7 +857,7 @@ export default function AdminPage() {
         </section>
       ) : null}
 
-      <details className="adminFold">
+      <details className="adminFold" open>
         <summary>Tabla y puntos</summary>
       <section className="tableShell">
         <table className="standingsTable adminStandingsTable">
@@ -1120,225 +953,6 @@ export default function AdminPage() {
       </details>
 
       <details className="adminFold">
-        <summary>Resultados de grupos</summary>
-      <section className="sectionHeader">
-        <p className="eyebrow">Resultados</p>
-        <h2>Fase de grupos.</h2>
-      </section>
-
-      <section className="roundStrip" aria-label="Fechas de resultados">
-        {([1, 2, 3] as MatchRound[]).map((round) => {
-          const roundDone = matches
-            .filter((match) => match.round === round)
-            .filter((match) => matchDraft[match.id].homeGoals && matchDraft[match.id].awayGoals).length;
-          return (
-            <button
-              className={activeRound === round ? "roundTab active" : "roundTab"}
-              key={round}
-              onClick={() => setActiveRound(round)}
-              type="button"
-            >
-              <span>{roundLabels[round]}</span>
-              <strong>{roundDone}/24</strong>
-            </button>
-          );
-        })}
-      </section>
-
-      <section className="resultGrid" aria-label={roundLabels[activeRound]}>
-        {roundMatches.map((match) => {
-          const value = matchDraft[match.id];
-          return (
-            <article className="resultCard" key={match.id}>
-              <span>#{match.order} · Grupo {match.groupId}</span>
-              {value.source ? (
-                <small className={`resultSource ${value.source}`}>
-                  {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
-                  {value.source === "manual" ? "Admin" : "API"}
-                </small>
-              ) : null}
-              <strong><TeamBadge team={match.home} /> <span>vs.</span> <TeamBadge team={match.away} /></strong>
-              <div className="scoreInputs compact">
-                <label>
-                  <TeamBadge compact team={match.home} />
-                  <input
-                    inputMode="numeric"
-                    value={value.homeGoals}
-                    onChange={(event) => setResultScore(match.id, "homeGoals", event.target.value)}
-                    aria-label={`Resultado de ${match.home}`}
-                  />
-                </label>
-                <b>-</b>
-                <label>
-                  <TeamBadge compact team={match.away} />
-                  <input
-                    inputMode="numeric"
-                    value={value.awayGoals}
-                    onChange={(event) => setResultScore(match.id, "awayGoals", event.target.value)}
-                    aria-label={`Resultado de ${match.away}`}
-                  />
-                </label>
-              </div>
-              <label className="highlightUrlInput">
-                <span>Video resumen</span>
-                <input
-                  type="url"
-                  value={value.highlightUrl ?? ""}
-                  onChange={(event) => setResultHighlight(match.id, event.target.value)}
-                  placeholder="https://..."
-                  aria-label={`Video resumen de ${match.home} vs ${match.away}`}
-                />
-              </label>
-            </article>
-          );
-        })}
-      </section>
-      </details>
-
-      <details className="adminFold">
-        <summary>Clasificados por grupo</summary>
-      <section className="sectionHeader">
-        <p className="eyebrow">Clasificados</p>
-        <h2>Top 2 real por grupo.</h2>
-      </section>
-
-      <section className="groupGrid" aria-label="Resultados de grupos">
-        {groups.map((group) => {
-          const value = groupDraft[group.id];
-          const duplicate = value.first && value.second && value.first === value.second;
-          return (
-            <article className={duplicate ? "groupCard invalid" : "groupCard"} key={group.id}>
-              <div className="matchHeader">
-                <span>Grupo {group.id}</span>
-                <strong>Resultado</strong>
-              </div>
-              <div className="groupSelectors">
-                <label>
-                  <span>1º real</span>
-                  <select value={value.first} onChange={(event) => setGroupResult(group.id, "first", event.target.value)}>
-                    <option value="">Elegir</option>
-                    {group.teams.map((team) => (
-                      <option key={team} value={team}>
-                        {team}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  <span>2º real</span>
-                  <select value={value.second} onChange={(event) => setGroupResult(group.id, "second", event.target.value)}>
-                    <option value="">Elegir</option>
-                    {group.teams.map((team) => (
-                      <option key={team} value={team}>
-                        {team}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              {duplicate ? <small>Elegí dos equipos distintos.</small> : null}
-            </article>
-          );
-        })}
-      </section>
-      </details>
-
-      {false ? (
-      <details className="adminFold">
-        <summary>Eliminatorias</summary>
-      <section className="sectionHeader">
-        <p className="eyebrow">Eliminatorias</p>
-        <h2>Cruces y resultados exactos.</h2>
-      </section>
-
-      <section className="knockoutComposer">
-        <select value={newFixture.stage} onChange={(event) => setNewFixture((current) => ({ ...current, stage: event.target.value as KnockoutStage }))}>
-          {knockoutStages.map((stage) => (
-            <option key={stage} value={stage}>
-              {knockoutStageLabels[stage]}
-            </option>
-          ))}
-        </select>
-        <input value={newFixture.home} onChange={(event) => setNewFixture((current) => ({ ...current, home: event.target.value }))} placeholder="Equipo A" />
-        <input value={newFixture.away} onChange={(event) => setNewFixture((current) => ({ ...current, away: event.target.value }))} placeholder="Equipo B" />
-        <input
-          type="datetime-local"
-          value={newFixture.kickoffAt}
-          onChange={(event) => setNewFixture((current) => ({ ...current, kickoffAt: event.target.value }))}
-          title="Horario del partido"
-        />
-        <button className="primaryAction light" onClick={addKnockoutFixture} type="button">
-          <Plus size={18} aria-hidden="true" />
-          Agregar cruce
-        </button>
-      </section>
-
-      <section className="resultGrid" aria-label="Resultados eliminatorias">
-        {knockoutFixtures.map((fixture) => {
-          const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
-          return (
-            <article className="resultCard knockoutResult" key={fixture.id}>
-              <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
-              {value.source ? (
-                <small className={`resultSource ${value.source}`}>
-                  {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
-                  {value.source === "manual" ? "Admin" : "API"}
-                </small>
-              ) : null}
-              <strong>{fixture.home} vs. {fixture.away}</strong>
-              <label className="adminTextInput">
-                <span>Horario del partido</span>
-                <input
-                  type="datetime-local"
-                  value={isoToArgentinaInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
-                  onChange={(event) => setKnockoutKickoff(fixture.id, event.target.value)}
-                />
-              </label>
-              <div className="scoreInputs compact">
-                <label>
-                  <span>{fixture.home}</span>
-                  <input inputMode="numeric" value={value.homeGoals} onChange={(event) => setKnockoutResult(fixture.id, "homeGoals", event.target.value)} />
-                </label>
-                <b>-</b>
-                <label>
-                  <span>{fixture.away}</span>
-                  <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
-                </label>
-              </div>
-              {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
-                <label className="adminTextInput">
-                  <span>Clasificado por penales</span>
-                  <select
-                    value={value.qualifiedTeam ?? ""}
-                    onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
-                  >
-                    <option value="">Elegir</option>
-                    <option value="home">{fixture.home}</option>
-                    <option value="away">{fixture.away}</option>
-                  </select>
-                </label>
-              ) : null}
-              <label className="adminTextInput">
-                <span>Goleadores oficiales</span>
-                <input
-                  value={value.scorerNames ?? ""}
-                  onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
-                  placeholder="Balogun, Messi"
-                />
-              </label>
-              <button className="tableButton dangerButton" onClick={() => removeKnockoutFixture(fixture.id)} type="button">
-                <Trash2 size={14} aria-hidden="true" />
-                Quitar
-              </button>
-            </article>
-          );
-        })}
-        {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
-      </section>
-      </details>
-      ) : null}
-
-      <details className="adminFold">
         <summary>Envios y detalle</summary>
       <section className="split">
         <div className="tableShell">
@@ -1425,62 +1039,365 @@ export default function AdminPage() {
         </section>
       </details>
 
-      <details className="adminFold">
-        <summary>Pronosticos eliminatorias</summary>
-        <section className="knockoutAdminReview">
-          <div className="sectionHeader">
-            <p className="eyebrow">Control</p>
-            <h2>Quien completo y quien falta.</h2>
-            <p>{knockoutFixtures.length} partidos configurados para revisar.</p>
-          </div>
+      {/* ARCHIVO: HERRAMIENTAS Y EDICIONES ANTERIORES */}
+      <details className="adminFold archiveFold" style={{ marginTop: "24px" }}>
+        <summary style={{ fontSize: "1.1rem", fontWeight: 900 }}>📁 Archivo (Herramientas &amp; Ediciones Anteriores)</summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+          {/* 1. Recopa Fiss Kahl */}
+          <details className="adminFold">
+            <summary>⚔️ Recopa Fiss Kahl (Gonza el + Fachero. vs Javier)</summary>
+            <section className="sectionHeader">
+              <p className="eyebrow">Recopa Fiss Kahl</p>
+              <h2>Pronósticos de los Participantes Habilitados</h2>
+              <p>Revisión de los marcadores y goleadores cargados por Gonza el + Fachero. y Javier para los 6 partidos.</p>
+            </section>
 
-          <div className="knockoutStatusGrid">
-            <article className="knockoutStatusCard ok">
-              <span>OK</span>
-              <strong>{knockoutControl.complete.length}</strong>
-              <div>
-                {knockoutControl.complete.map((submission) => (
-                  <b key={submission.id}>{submission.name}</b>
-                ))}
-                {knockoutControl.complete.length === 0 ? <small>Nadie completo todavia.</small> : null}
-              </div>
-            </article>
-            <article className="knockoutStatusCard missing">
-              <span>Faltan</span>
-              <strong>{knockoutControl.missing.length}</strong>
-              <div>
-                {knockoutControl.missing.map((submission) => (
-                  <b key={submission.id}>{submission.name}</b>
-                ))}
-                {knockoutControl.missing.length === 0 ? <small>Todos estan completos.</small> : null}
-              </div>
-            </article>
-          </div>
+            <section className="resultGrid" aria-label="Pronósticos Recopa">
+              {recopaMatches.map((match) => {
+                const gonzaSub = recopaAdminData?.submissions?.find((s) => s.participant === "Gonza el + Fachero.");
+                const javiSub = recopaAdminData?.submissions?.find((s) => s.participant === "Javier");
+                const gonzaPred = gonzaSub?.predictions?.find((p) => p.matchId === match.id);
+                const javiPred = javiSub?.predictions?.find((p) => p.matchId === match.id);
+                const result = recopaAdminData?.results?.find((r) => r.matchId === match.id);
 
-          <div className="knockoutReviewList">
-            {knockoutFixtures.map((fixture) => (
-              <article className="knockoutReviewMatch" key={fixture.id}>
-                <header>
-                  <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
-                  <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
-                </header>
-                <div className="knockoutReviewRows">
-                  {submissions.map((submission) => {
-                    const prediction = (submission.knockoutPredictions ?? []).find((item) => item.fixtureId === fixture.id);
-                    const completePrediction = prediction ? prediction.homeGoals !== prediction.awayGoals || Boolean(prediction.qualifiedTeam) : false;
-                    return (
-                      <div className={completePrediction ? "knockoutReviewRow ok" : "knockoutReviewRow missing"} key={`${fixture.id}-${submission.id}`}>
-                        <span>{submission.name}</span>
-                        <b>{prediction ? serializeKnockoutPrediction(prediction) : "Falta"}</b>
+                return (
+                  <article className="resultCard" key={match.id} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <span>#{match.order} - {match.home} vs {match.away} ({match.dateLabel} {match.kickoffTime} hs)</span>
+                    {result ? (
+                      <small style={{ color: "#16a34a", fontWeight: 800 }}>
+                        Oficial: {result.homeGoals} - {result.awayGoals} {result.scorerNames?.length ? `(⚽ ${result.scorerNames.join(", ")})` : ""}
+                      </small>
+                    ) : (
+                      <small style={{ color: "#64748b" }}>Pendiente de juego</small>
+                    )}
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px", fontSize: "0.85rem" }}>
+                      <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                        <strong style={{ color: "#1e293b" }}>Gonza el + Fachero.:</strong>{" "}
+                        {gonzaPred ? (
+                          <span style={{ fontWeight: 800, color: "#2563eb" }}>{gonzaPred.homeGoals} - {gonzaPred.awayGoals}</span>
+                        ) : (
+                          <span style={{ color: "#94a3b8" }}>Sin cargar</span>
+                        )}
+                        {gonzaPred?.goalScorer ? <span style={{ color: "#0284c7", fontWeight: 700, marginLeft: "6px" }}>⚽ {gonzaPred.goalScorer}</span> : null}
                       </div>
-                    );
-                  })}
-                </div>
-              </article>
-            ))}
-            {knockoutFixtures.length === 0 ? <div className="emptyState">No hay cruces de eliminatorias cargados.</div> : null}
-          </div>
-        </section>
+
+                      <div style={{ background: "#f8fafc", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
+                        <strong style={{ color: "#1e293b" }}>Javier:</strong>{" "}
+                        {javiPred ? (
+                          <span style={{ fontWeight: 800, color: "#2563eb" }}>{javiPred.homeGoals} - {javiPred.awayGoals}</span>
+                        ) : (
+                          <span style={{ color: "#94a3b8" }}>Sin cargar</span>
+                        )}
+                        {javiPred?.goalScorer ? <span style={{ color: "#0284c7", fontWeight: 700, marginLeft: "6px" }}>⚽ {javiPred.goalScorer}</span> : null}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+          </details>
+
+          {/* 2. Resultados de eliminatorias */}
+          <details className="adminFold">
+            <summary>Resultados de eliminatorias</summary>
+            <section className="sectionHeader">
+              <p className="eyebrow">Resultados</p>
+              <h2>Marcadores reales de eliminatorias.</h2>
+              <p>Carga estos resultados manualmente si la API falla. Si el partido termina empatado tras 120 minutos, elegi el clasificado por penales.</p>
+            </section>
+
+            <section className="resultGrid" aria-label="Resultados eliminatorias">
+              {knockoutFixtures.map((fixture) => {
+                const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
+                return (
+                  <article className="resultCard knockoutResult" key={fixture.id}>
+                    <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
+                    {value.source ? (
+                      <small className={`resultSource ${value.source}`}>
+                        {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
+                        {value.source === "manual" ? "Admin" : "API"}
+                      </small>
+                    ) : null}
+                    <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+                    <div className="scoreInputs compact">
+                      <label>
+                        <TeamBadge compact team={fixture.home} />
+                        <input inputMode="numeric" value={value.homeGoals} onChange={(event) => setKnockoutResult(fixture.id, "homeGoals", event.target.value)} />
+                      </label>
+                      <b>-</b>
+                      <label>
+                        <TeamBadge compact team={fixture.away} />
+                        <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
+                      </label>
+                    </div>
+                    {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
+                      <label className="adminTextInput">
+                        <span>Clasificado por penales</span>
+                        <select
+                          value={value.qualifiedTeam ?? ""}
+                          onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
+                        >
+                          <option value="">Elegir</option>
+                          <option value="home">{fixture.home}</option>
+                          <option value="away">{fixture.away}</option>
+                        </select>
+                      </label>
+                    ) : null}
+                    <label className="adminTextInput">
+                      <span>Goleadores oficiales</span>
+                      <input
+                        value={value.scorerNames ?? ""}
+                        onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
+                        placeholder="Balogun, Messi"
+                      />
+                    </label>
+                  </article>
+                );
+              })}
+              {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
+            </section>
+          </details>
+
+          {/* 3. Eliminatorias */}
+          <details className="adminFold">
+            <summary>Eliminatorias</summary>
+            <section className="sectionHeader">
+              <p className="eyebrow">Cruces</p>
+              <h2>Equipos y horarios estimados.</h2>
+              <p>Estos horarios se usan para mostrar apertura publica y cierre de carga. Son editables desde admin.</p>
+            </section>
+
+            <section className="knockoutComposer">
+              <select value={newFixture.stage} onChange={(event) => setNewFixture((current) => ({ ...current, stage: event.target.value as KnockoutStage }))}>
+                {knockoutStages.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {knockoutStageLabels[stage]}
+                  </option>
+                ))}
+              </select>
+              <input value={newFixture.home} onChange={(event) => setNewFixture((current) => ({ ...current, home: event.target.value }))} placeholder="Equipo A" />
+              <input value={newFixture.away} onChange={(event) => setNewFixture((current) => ({ ...current, away: event.target.value }))} placeholder="Equipo B" />
+              <input
+                type="datetime-local"
+                value={newFixture.kickoffAt}
+                onChange={(event) => setNewFixture((current) => ({ ...current, kickoffAt: event.target.value }))}
+                title="Horario del partido"
+              />
+              <button className="primaryAction light" onClick={addKnockoutFixture} type="button">
+                <Plus size={18} aria-hidden="true" />
+                Agregar cruce
+              </button>
+            </section>
+
+            <section className="resultGrid" aria-label="Cruces eliminatorias">
+              {knockoutFixtures.map((fixture) => (
+                <article className="resultCard knockoutResult" key={fixture.id}>
+                  <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
+                  <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+                  <label className="adminTextInput">
+                    <span>Horario del partido</span>
+                    <input
+                      type="datetime-local"
+                      value={isoToArgentinaInput(fixture.kickoffAt ?? getKnockoutKickoffAt(fixture))}
+                      onChange={(event) => setKnockoutKickoff(fixture.id, event.target.value)}
+                    />
+                  </label>
+                  <button className="tableButton dangerButton" onClick={() => removeKnockoutFixture(fixture.id)} type="button">
+                    <Trash2 size={14} aria-hidden="true" />
+                    Quitar
+                  </button>
+                </article>
+              ))}
+              {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
+            </section>
+          </details>
+
+          {/* 4. Resultados de grupos */}
+          <details className="adminFold">
+            <summary>Resultados de grupos</summary>
+            <section className="sectionHeader">
+              <p className="eyebrow">Resultados</p>
+              <h2>Fase de grupos.</h2>
+            </section>
+
+            <section className="roundStrip" aria-label="Fechas de resultados">
+              {([1, 2, 3] as MatchRound[]).map((round) => {
+                const roundDone = matches
+                  .filter((match) => match.round === round)
+                  .filter((match) => matchDraft[match.id].homeGoals && matchDraft[match.id].awayGoals).length;
+                return (
+                  <button
+                    className={activeRound === round ? "roundTab active" : "roundTab"}
+                    key={round}
+                    onClick={() => setActiveRound(round)}
+                    type="button"
+                  >
+                    <span>{roundLabels[round]}</span>
+                    <strong>{roundDone}/24</strong>
+                  </button>
+                );
+              })}
+            </section>
+
+            <section className="resultGrid" aria-label={roundLabels[activeRound]}>
+              {roundMatches.map((match) => {
+                const value = matchDraft[match.id];
+                return (
+                  <article className="resultCard" key={match.id}>
+                    <span>#{match.order} · Grupo {match.groupId}</span>
+                    {value.source ? (
+                      <small className={`resultSource ${value.source}`}>
+                        {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
+                        {value.source === "manual" ? "Admin" : "API"}
+                      </small>
+                    ) : null}
+                    <strong><TeamBadge team={match.home} /> <span>vs.</span> <TeamBadge team={match.away} /></strong>
+                    <div className="scoreInputs compact">
+                      <label>
+                        <TeamBadge compact team={match.home} />
+                        <input
+                          inputMode="numeric"
+                          value={value.homeGoals}
+                          onChange={(event) => setResultScore(match.id, "homeGoals", event.target.value)}
+                          aria-label={`Resultado de ${match.home}`}
+                        />
+                      </label>
+                      <b>-</b>
+                      <label>
+                        <TeamBadge compact team={match.away} />
+                        <input
+                          inputMode="numeric"
+                          value={value.awayGoals}
+                          onChange={(event) => setResultScore(match.id, "awayGoals", event.target.value)}
+                          aria-label={`Resultado de ${match.away}`}
+                        />
+                      </label>
+                    </div>
+                    <label className="highlightUrlInput">
+                      <span>Video resumen</span>
+                      <input
+                        type="url"
+                        value={value.highlightUrl ?? ""}
+                        onChange={(event) => setResultHighlight(match.id, event.target.value)}
+                        placeholder="https://..."
+                        aria-label={`Video resumen de ${match.home} vs ${match.away}`}
+                      />
+                    </label>
+                  </article>
+                );
+              })}
+            </section>
+          </details>
+
+          {/* 5. Clasificados por grupo */}
+          <details className="adminFold">
+            <summary>Clasificados por grupo</summary>
+            <section className="sectionHeader">
+              <p className="eyebrow">Clasificados</p>
+              <h2>Top 2 real por grupo.</h2>
+            </section>
+
+            <section className="groupGrid" aria-label="Resultados de grupos">
+              {groups.map((group) => {
+                const value = groupDraft[group.id];
+                const duplicate = value.first && value.second && value.first === value.second;
+                return (
+                  <article className={duplicate ? "groupCard invalid" : "groupCard"} key={group.id}>
+                    <div className="matchHeader">
+                      <span>Grupo {group.id}</span>
+                      <strong>Resultado</strong>
+                    </div>
+                    <div className="groupSelectors">
+                      <label>
+                        <span>1º real</span>
+                        <select value={value.first} onChange={(event) => setGroupResult(group.id, "first", event.target.value)}>
+                          <option value="">Elegir</option>
+                          {group.teams.map((team) => (
+                            <option key={team} value={team}>
+                              {team}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        <span>2º real</span>
+                        <select value={value.second} onChange={(event) => setGroupResult(group.id, "second", event.target.value)}>
+                          <option value="">Elegir</option>
+                          {group.teams.map((team) => (
+                            <option key={team} value={team}>
+                              {team}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    {duplicate ? <small>Elegí dos equipos distintos.</small> : null}
+                  </article>
+                );
+              })}
+            </section>
+          </details>
+
+          {/* 6. Pronósticos eliminatorias */}
+          <details className="adminFold">
+            <summary>Pronosticos eliminatorias</summary>
+            <section className="knockoutAdminReview">
+              <div className="sectionHeader">
+                <p className="eyebrow">Control</p>
+                <h2>Quien completo y quien falta.</h2>
+                <p>{knockoutFixtures.length} partidos configurados para revisar.</p>
+              </div>
+
+              <div className="knockoutStatusGrid">
+                <article className="knockoutStatusCard ok">
+                  <span>OK</span>
+                  <strong>{knockoutControl.complete.length}</strong>
+                  <div>
+                    {knockoutControl.complete.map((submission) => (
+                      <b key={submission.id}>{submission.name}</b>
+                    ))}
+                    {knockoutControl.complete.length === 0 ? <small>Nadie completo todavia.</small> : null}
+                  </div>
+                </article>
+                <article className="knockoutStatusCard missing">
+                  <span>Faltan</span>
+                  <strong>{knockoutControl.missing.length}</strong>
+                  <div>
+                    {knockoutControl.missing.map((submission) => (
+                      <b key={submission.id}>{submission.name}</b>
+                    ))}
+                    {knockoutControl.missing.length === 0 ? <small>Todos estan completos.</small> : null}
+                  </div>
+                </article>
+              </div>
+
+              <div className="knockoutReviewList">
+                {knockoutFixtures.map((fixture) => (
+                  <article className="knockoutReviewMatch" key={fixture.id}>
+                    <header>
+                      <span>#{fixture.order} · {knockoutStageLabels[fixture.stage]}</span>
+                      <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+                    </header>
+                    <div className="knockoutReviewRows">
+                      {submissions.map((submission) => {
+                        const prediction = (submission.knockoutPredictions ?? []).find((item) => item.fixtureId === fixture.id);
+                        const completePrediction = prediction ? prediction.homeGoals !== prediction.awayGoals || Boolean(prediction.qualifiedTeam) : false;
+                        return (
+                          <div className={completePrediction ? "knockoutReviewRow ok" : "knockoutReviewRow missing"} key={`${fixture.id}-${submission.id}`}>
+                            <span>{submission.name}</span>
+                            <b>{prediction ? serializeKnockoutPrediction(prediction) : "Falta"}</b>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+                ))}
+                {knockoutFixtures.length === 0 ? <div className="emptyState">No hay cruces de eliminatorias cargados.</div> : null}
+              </div>
+            </section>
+          </details>
+        </div>
       </details>
 
       {detailSubmissions.length > 0 ? (
