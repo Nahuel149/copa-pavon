@@ -199,7 +199,7 @@ export type AllTimeRecord = {
 
 export const allTimePalmares: AllTimeRecord[] = [
   {
-    participant: "Javi / Javier",
+    participant: "Javier",
     gold: 2,
     silver: 0,
     bronze: 0,
@@ -209,7 +209,7 @@ export const allTimePalmares: AllTimeRecord[] = [
     ],
   },
   {
-    participant: "Gonza Fiss / Gonza el + Fachero.",
+    participant: "Gonza el + Fachero.",
     gold: 2,
     silver: 1,
     bronze: 0,
