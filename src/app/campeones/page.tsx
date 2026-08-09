@@ -321,7 +321,7 @@ export default function CampeonesPage() {
                               {row.badge === "relegated" && <span className="historyBadge relegatedTag">🔻 Descendido</span>}
                               {!row.badge && <span className="historyBadge defaultTag">Competidor</span>}
                             </td>
-                            <td style={{ fontSize: "0.88rem", color: "#334155", fontStyle: "italic", textAlign: "left", lineHeight: "1.4" }}>
+                            <td className="historyNotesCell">
                               "{row.notes}"
                             </td>
                           </tr>

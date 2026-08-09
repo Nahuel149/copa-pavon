@@ -289,7 +289,6 @@ a {
 :root[data-theme="dark"] .compactPredictionRow,
 :root[data-theme="dark"] .compactPredictionRow > span:last-child,
 :root[data-theme="dark"] .raceLegend,
-:root[data-theme="dark"] .commentList article,
 :root[data-theme="dark"] .shareCardPreview,
 :root[data-theme="dark"] .pointBreakdown article {
   background: #151311;
@@ -462,8 +461,6 @@ a {
   background: #132331;
 }
 
-:root[data-theme="dark"] .commentForm input,
-:root[data-theme="dark"] .commentForm textarea,
 :root[data-theme="dark"] .heroControl input,
 :root[data-theme="dark"] .adminGate input,
 :root[data-theme="dark"] .scoreInputs input,
@@ -475,12 +472,10 @@ a {
 :root[data-theme="dark"] .highlightUrlInput select,
 :root[data-theme="dark"] .adminTextInput select {
   background: #0f0d0b;
-  color: var(--ink);
-  border-color: var(--ink);
+  color: #f1f5f9;
+  border-color: #334155;
 }
 
-:root[data-theme="dark"] .commentList article:nth-child(even),
-:root[data-theme="dark"] .commentList article,
 :root[data-theme="dark"] .awardPill,
 :root[data-theme="dark"] .statsGrid article,
 :root[data-theme="dark"] .dailyResultStrip article,
@@ -496,7 +491,65 @@ a {
 :root[data-theme="dark"] .goalScorerStrip,
 :root[data-theme="dark"] .selectedMatchBar strong {
   background: #1d1a17;
-  color: var(--ink);
+  color: #f1f5f9;
+}
+
+/* Clear light text for comments & commentary in dark mode */
+.historyNotesCell {
+  font-size: 0.88rem;
+  color: #334155;
+  font-style: italic;
+  text-align: left;
+  line-height: 1.4;
+}
+
+:root[data-theme="dark"] .historyNotesCell {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .commentForm input,
+:root[data-theme="dark"] .commentForm textarea,
+:root[data-theme="dark"] .commentReplyForm input,
+:root[data-theme="dark"] .commentReplyForm textarea {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+:root[data-theme="dark"] .commentForm input::placeholder,
+:root[data-theme="dark"] .commentForm textarea::placeholder,
+:root[data-theme="dark"] .commentReplyForm input::placeholder,
+:root[data-theme="dark"] .commentReplyForm textarea::placeholder {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .commentList article,
+:root[data-theme="dark"] .commentList article:nth-child(even) {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .commentList strong {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .commentList p {
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .commentList small {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .commentReplyItem {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .commentsPanel .emptyState {
+  color: #cbd5e1;
 }
 
 :root[data-theme="dark"] .shareCardPreview,
