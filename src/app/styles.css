@@ -7944,3 +7944,155 @@ canvas {
     justify-content: center;
   }
 }
+
+/* Navigation layout: compact centered links on desktop, predictable four-cell header on mobile. */
+@media (min-width: 1181px) {
+  .masthead {
+    grid-template-columns: minmax(240px, auto) minmax(0, 1fr) auto;
+  }
+
+  .masthead .desktopNav {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    justify-self: center;
+    width: fit-content;
+    max-width: 100%;
+    border-left: 0;
+  }
+
+  .masthead .desktopNav .navItem {
+    flex: 0 0 auto;
+    min-height: 74px;
+    padding-inline: 15px;
+    border-left: 1px solid rgba(5, 5, 5, 0.15);
+    border-right: 0;
+    font-size: 0.82rem;
+  }
+
+  .masthead .desktopNav .navItem:last-child {
+    border-right: 1px solid rgba(5, 5, 5, 0.15);
+  }
+
+  .masthead .desktopNav .navLabel strong {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .masthead .mastActions {
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 721px) {
+  .masthead {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "brand actions" "nav nav";
+  }
+
+  .masthead .brand {
+    grid-area: brand;
+  }
+
+  .masthead .mastActions {
+    grid-area: actions;
+    position: static;
+    padding-inline: 16px;
+  }
+
+  .masthead .desktopNav {
+    grid-area: nav;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    border-left: 0;
+  }
+
+  .masthead .mobileNav {
+    display: none;
+  }
+
+  .masthead .desktopNav .navItem {
+    flex: 0 0 auto;
+    min-height: 56px;
+    padding-inline: 12px;
+    border-left: 1px solid rgba(5, 5, 5, 0.15);
+    border-right: 0;
+    font-size: 0.78rem;
+  }
+
+  .masthead .desktopNav .navItem:last-child {
+    border-right: 1px solid rgba(5, 5, 5, 0.15);
+  }
+
+  .masthead .desktopNav .navLabel strong {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}
+
+@media (max-width: 720px) {
+  .masthead {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .masthead .brand {
+    min-height: 72px;
+    padding: 10px 58px 10px 14px;
+  }
+
+  .masthead .brandMark {
+    width: 44px;
+    height: 44px;
+  }
+
+  .masthead .mastActions {
+    top: 10px;
+    right: 12px;
+  }
+
+  .masthead .mobileNav {
+    display: block;
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid rgba(5, 5, 5, 0.15);
+  }
+
+  .mobileNavPrimary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 48px;
+    width: 100%;
+  }
+
+  .mobileNavPrimary .navItem {
+    min-height: 56px;
+    gap: 4px;
+    padding-inline: 2px;
+    font-size: clamp(0.68rem, 2.6vw, 0.8rem);
+  }
+
+  .mobileNavPrimary .navItem svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .mobileNavPrimary .navLabel strong {
+    white-space: nowrap;
+  }
+
+  .mobileNavPrimary .moreNavButton {
+    width: 48px;
+    gap: 0;
+    padding-inline: 0;
+  }
+
+  .mobileNavMore {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    border-top: 3px solid var(--red);
+  }
+}
