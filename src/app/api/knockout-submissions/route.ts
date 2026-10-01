@@ -1,3 +1,5 @@
+import { needsQualifierSelection } from "@/lib/knockout-format";
+import type { KnockoutFixture } from "@/lib/matches";
 import { NextResponse } from "next/server";
 import { isKnockoutFixtureEditable } from "@/lib/knockout-deadlines";
 import { isOptionalLateKnockoutFixture } from "@/lib/knockout-optional";
@@ -8,7 +10,7 @@ import { appendKnockoutPredictions, findSubmissionByNormalizedName, readResultSt
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function hasCompleteRawKnockoutPrediction(value: unknown) {
+function hasCompleteRawKnockoutPrediction(value: unknown, fixture: KnockoutFixture) {
   if (!value || typeof value !== "object") return false;
   const item = value as { homeGoals?: unknown; awayGoals?: unknown; qualifiedTeam?: unknown };
   const homeGoals = typeof item.homeGoals === "string" ? item.homeGoals.trim() : item.homeGoals;
@@ -17,7 +19,7 @@ function hasCompleteRawKnockoutPrediction(value: unknown) {
   const homeNumber = Number(homeGoals);
   const awayNumber = Number(awayGoals);
   if (!Number.isInteger(homeNumber) || !Number.isInteger(awayNumber)) return false;
-  return homeNumber !== awayNumber || item.qualifiedTeam === "home" || item.qualifiedTeam === "away";
+  return !needsQualifierSelection(fixture, homeNumber, awayNumber) || item.qualifiedTeam === "home" || item.qualifiedTeam === "away";
 }
 
 export async function POST(request: Request) {
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
       .map((item) => [item.fixtureId, item] as const),
   );
   const optionalIncompleteFixtureIds = results.knockoutFixtures
-    .filter((fixture) => isOptionalLateKnockoutFixture(fixture) && !hasCompleteRawKnockoutPrediction(rawByFixture.get(fixture.id)))
+    .filter((fixture) => isOptionalLateKnockoutFixture(fixture) && !hasCompleteRawKnockoutPrediction(rawByFixture.get(fixture.id), fixture))
     .map((fixture) => fixture.id);
 
   if (results.knockoutFixtures.length > 0 && closedFixtureIds.length === results.knockoutFixtures.length) {

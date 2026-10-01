@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { appendAuditEvent, readResultStore, writeResultStore } from "@/lib/storage";
 import { validateResultStore, type ResultStore } from "@/lib/prode";
 import { syncGroupMatchResults } from "@/lib/auto-results";
+import { needsQualifierSelection } from "@/lib/knockout-format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,7 +60,19 @@ export async function PUT(request: Request) {
   }
 
   const current = await readResultStore();
-  const results = await writeResultStore(markAdminResultsAsManual(validateResultStore(payload), current));
+  const validated = validateResultStore(payload);
+  const rawResults = (payload as Partial<ResultStore> | null)?.knockoutResults;
+  if (Array.isArray(rawResults)) {
+    for (const raw of rawResults) {
+      if (!raw || typeof raw !== "object") continue;
+      const fixture = validated.knockoutFixtures.find((item) => item.id === raw.fixtureId);
+      if (fixture && needsQualifierSelection(fixture, raw.homeGoals, raw.awayGoals)
+        && raw.qualifiedTeam !== "home" && raw.qualifiedTeam !== "away") {
+        return NextResponse.json({ error: `Elegí el equipo que clasifica en ${fixture.home} vs. ${fixture.away}.` }, { status: 400 });
+      }
+    }
+  }
+  const results = await writeResultStore(markAdminResultsAsManual(validated, current));
   await appendAuditEvent({
     actor: "admin",
     type: "results",

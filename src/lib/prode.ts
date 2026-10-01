@@ -11,6 +11,7 @@ import {
 } from "./matches";
 import { getKnockoutScorerRole, knockoutScorerRolePoints } from "./knockout-rosters";
 import { isKnockoutFixtureEditable } from "./knockout-deadlines";
+import { isFirstLeg, needsQualifierSelection, requiresQualifier, usesSeparatedKnockoutScoring } from "./knockout-format";
 
 export type PredictionChoice = "home" | "draw" | "away";
 
@@ -330,6 +331,10 @@ function knockoutScorerBonusMatches(prediction: KnockoutPrediction, result: Knoc
 }
 
 function knockoutScorerBonusPoints(prediction: KnockoutPrediction, result: KnockoutResult, fixture?: KnockoutFixture) {
+  if (fixture && usesSeparatedKnockoutScoring(fixture)) {
+    return normalizeScorerName(prediction.goalScorer ?? "") && scorerNameMatches(prediction.goalScorer, result.scorerNames)
+      ? knockoutStageScoring[fixture.stage].bonusMultiplier : 0;
+  }
   if (!knockoutScorerBonusMatches(prediction, result)) return 0;
   const multiplier = fixture ? knockoutStageScoring[fixture.stage].bonusMultiplier : 1;
   if (!normalizeScorerName(prediction.goalScorer ?? "")) return multiplier;
@@ -355,12 +360,14 @@ const underdogBonusStages = new Set<KnockoutStage>(["QF", "SF", "THIRD", "FINAL"
 
 export function getKnockoutQualifierVoteCounts(fixture: KnockoutFixture | undefined, submissions: Submission[]) {
   const votes = { home: 0, away: 0 };
-  if (!fixture) return votes;
+  if (!fixture || isFirstLeg(fixture)) return votes;
 
   for (const submission of submissions) {
     const prediction = submission.knockoutPredictions?.find((item) => item.fixtureId === fixture.id);
     if (!prediction) continue;
-    const qualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
+    const qualified = usesSeparatedKnockoutScoring(fixture)
+      ? prediction.qualifiedTeam
+      : getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
     if (qualified === "home" || qualified === "away") votes[qualified] += 1;
   }
 
@@ -374,6 +381,11 @@ export function getKnockoutUnderdogBonus(
   submissions: Submission[],
 ) {
   if (!prediction || !result || !fixture || !underdogBonusStages.has(fixture.stage)) return 0;
+  if (usesSeparatedKnockoutScoring(fixture)) {
+    if (!requiresQualifier(fixture) || !prediction.qualifiedTeam || prediction.qualifiedTeam !== result.qualifiedTeam) return 0;
+    const votes = getKnockoutQualifierVoteCounts(fixture, submissions);
+    return votes[prediction.qualifiedTeam] > 0 && votes[prediction.qualifiedTeam] <= 7 ? 2 : 0;
+  }
 
   const predictionQualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
   const resultQualified = getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
@@ -396,13 +408,25 @@ export function scoreKnockoutPredictionForFixture(
   options: { underdogBonus?: number } = {},
 ) {
   if (!result) {
-    return { basePoints: 0, scorerPoints: 0, underdogPoints: 0, totalPoints: 0, verdict: "pending" as const };
+    return { basePoints: 0, qualifierPoints: 0, scorerPoints: 0, underdogPoints: 0, totalPoints: 0, verdict: "pending" as const };
   }
   if (!prediction) {
-    return { basePoints: 0, scorerPoints: 0, underdogPoints: 0, totalPoints: 0, verdict: "miss" as const };
+    return { basePoints: 0, qualifierPoints: 0, scorerPoints: 0, underdogPoints: 0, totalPoints: 0, verdict: "miss" as const };
   }
 
   const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
+  if (fixture && usesSeparatedKnockoutScoring(fixture)) {
+    const exact = prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals;
+    const sameOutcome = getOutcome(prediction.homeGoals, prediction.awayGoals) === getOutcome(result.homeGoals, result.awayGoals);
+    const basePoints = exact ? scoring.exact : sameOutcome ? scoring.winner : 0;
+    const qualifierPoints = requiresQualifier(fixture) && prediction.qualifiedTeam && prediction.qualifiedTeam === result.qualifiedTeam ? 1 : 0;
+    const scorerPoints = knockoutScorerBonusPoints(prediction, result, fixture);
+    const underdogPoints = qualifierPoints ? Math.min(2, Math.max(0, options.underdogBonus ?? 0)) : 0;
+    const totalPoints = basePoints + qualifierPoints + scorerPoints + underdogPoints;
+    return { basePoints, qualifierPoints, scorerPoints, underdogPoints, totalPoints,
+      verdict: exact ? "exact" as const : totalPoints > 0 ? "partial" as const : "miss" as const };
+  }
+
   const predictionQualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
   const resultQualified = getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
   const exactScore = prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals;
@@ -428,7 +452,7 @@ export function scoreKnockoutPredictionForFixture(
   const scorerPoints = knockoutScorerBonusPoints(prediction, result, fixture);
   const underdogPoints = options.underdogBonus ?? 0;
   if (verdict === "miss" && scorerPoints + underdogPoints > 0) verdict = "partial";
-  return { basePoints, scorerPoints, underdogPoints, totalPoints: basePoints + scorerPoints + underdogPoints, verdict };
+  return { basePoints, qualifierPoints: 0, scorerPoints, underdogPoints, totalPoints: basePoints + scorerPoints + underdogPoints, verdict };
 }
 
 export function choiceLabel(choice: PredictionChoice, home: string, away: string) {
@@ -663,8 +687,8 @@ export function validateKnockoutSubmission(
       continue;
     }
     const qualifiedTeam = raw.qualifiedTeam === "home" || raw.qualifiedTeam === "away" ? raw.qualifiedTeam : undefined;
-    if (homeGoals === awayGoals && !qualifiedTeam) {
-      errors.push(`Elegí quien clasifica por penales en ${fixture.home} vs. ${fixture.away}.`);
+    if (needsQualifierSelection(fixture, homeGoals, awayGoals) && !qualifiedTeam) {
+      errors.push(usesSeparatedKnockoutScoring(fixture) ? `Elegí el equipo que clasifica en ${fixture.home} vs. ${fixture.away}.` : `Elegí quien clasifica por penales en ${fixture.home} vs. ${fixture.away}.`);
       continue;
     }
     const goalScorer = typeof raw.goalScorer === "string" ? raw.goalScorer.trim().replace(/\s+/g, " ") : "";
@@ -672,7 +696,7 @@ export function validateKnockoutSubmission(
       fixtureId: fixture.id,
       homeGoals,
       awayGoals,
-      ...(qualifiedTeam ? { qualifiedTeam } : {}),
+      ...(!isFirstLeg(fixture) && qualifiedTeam ? { qualifiedTeam } : {}),
       ...(goalScorer ? { goalScorer } : {}),
     });
   }
@@ -754,7 +778,8 @@ export function validateResultStore(payload: unknown): ResultStore {
       continue;
     }
     const qualifiedTeam = item.qualifiedTeam === "home" || item.qualifiedTeam === "away" ? item.qualifiedTeam : undefined;
-    if (homeGoals === awayGoals && !qualifiedTeam) continue;
+    const fixture = fixtureById.get(item.fixtureId)!;
+    if (needsQualifierSelection(fixture, homeGoals, awayGoals) && !qualifiedTeam) continue;
     const scorerNames = Array.isArray(item.scorerNames)
       ? item.scorerNames.filter((scorer): scorer is string => typeof scorer === "string" && scorer.trim().length > 0)
       : parseScorerNames((item as Partial<KnockoutResult> & { scorers?: unknown }).scorers);
@@ -762,7 +787,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       fixtureId: item.fixtureId,
       homeGoals,
       awayGoals,
-      ...(homeGoals === awayGoals && qualifiedTeam ? { qualifiedTeam } : {}),
+      ...(!isFirstLeg(fixture) && qualifiedTeam ? { qualifiedTeam } : {}),
       ...(scorerNames.length > 0 ? { scorerNames } : {}),
       ...(item.source === "manual" || item.source === "api" ? { source: item.source } : {}),
     });
@@ -818,15 +843,15 @@ export function countCompleteKnockoutPredictions(
   return fixtures.reduce((total, fixture) => {
     const value = predictions[fixture.id];
     if (!value || value.homeGoals === "" || value.awayGoals === "") return total;
-    if (value.homeGoals === value.awayGoals && value.qualifiedTeam !== "home" && value.qualifiedTeam !== "away") return total;
+    if (needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) && value.qualifiedTeam !== "home" && value.qualifiedTeam !== "away") return total;
     return total + 1;
   }, 0);
 }
 
-function hasValidKnockoutPrediction(prediction: KnockoutPrediction | undefined) {
+function hasValidKnockoutPrediction(prediction: KnockoutPrediction | undefined, fixture: KnockoutFixture) {
   if (!prediction) return false;
   if (!Number.isFinite(prediction.homeGoals) || !Number.isFinite(prediction.awayGoals)) return false;
-  if (prediction.homeGoals === prediction.awayGoals && prediction.qualifiedTeam !== "home" && prediction.qualifiedTeam !== "away") return false;
+  if (needsQualifierSelection(fixture, prediction.homeGoals, prediction.awayGoals) && prediction.qualifiedTeam !== "home" && prediction.qualifiedTeam !== "away") return false;
   return true;
 }
 
@@ -834,7 +859,7 @@ export function countMissedClosedKnockoutPredictions(submission: Submission, res
   const predictionByFixture = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
   return results.knockoutFixtures.reduce((total, fixture) => {
     if (isKnockoutFixtureEditable(fixture, now, results.knockoutFixtures)) return total;
-    return hasValidKnockoutPrediction(predictionByFixture.get(fixture.id)) ? total : total + 1;
+    return hasValidKnockoutPrediction(predictionByFixture.get(fixture.id), fixture) ? total : total + 1;
   }, 0);
 }
 
@@ -856,7 +881,7 @@ export function serializePrediction(prediction: Prediction) {
 
 export function serializeKnockoutPrediction(prediction: KnockoutPrediction) {
   const qualifiedLabel =
-    prediction.homeGoals === prediction.awayGoals && prediction.qualifiedTeam
+    prediction.qualifiedTeam
       ? ` · clasifica ${prediction.qualifiedTeam === "home" ? "local" : "visitante"}`
       : "";
   return `${prediction.homeGoals}-${prediction.awayGoals}${qualifiedLabel}${prediction.goalScorer ? ` · ${prediction.goalScorer}` : ""}`;
@@ -1017,49 +1042,45 @@ export function scoreSubmission(submission: Submission, results: ResultStore, al
     const fixture = knockoutFixtureById.get(prediction.fixtureId);
     if (!result) continue;
     playedKnockoutPredictions += 1;
-    const scoring = fixture ? knockoutStageScoring[fixture.stage] : knockoutStageScoring.R16;
-    const predictionQualified = getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
-    const resultQualified = getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
+    const predictionQualified = fixture && usesSeparatedKnockoutScoring(fixture)
+      ? prediction.qualifiedTeam : getKnockoutQualifiedTeam(prediction.homeGoals, prediction.awayGoals, prediction.qualifiedTeam);
+    const resultQualified = fixture && usesSeparatedKnockoutScoring(fixture)
+      ? result.qualifiedTeam : getKnockoutQualifiedTeam(result.homeGoals, result.awayGoals, result.qualifiedTeam);
+    const scored = scoreKnockoutPredictionForFixture(prediction, result, fixture);
+    const basePoints = scored.basePoints;
     const exactScore = prediction.homeGoals === result.homeGoals && prediction.awayGoals === result.awayGoals;
-    const exactDrawWrongQualifier =
-      exactScore &&
-      result.homeGoals === result.awayGoals &&
-      Boolean(resultQualified) &&
-      Boolean(predictionQualified) &&
-      predictionQualified !== resultQualified;
-    let basePoints = 0;
-    let baseVerdict: PointAuditEntry["verdict"] = "miss";
-    if (exactDrawWrongQualifier) {
-      basePoints = knockoutWrongPenaltyExactPoints(fixture?.stage);
-      baseVerdict = "correct";
-      knockoutExactHits += 1;
-    } else if (exactScore) {
-      basePoints = scoring.exact;
-      baseVerdict = "exact";
-      knockoutExactHits += 1;
-    } else if (predictionQualified && resultQualified && predictionQualified === resultQualified) {
-      basePoints = scoring.winner;
-      baseVerdict = "correct";
-      knockoutWinnerHits += 1;
-    }
+    const baseVerdict: PointAuditEntry["verdict"] = scored.verdict === "exact" ? "exact" : basePoints > 0 ? "correct" : "miss";
+    if (exactScore) knockoutExactHits += 1;
+    else if (basePoints > 0) knockoutWinnerHits += 1;
     knockoutPoints += basePoints;
     pointAudit.push({
       id: prediction.fixtureId,
       category: "knockout",
       label: fixture ? `${fixture.home} vs. ${fixture.away}` : prediction.fixtureId,
       prediction: `${prediction.homeGoals}-${prediction.awayGoals}${
-        predictionQualified && fixture && prediction.homeGoals === prediction.awayGoals
+        predictionQualified && fixture && !usesSeparatedKnockoutScoring(fixture) && prediction.homeGoals === prediction.awayGoals
           ? `, clasifica ${predictionQualified === "home" ? fixture.home : fixture.away}`
           : ""
       }`,
       official: `${result.homeGoals}-${result.awayGoals}${
-        resultQualified && fixture && result.homeGoals === result.awayGoals
+        resultQualified && fixture && !usesSeparatedKnockoutScoring(fixture) && result.homeGoals === result.awayGoals
           ? `, clasificó ${resultQualified === "home" ? fixture.home : fixture.away}`
           : ""
       }`,
       points: basePoints,
       verdict: baseVerdict,
     });
+
+    if (fixture && usesSeparatedKnockoutScoring(fixture) && requiresQualifier(fixture)) {
+      knockoutPoints += scored.qualifierPoints;
+      pointAudit.push({
+        id: `${prediction.fixtureId}-qualifier`, category: "knockout",
+        label: `Clasificado: ${fixture.home} vs. ${fixture.away}`,
+        prediction: prediction.qualifiedTeam ? (prediction.qualifiedTeam === "home" ? fixture.home : fixture.away) : "Sin clasificado",
+        official: result.qualifiedTeam ? (result.qualifiedTeam === "home" ? fixture.home : fixture.away) : "Pendiente",
+        points: scored.qualifierPoints, verdict: scored.qualifierPoints ? "correct" : "miss",
+      });
+    }
 
     const scorerPoints = knockoutScorerBonusPoints(prediction, result, fixture);
     const scorerHit = scorerPoints > 0;
@@ -1083,7 +1104,7 @@ export function scoreSubmission(submission: Submission, results: ResultStore, al
       pointAudit.push({
         id: `${prediction.fixtureId}-minority`,
         category: "underdog",
-        label: fixture ? `MinorÃ­a: ${fixture.home} vs. ${fixture.away}` : `MinorÃ­a: ${prediction.fixtureId}`,
+        label: fixture ? `Minoría: ${fixture.home} vs. ${fixture.away}` : `MinorÃ­a: ${prediction.fixtureId}`,
         prediction:
           fixture && predictionQualified
             ? `Clasifica ${predictionQualified === "home" ? fixture.home : fixture.away}`

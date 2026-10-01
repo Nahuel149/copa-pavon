@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2, LogIn, Send } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
+import { isFirstLeg, isSecondLeg, needsQualifierSelection } from "@/lib/knockout-format";
 import { isOptionalLateKnockoutFixture } from "@/lib/knockout-optional";
 import {
   getKnockoutScorerOptions,
@@ -12,7 +13,7 @@ import {
   knockoutScorerRoleLabels,
   knockoutScorerRolePoints,
 } from "@/lib/knockout-rosters";
-import { knockoutStageLabels, knockoutStageSchedule, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
+import { knockoutStageLabels, knockoutStageScoring, knockoutStages, type KnockoutFixture } from "@/lib/matches";
 import type { KnockoutPrediction, Submission } from "@/lib/prode";
 
 type FixtureResponse = {
@@ -39,9 +40,14 @@ type SavedKnockoutDraft = {
 };
 
 const knockoutDraftStorageKey = "copa-kahl-knockout-draft-v1";
-const variableScorerStages = new Set(["QF", "SF", "THIRD", "FINAL"]);
+const rosterScorerStages = new Set(["QF", "SF", "THIRD", "FINAL"]);
+const variableScorerStages = new Set(["QF", "THIRD"]);
 
-function hasVariableQuarterfinalRules(stage: KnockoutFixture["stage"]) {
+function hasRosterScorerOptions(stage: KnockoutFixture["stage"]) {
+  return rosterScorerStages.has(stage);
+}
+
+function hasVariableScorerRules(stage: KnockoutFixture["stage"]) {
   return variableScorerStages.has(stage);
 }
 
@@ -52,9 +58,10 @@ function draftFromFixtures(fixtures: KnockoutFixture[]) {
   }, {});
 }
 
-function isKnockoutPredictionComplete(value: KnockoutDraft[string] | undefined) {
+function isKnockoutPredictionComplete(fixture: KnockoutFixture, value: KnockoutDraft[string] | undefined) {
   if (!value || value.homeGoals === "" || value.awayGoals === "") return false;
-  return value.homeGoals !== value.awayGoals || value.qualifiedTeam === "home" || value.qualifiedTeam === "away";
+  if (!needsQualifierSelection(fixture, value.homeGoals, value.awayGoals)) return true;
+  return value.qualifiedTeam === "home" || value.qualifiedTeam === "away";
 }
 
 function mergeKnockoutPredictions(fixtures: KnockoutFixture[], current: KnockoutDraft, savedPredictions: KnockoutPrediction[] = []) {
@@ -116,9 +123,12 @@ export default function EliminatoriasPage() {
   const openFixtures = fixtures.filter((fixture) => fixtureStatus[fixture.id]?.open ?? true);
   const requiredOpenFixtures = openFixtures.filter((fixture) => {
     if (!isOptionalLateKnockoutFixture(fixture)) return true;
-    return isKnockoutPredictionComplete(predictions[fixture.id]);
+    return isKnockoutPredictionComplete(fixture, predictions[fixture.id]);
   });
-  const completed = requiredOpenFixtures.reduce((total, fixture) => total + (isKnockoutPredictionComplete(predictions[fixture.id]) ? 1 : 0), 0);
+  const completed = requiredOpenFixtures.reduce(
+    (total, fixture) => total + (isKnockoutPredictionComplete(fixture, predictions[fixture.id]) ? 1 : 0),
+    0,
+  );
   const missingName = name.trim().length < 2;
   const missingLogin = !isUnlocked;
   const missingFixtures = requiredOpenFixtures.length - completed;
@@ -163,7 +173,7 @@ export default function EliminatoriasPage() {
 
   const knockoutRulesPanel = (
     <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos de mano a mano">
-      {knockoutStages.map((stage) => {
+      {knockoutStages.filter((stage) => fixtures.some((fixture) => fixture.stage === stage)).map((stage) => {
         const scoring = knockoutStageScoring[stage];
         return (
           <article key={stage}>
@@ -175,14 +185,14 @@ export default function EliminatoriasPage() {
               {scoring.exact} / {scoring.winner}
             </strong>
             <p>
-              Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts. Fecha:{" "}
-              {knockoutStageSchedule[stage]}. Si el marcador queda empatado tras 120&apos; y errás el clasificado por
-              penales, suma parcial: 2 pts en 16avos/octavos, 3 en cuartos, 4 en semis y tercer puesto, y 15 en final.
-              {stage === "FINAL"
-                ? " Final x3: goleador +3/+6/+9 y batacazo +9. Vacio suma 3 si sale 0-0."
-                : stage === "QF" || stage === "SF" || stage === "THIRD"
-                  ? " Goleador +1/+2/+3 y batacazo +3. Vacio suma 1 si sale 0-0."
-                  : " Goleador acertado: +1. Vacio suma si sale 0-0."}
+              Exacto: {scoring.exact} pts. {scoring.winnerLabel}: {scoring.winner} pts.
+              {stage === "SF"
+                ? " Exacto y resultado son excluyentes. Goleador +1; en partidos definitorios, clasificado +1 y minoría +2."
+                : stage === "FINAL"
+                  ? " Exacto y resultado son excluyentes. Goleador +1, clasificado +1 y minoría +2."
+                  : stage === "QF" || stage === "THIRD"
+                    ? " Se mantienen los bonus por rol del goleador y batacazo de esta etapa."
+                    : " Goleador acertado: +1."}
             </p>
           </article>
         );
@@ -311,7 +321,7 @@ export default function EliminatoriasPage() {
     const hasSelectedOption = options.some((option) => option.name === value.goalScorer);
     const disabled = !isUnlocked || !fixtureOpen || status === "saving";
 
-    if (!hasVariableQuarterfinalRules(fixture.stage) || options.length === 0) {
+    if (!hasRosterScorerOptions(fixture.stage) || options.length === 0) {
       return (
         <label className="scorerInput">
           <span>Goleador del partido (+1)</span>
@@ -325,9 +335,12 @@ export default function EliminatoriasPage() {
       );
     }
 
+    const usesFixedScorerPoints = fixture.stage === "SF" || fixture.stage === "FINAL";
+    const fixedScorerPoints = 1;
+
     return (
       <label className="scorerInput">
-        <span>{fixture.stage === "FINAL" ? "Goleador del partido - Final x3 (+3/+6/+9)" : "Goleador del partido (+1/+2/+3)"}</span>
+        <span>{usesFixedScorerPoints ? `Goleador del partido (+${fixedScorerPoints})` : "Goleador del partido (+1/+2/+3)"}</span>
         <select
           value={value.goalScorer ?? ""}
           onChange={(event) => setGoalScorer(fixture.id, event.target.value)}
@@ -343,36 +356,60 @@ export default function EliminatoriasPage() {
               <optgroup key={side} label={side === "home" ? fixture.home : fixture.away}>
                 {teamOptions.map((option) => (
                   <option className={`scorerRoleOption ${option.role}`} key={`${option.team}-${option.name}`} value={option.name}>
-                    {option.name} - {knockoutScorerRoleLabels[option.role].split(" +")[0]} +
-                    {knockoutScorerRolePoints[option.role] * knockoutStageScoring[fixture.stage].bonusMultiplier}
+                    {option.name}
+                    {usesFixedScorerPoints
+                      ? ""
+                      : ` - ${knockoutScorerRoleLabels[option.role].split(" +")[0]} +${knockoutScorerRolePoints[option.role]}`}
                   </option>
                 ))}
               </optgroup>
             );
           })}
         </select>
-        <small className="scorerLegend">
-          <b className="scorerRolePill star">Figura +{fixture.stage === "FINAL" ? 3 : 1}</b>
-          <b className="scorerRolePill forward">Delantero +{fixture.stage === "FINAL" ? 6 : 2}</b>
-          <b className="scorerRolePill field">Medio/defensa +{fixture.stage === "FINAL" ? 9 : 3}</b>
-        </small>
+        {usesFixedScorerPoints ? null : (
+          <small className="scorerLegend">
+            <b className="scorerRolePill star">Figura +1</b>
+            <b className="scorerRolePill forward">Delantero +2</b>
+            <b className="scorerRolePill field">Medio/defensa +3</b>
+          </small>
+        )}
       </label>
     );
   }
 
-  function renderQuarterfinalRuleNote(fixture: KnockoutFixture) {
-    if (!hasVariableQuarterfinalRules(fixture.stage)) return null;
+  function renderFixtureRuleNote(fixture: KnockoutFixture) {
+    if (fixture.stage === "SF") {
+      return (
+        <section className="knockoutRuleNote compactRuleNote">
+          <strong>Semifinal</strong>
+          <span>Exacto 3 o resultado 1. Goleador +1. Si define la serie: clasificado +1 y minoría +2.</span>
+        </section>
+      );
+    }
+
+    if (fixture.stage === "FINAL") {
+      return (
+        <section className="knockoutRuleNote compactRuleNote">
+          <strong>Final</strong>
+          <span>Exacto 5 o resultado 3. Goleador +1, campeón +1 y minoría +2. Máximo: 9 puntos.</span>
+        </section>
+      );
+    }
+
+    if (!hasVariableScorerRules(fixture.stage)) return null;
 
     return (
       <section className="knockoutRuleNote compactRuleNote">
-        <strong>{fixture.stage === "FINAL" ? "Final x3" : "Regla desde cuartos"}</strong>
-        <span>
-          {fixture.stage === "FINAL"
-            ? "Exacto 27, campeon 15, goleador +3/+6/+9 y batacazo +9. Maximo 45 puntos; exacto y campeon no se acumulan."
-            : "Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto, bonus extra +3 por batacazo."}
-        </span>
+        <strong>Regla de esta etapa</strong>
+        <span>Goleador: figura +1, delantero +2, medio/defensa +3. Si 7 o menos eligieron al clasificado correcto, bonus extra +3 por batacazo.</span>
       </section>
     );
+  }
+
+  function fixtureLegLabel(fixture: KnockoutFixture) {
+    if (isFirstLeg(fixture)) return "Ida";
+    if (isSecondLeg(fixture)) return "Vuelta";
+    return "Partido único";
   }
 
   async function handleLogin() {
@@ -425,7 +462,13 @@ export default function EliminatoriasPage() {
           fixtureId: fixture.id,
           homeGoals: predictions[fixture.id]?.homeGoals ?? "",
           awayGoals: predictions[fixture.id]?.awayGoals ?? "",
-          qualifiedTeam: predictions[fixture.id]?.qualifiedTeam ?? "",
+          qualifiedTeam: needsQualifierSelection(
+            fixture,
+            predictions[fixture.id]?.homeGoals ?? "",
+            predictions[fixture.id]?.awayGoals ?? "",
+          )
+            ? predictions[fixture.id]?.qualifiedTeam ?? ""
+            : "",
           goalScorer: predictions[fixture.id]?.goalScorer ?? "",
         })),
       }),
@@ -452,7 +495,7 @@ export default function EliminatoriasPage() {
       <article className="matchCard exact" key={fixture.id}>
         <div className="matchHeader">
           <span>#{fixture.order}</span>
-          <strong>Eliminatoria exacta</strong>
+          <strong>{fixtureLegLabel(fixture)}</strong>
         </div>
         <h2>
           <TeamBadge team={fixture.home} />
@@ -462,7 +505,7 @@ export default function EliminatoriasPage() {
         <small className={fixtureOpen ? "editState open" : "editState closed"}>
           {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
         </small>
-        {renderQuarterfinalRuleNote(fixture)}
+        {renderFixtureRuleNote(fixture)}
         <div className="scoreInputs">
           <label>
             <TeamBadge compact team={fixture.home} />
@@ -484,9 +527,9 @@ export default function EliminatoriasPage() {
             />
           </label>
         </div>
-        {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
-          <div className="penaltyQualifier" role="radiogroup" aria-label="Clasifica por penales">
-            <span>Clasifica por penales</span>
+        {value.homeGoals !== "" && value.awayGoals !== "" && needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) ? (
+          <div className="penaltyQualifier" role="radiogroup" aria-label="Equipo que clasifica">
+            <span>{isSecondLeg(fixture) ? "Equipo que clasifica (serie completa)" : fixture.stage === "FINAL" ? "Equipo campeón" : "Equipo que clasifica"}</span>
             <div>
               {(["home", "away"] as const).map((side) => {
                 const selected = value.qualifiedTeam === side;
@@ -620,7 +663,7 @@ export default function EliminatoriasPage() {
                   <article className="matchCard exact" key={fixture.id}>
                     <div className="matchHeader">
                       <span>#{fixture.order}</span>
-                      <strong>Eliminatoria exacta</strong>
+                      <strong>{fixtureLegLabel(fixture)}</strong>
                     </div>
                     <h2>
                       <TeamBadge team={fixture.home} />
@@ -630,7 +673,7 @@ export default function EliminatoriasPage() {
                     <small className={fixtureOpen ? "editState open" : "editState closed"}>
                       {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
                     </small>
-                    {renderQuarterfinalRuleNote(fixture)}
+                    {renderFixtureRuleNote(fixture)}
                     <div className="scoreInputs">
                       <label>
                         <TeamBadge compact team={fixture.home} />
@@ -652,9 +695,9 @@ export default function EliminatoriasPage() {
                         />
                       </label>
                     </div>
-                    {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
-                      <div className="penaltyQualifier" role="radiogroup" aria-label="Clasifica por penales">
-                        <span>Clasifica por penales</span>
+                    {value.homeGoals !== "" && value.awayGoals !== "" && needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) ? (
+                      <div className="penaltyQualifier" role="radiogroup" aria-label="Equipo que clasifica">
+                        <span>{isSecondLeg(fixture) ? "Equipo que clasifica (serie completa)" : fixture.stage === "FINAL" ? "Equipo campeón" : "Equipo que clasifica"}</span>
                         <div>
                           {(["home", "away"] as const).map((side) => {
                             const selected = value.qualifiedTeam === side;

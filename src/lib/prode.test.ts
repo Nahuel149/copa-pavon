@@ -16,6 +16,8 @@ import {
   countCompleteKnockoutPredictions,
   defaultClan,
   getOutcome,
+  getKnockoutUnderdogBonus,
+  getKnockoutQualifierVoteCounts,
   normalizeName,
   parseScorerEvents,
   parseScorerNames,
@@ -332,7 +334,7 @@ describe("prode scoring", () => {
       knockoutResults: [{ fixtureId: "k-final", homeGoals: 2, awayGoals: 1 }],
     });
 
-    expect(row.knockoutPoints).toBe(27);
+    expect(row.knockoutPoints).toBe(5);
     expect(row.knockoutExactHits).toBe(1);
     expect(row.knockoutWinnerHits).toBe(0);
     expect(row.predictionMatchesPlayed).toBe(1);
@@ -381,9 +383,9 @@ describe("prode scoring", () => {
   it("scales exact knockout draw points by stage when the penalty qualifier is wrong", () => {
     const cases = [
       { stage: "QF" as const, points: 3 },
-      { stage: "SF" as const, points: 4 },
+      { stage: "SF" as const, points: 3 },
       { stage: "THIRD" as const, points: 4 },
-      { stage: "FINAL" as const, points: 15 },
+      { stage: "FINAL" as const, points: 5 },
     ];
 
     for (const item of cases) {
@@ -879,47 +881,17 @@ describe("prode scoring", () => {
     ).toBe(3);
   });
 
-  it("triples every final scoring component without accumulating exact and winner points", () => {
-    const fixture: KnockoutFixture = { id: "k-final-x3", order: 1, stage: "FINAL", home: "Inglaterra", away: "Noruega" };
-    const result = { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: ["Martin Odegaard"] };
-
-    expect(
-      scoreKnockoutPredictionForFixture(
-        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, goalScorer: "Martin Odegaard" },
-        result,
-        fixture,
-        { underdogBonus: 9 },
-      ),
-    ).toMatchObject({
-      basePoints: 27,
-      scorerPoints: 9,
-      underdogPoints: 9,
-      totalPoints: 45,
-      verdict: "exact",
+  it("scores the final with separate match, qualifier, scorer and minority points", () => {
+    const fixture: KnockoutFixture = { id: "k-final", order: 1, stage: "FINAL", home: "Inglaterra", away: "Noruega" };
+    const prediction = { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, qualifiedTeam: "away" as const, goalScorer: "Martin Odegaard" };
+    const result = { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, qualifiedTeam: "away" as const, scorerNames: ["Martin Odegaard"] };
+    expect(scoreKnockoutPredictionForFixture(prediction, result, fixture, { underdogBonus: 2 })).toMatchObject({
+      basePoints: 5, qualifierPoints: 1, scorerPoints: 1, underdogPoints: 2, totalPoints: 9, verdict: "exact",
     });
-
-    expect(
-      scoreKnockoutPredictionForFixture(
-        { fixtureId: fixture.id, homeGoals: 0, awayGoals: 2 },
-        result,
-        fixture,
-      ),
-    ).toMatchObject({ basePoints: 15, totalPoints: 15, verdict: "partial" });
-
-    const submissions = Array.from({ length: 8 }, (_, index) => ({
-      ...submissionFromPayload(`Finalista ${index + 1}`),
-      knockoutPredictions: [
-        { fixtureId: fixture.id, homeGoals: index < 7 ? 0 : 2, awayGoals: index < 7 ? 1 : 0 },
-      ],
-    }));
-    const standings = buildStandings(submissions, {
-      ...emptyResults,
-      knockoutFixtures: [fixture],
-      knockoutResults: [result],
-    });
-    expect(standings.find((row) => row.name === "Finalista 1")?.pointAudit).toEqual(
-      expect.arrayContaining([expect.objectContaining({ category: "underdog", points: 9 })]),
-    );
+    const submission = { ...submissionFromPayload(), knockoutPredictions: [prediction] };
+    const row = scoreSubmission(submission, { ...emptyResults, knockoutFixtures: [fixture], knockoutResults: [result] }, [submission]);
+    expect(row.knockoutPoints).toBe(9);
+    expect(row.pointAudit).toEqual(expect.arrayContaining([expect.objectContaining({ category: "underdog", points: 2 })]));
   });
 
   it("adds the minority qualifier bonus only from quarterfinals onward", () => {
@@ -1034,5 +1006,90 @@ describe("prode scoring", () => {
       { name: "Ana", points: 2, exacts: 0, wins: 2 },
       { name: "Nahuel", points: 2, exacts: 0, wins: 1 },
     ]);
+  });
+});
+
+
+describe("continental semifinals", () => {
+  const ida: KnockoutFixture = { id: "sudamericana-2026-sf-boca-vasco-ida", order: 1, stage: "SF", home: "Boca Juniors", away: "Vasco da Gama", kickoffAt: "2026-10-13T21:30:00-03:00" };
+  const vuelta: KnockoutFixture = { ...ida, id: "sudamericana-2026-sf-boca-vasco-vuelta", order: 2, home: ida.away, away: ida.home, kickoffAt: "2026-10-20T21:30:00-03:00" };
+
+  it("accepts first-leg draws without qualification and discards stray qualifiers", () => {
+    const validation = validateKnockoutSubmission({ name: "Nahuel", predictions: [{ fixtureId: ida.id, homeGoals: 1, awayGoals: 1, qualifiedTeam: "away" }] }, [ida]);
+    expect(validation).toMatchObject({ ok: true, predictions: [{ fixtureId: ida.id, homeGoals: 1, awayGoals: 1 }] });
+    if (validation.ok) expect(validation.predictions[0].qualifiedTeam).toBeUndefined();
+    const store = validateResultStore({ ...emptyResults, knockoutFixtures: [ida], knockoutResults: [{ fixtureId: ida.id, homeGoals: 1, awayGoals: 1 }] });
+    expect(store.knockoutResults).toHaveLength(1);
+    expect(countCompleteKnockoutPredictions({ [ida.id]: { homeGoals: "1", awayGoals: "1" } }, [ida])).toBe(1);
+  });
+
+  it("requires a separate qualifier on every return-leg score and preserves non-draw qualifiers", () => {
+    for (const [homeGoals, awayGoals] of [[1, 1], [2, 0]]) {
+      expect(validateKnockoutSubmission({ name: "Nahuel", predictions: [{ fixtureId: vuelta.id, homeGoals, awayGoals }] }, [vuelta]).ok).toBe(false);
+      const validation = validateKnockoutSubmission({ name: "Nahuel", predictions: [{ fixtureId: vuelta.id, homeGoals, awayGoals, qualifiedTeam: "away" }] }, [vuelta]);
+      expect(validation).toMatchObject({ ok: true, predictions: [{ qualifiedTeam: "away" }] });
+      expect(validateResultStore({ ...emptyResults, knockoutFixtures: [vuelta], knockoutResults: [{ fixtureId: vuelta.id, homeGoals, awayGoals }] }).knockoutResults).toHaveLength(0);
+      expect(validateResultStore({ ...emptyResults, knockoutFixtures: [vuelta], knockoutResults: [{ fixtureId: vuelta.id, homeGoals, awayGoals, qualifiedTeam: "away" }] }).knockoutResults[0].qualifiedTeam).toBe("away");
+    }
+  });
+
+  it("awards exact 3 or outcome 1, never both, and named scorer 1 in the first leg", () => {
+    const result = { fixtureId: ida.id, homeGoals: 1, awayGoals: 1, scorerNames: ["Merentiel"] };
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: ida.id, homeGoals: 1, awayGoals: 1, goalScorer: "Merentiel" }, result, ida, { underdogBonus: 2 })).toMatchObject({ basePoints: 3, scorerPoints: 1, qualifierPoints: 0, underdogPoints: 0, totalPoints: 4 });
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: ida.id, homeGoals: 2, awayGoals: 2 }, result, ida).totalPoints).toBe(1);
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: ida.id, homeGoals: 2, awayGoals: 0 }, result, ida).totalPoints).toBe(0);
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: ida.id, homeGoals: 0, awayGoals: 0 }, { fixtureId: ida.id, homeGoals: 0, awayGoals: 0 }, ida).scorerPoints).toBe(0);
+  });
+
+  it("does not count valid first-leg draws as missed predictions", () => {
+    const other = { ...ida, id: "libertadores-sf-test-ida", order: 3 };
+    const submission = { ...submissionFromPayload(), knockoutPredictions: [
+      { fixtureId: ida.id, homeGoals: 0, awayGoals: 0 },
+      { fixtureId: other.id, homeGoals: 1, awayGoals: 1 },
+    ] };
+    expect(buildStandings([submission], { ...emptyResults, knockoutFixtures: [ida, other] }, new Date("2026-10-14T00:30:00Z"))).toHaveLength(1);
+  });
+
+  it("keeps the scorer bonus at one for every semifinal and final player role", () => {
+    for (const stage of ["SF", "FINAL"] as const) {
+      const fixture = { ...ida, stage, home: "Inglaterra", away: "Noruega" };
+      for (const name of ["Erling Haaland", "Martin Odegaard"]) {
+        expect(scoreKnockoutPredictionForFixture(
+          { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, goalScorer: name },
+          { fixtureId: fixture.id, homeGoals: 0, awayGoals: 1, scorerNames: [name] }, fixture,
+        ).scorerPoints).toBe(1);
+      }
+    }
+  });
+
+  it("scores the match independently when its winner does not qualify on aggregate", () => {
+    const result = { fixtureId: vuelta.id, homeGoals: 1, awayGoals: 0, qualifiedTeam: "away" as const, scorerNames: ["Vegetti"] };
+    const prediction = { fixtureId: vuelta.id, homeGoals: 1, awayGoals: 0, qualifiedTeam: "away" as const, goalScorer: "Vegetti" };
+    const submission = { ...submissionFromPayload(), knockoutPredictions: [prediction] };
+    expect(scoreKnockoutPredictionForFixture(prediction, result, vuelta, { underdogBonus: 2 })).toMatchObject({ basePoints: 3, qualifierPoints: 1, scorerPoints: 1, underdogPoints: 2, totalPoints: 7 });
+    const row = scoreSubmission(submission, { ...emptyResults, knockoutFixtures: [vuelta], knockoutResults: [result] }, [submission]);
+    expect(row.knockoutPoints).toBe(7);
+    expect(row.pointAudit.reduce((total, item) => total + item.points, 0)).toBe(row.totalPoints);
+    expect(getKnockoutQualifierVoteCounts(vuelta, [submission])).toEqual({ home: 0, away: 1 });
+    expect(scoreKnockoutPredictionForFixture({ ...prediction, qualifiedTeam: "home" }, result, vuelta, { underdogBonus: 2 })).toMatchObject({ basePoints: 3, qualifierPoints: 0, underdogPoints: 0, totalPoints: 4 });
+    expect(scoreKnockoutPredictionForFixture({ ...prediction, homeGoals: 0, awayGoals: 3 }, result, vuelta, { underdogBonus: 2 })).toMatchObject({ basePoints: 0, qualifierPoints: 1, underdogPoints: 2 });
+  });
+
+  it("keeps exact-draw match points with the wrong qualifier and scores draws without exact scores", () => {
+    const result = { fixtureId: vuelta.id, homeGoals: 1, awayGoals: 1, qualifiedTeam: "away" as const };
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: vuelta.id, homeGoals: 1, awayGoals: 1, qualifiedTeam: "home" }, result, vuelta)).toMatchObject({ basePoints: 3, qualifierPoints: 0, totalPoints: 3 });
+    expect(scoreKnockoutPredictionForFixture({ fixtureId: vuelta.id, homeGoals: 2, awayGoals: 2, qualifiedTeam: "away" }, result, vuelta)).toMatchObject({ basePoints: 1, qualifierPoints: 1, totalPoints: 2 });
+  });
+
+  it("awards minority +2 only to correct qualifiers with 1-7 votes after the return result", () => {
+    const prediction = { fixtureId: vuelta.id, homeGoals: 0, awayGoals: 1, qualifiedTeam: "away" as const };
+    const result = { ...prediction, homeGoals: 1, awayGoals: 0 };
+    const voters = Array.from({ length: 8 }, (_, i) => ({ ...submissionFromPayload(`Voter ${i}`), knockoutPredictions: [prediction] }));
+    expect(getKnockoutUnderdogBonus(prediction, result, vuelta, voters.slice(0, 7))).toBe(2);
+    expect(getKnockoutUnderdogBonus(prediction, result, vuelta, voters)).toBe(0);
+    expect(getKnockoutUnderdogBonus(prediction, undefined, vuelta, voters)).toBe(0);
+    expect(getKnockoutUnderdogBonus({ ...prediction, qualifiedTeam: "home" }, result, vuelta, voters)).toBe(0);
+    expect(getKnockoutUnderdogBonus({ ...prediction, fixtureId: ida.id }, { ...result, fixtureId: ida.id }, ida, voters)).toBe(0);
+    expect(scoreKnockoutPredictionForFixture(prediction, undefined, vuelta, { underdogBonus: 2 }).totalPoints).toBe(0);
   });
 });

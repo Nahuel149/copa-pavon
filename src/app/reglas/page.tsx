@@ -1,55 +1,55 @@
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, Brackets, CheckCircle2, ClipboardList, HelpCircle, RefreshCw, ShieldCheck, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, Brackets, CheckCircle2, ClipboardList, RefreshCw, ShieldCheck } from "lucide-react";
 
 const ruleSteps = [
   {
-    title: "1. Anotate con Nombre y PIN",
-    copy: "Elegí tu nombre y un PIN numérico desde la Tabla o Editar Prode. Con ellos vas a poder ingresar y modificar tus jugadas.",
+    title: "1. Entrá con tu nombre y PIN",
+    copy: "Usá el mismo nombre y PIN para abrir tu prode y modificar los partidos que todavía estén habilitados.",
     icon: ClipboardList,
   },
   {
-    title: "2. Cargá tus pronósticos",
-    copy: "Completá los marcadores exactos, el clasificado (si el cruce tiene definición) y el goleador del partido.",
+    title: "2. Pronosticá cada partido",
+    copy: "Cargá el marcador y un goleador. En las vueltas y los partidos únicos, elegí además el equipo que clasifica.",
     icon: ShieldCheck,
   },
   {
-    title: "3. Seguí la tabla en vivo",
-    copy: "A medida que se carguen los resultados oficiales, la tabla recalcula las posiciones y puntos acumulados al instante.",
+    title: "3. Seguí la tabla",
+    copy: "Cuando se cargan los resultados oficiales, la tabla recalcula automáticamente los puntos acumulados.",
     icon: RefreshCw,
   },
 ];
 
 const scoringRules = [
   {
-    label: "Resultado exacto",
-    points: "3 pts / 5 pts",
-    copy: "Si acertás el marcador exacto en los 90' o 120'. Vale 3 pts en Semifinales y 5 pts en la Final.",
+    label: "Marcador o resultado",
+    points: "3 o 1 · 5 o 3",
+    copy: "En semifinales, el marcador exacto vale 3. Si no acertás el exacto pero sí el triunfo local, el empate o el triunfo visitante, sumás 1. En la final, valen 5 y 3. Son excluyentes: el exacto no suma también el punto por resultado.",
   },
   {
-    label: "Ganador / Empate (1X2)",
-    points: "1 pt / 3 pts",
-    copy: "Si no pegás el exacto pero acertás quién gana o si termina en empate. Vale 1 pt en Semifinales y 3 pts en la Final.",
+    label: "Equipo que clasifica",
+    points: "+1",
+    copy: "Se suma después de terminar la vuelta o el partido único y cargar el clasificado oficial. Si acertás quién avanza o sale campeón, ganás +1. Se elige por separado del marcador del partido.",
   },
   {
-    label: "Clasificado / Penales",
-    points: "+1 pt",
-    copy: "En partidos que definen cruce (Vuelta o Partido Único), si acertás quién avanza a la siguiente ronda o es campeón.",
+    label: "Goleador",
+    points: "+1",
+    copy: "Sumás si el jugador nombrado convierte durante el partido. Los goles de la tanda de penales no cuentan. Podés elegir “sin goleador” para un 0-0, pero no da bonus.",
   },
   {
-    label: "Goleador acertado",
-    points: "1 pt / 2 pts",
-    copy: "Si el jugador que elegiste convierte al menos un gol en el partido. Vale 1 pt en Semifinales y 2 pts en la Final.",
+    label: "Minoría",
+    points: "+2",
+    copy: "Solo en el partido que define la serie: si acertás el clasificado y lo eligieron 7 participantes o menos. En ida y vuelta, los votos se cuentan al cierre del segundo partido.",
   },
 ];
 
 function ArgentinaFlagBadge() {
   return (
     <span title="Argentina" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "26px", height: "17px", borderRadius: "3px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.25)", background: "#75AADB", flexShrink: 0 }}>
-      <svg width="26" height="17" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="30" height="20" fill="#75AADB"/>
-        <rect y="6.66" width="30" height="6.66" fill="#FFFFFF"/>
-        <circle cx="15" cy="10" r="2.3" fill="#F6B40E"/>
-        <path d="M15 6.8L15.4 8.5L16.8 7.7L15.9 9.1L17.7 10L15.9 10.9L16.8 12.3L15.4 11.5L15 13.2L14.6 11.5L13.2 12.3L14.1 10.9L12.3 10L14.1 9.1L13.2 7.7L14.6 8.5Z" fill="#855B14"/>
+      <svg width="26" height="17" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="30" height="20" fill="#75AADB" />
+        <rect y="6.66" width="30" height="6.66" fill="#FFFFFF" />
+        <circle cx="15" cy="10" r="2.3" fill="#F6B40E" />
+        <path d="M15 6.8L15.4 8.5L16.8 7.7L15.9 9.1L17.7 10L15.9 10.9L16.8 12.3L15.4 11.5L15 13.2L14.6 11.5L13.2 12.3L14.1 10.9L12.3 10L14.1 9.1L13.2 7.7L14.6 8.5Z" fill="#855B14" />
       </svg>
     </span>
   );
@@ -58,21 +58,19 @@ function ArgentinaFlagBadge() {
 export default function ReglasPage() {
   return (
     <div className="pageStack">
-      {/* 1. HERO */}
       <section className="heroBand tableHero standingsHero">
         <div>
           <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
-            REGLAMENTO OFICIAL 🏆
+            Reglamento oficial
           </p>
           <h1>Copa Se mató Pavón</h1>
           <p className="heroCopy">
-            Guía completa sobre el sistema de puntuación independiente, los mano a mano y el formato de las 4 competiciones estelares.
+            Cada partido se pronostica y puntúa de manera individual. En las series de ida y vuelta, el marcador de cada partido y el equipo que clasifica son aciertos distintos.
           </p>
         </div>
       </section>
 
-      {/* 2. PASO A PASO */}
-      <section className="rulesFlow" aria-label="Qué tiene que hacer cada participante">
+      <section className="rulesFlow" aria-label="Cómo participar">
         {ruleSteps.map((step) => {
           const Icon = step.icon;
           return (
@@ -85,13 +83,10 @@ export default function ReglasPage() {
         })}
       </section>
 
-      {/* 3. SISTEMA DE PUNTOS SEPARADOS */}
       <section className="sectionHeader">
         <p className="eyebrow">Puntaje</p>
-        <h2>Cómo suma cada acierto (Puntos Separados).</h2>
-        <p>
-          Los puntos se cuentan de manera individual por cada ítem acertado en el partido:
-        </p>
+        <h2>Qué suma en cada partido</h2>
+        <p>El marcador exacto y el resultado correcto son alternativas. Los demás aciertos se agregan cuando corresponden.</p>
       </section>
 
       <section className="scoreRuleGrid" aria-label="Sistema de puntos" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
@@ -104,130 +99,88 @@ export default function ReglasPage() {
         ))}
       </section>
 
-      {/* 4. EJEMPLO PRÁCTICO */}
       <section className="validationPanel" style={{ background: "var(--panel, #fff)", border: "2px solid rgba(5,5,5,0.15)", borderRadius: "16px", padding: "24px" }}>
-        <p className="eyebrow" style={{ background: "#38bdf8", color: "#0369a1", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "4px 10px", borderRadius: "10px", fontSize: "0.8rem", marginBottom: "10px" }}>
-          💡 EJEMPLO PRÁCTICO
-        </p>
-        <h2 style={{ fontSize: "1.35rem", fontWeight: 900, marginBottom: "8px" }}>
-          ¿Cómo se acumulan los puntos en una Semifinal?
-        </h2>
+        <p className="eyebrow">Ejemplo</p>
+        <h2 style={{ fontSize: "1.35rem", fontWeight: 900, marginBottom: "8px" }}>Máximo de una semifinal definitoria: 7 puntos</h2>
         <p style={{ fontSize: "1rem", lineHeight: "1.6", marginBottom: "12px" }}>
-          Supongamos que en un partido decisivo pronosticás <strong>1 - 1</strong> con clasificación por penales para el <strong>Equipo A</strong> y elegís de goleador a <strong>Messi</strong>:
+          Si acertás el marcador exacto, el equipo que clasifica, un goleador y además se activa el bonus de minoría:
         </p>
         <div style={{ display: "grid", gap: "10px", background: "rgba(0,0,0,0.03)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.08)", fontSize: "0.95rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <CheckCircle2 size={18} color="#16a34a" />
-            <span>Si el partido termina <strong>2 - 2</strong>: Sumás <strong>1 punto</strong> por acertar que empataron (aunque no diste el resultado exacto).</span>
+            <CheckCircle2 size={18} color="#16a34a" aria-hidden="true" />
+            <span>Marcador exacto: <strong>3 puntos</strong>.</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <CheckCircle2 size={18} color="#16a34a" />
-            <span>Si en los penales clasifica el <strong>Equipo A</strong>: Sumás <strong>+1 punto extra</strong> por acertar el ganador de la serie.</span>
+            <CheckCircle2 size={18} color="#16a34a" aria-hidden="true" />
+            <span>Clasificado y goleador: <strong>1 + 1 puntos</strong>.</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <CheckCircle2 size={18} color="#16a34a" />
-            <span>Si además convirtió <strong>Messi</strong>: Sumás <strong>+1 punto extra</strong> por el goleador.</span>
+            <CheckCircle2 size={18} color="#16a34a" aria-hidden="true" />
+            <span>Minoría de 7 votos o menos al cierre: <strong>2 puntos</strong>.</span>
           </div>
           <div style={{ marginTop: "6px", paddingTop: "8px", borderTop: "1px solid rgba(0,0,0,0.1)", fontWeight: 800 }}>
-            🔥 Total acumulado en esa jugada: 1 + 1 + 1 = 3 puntos.
+            Total: 3 + 1 + 1 + 2 = 7 puntos.
           </div>
         </div>
       </section>
 
-      {/* 5. PUNTOS POR ETAPA: SEMIS VS FINAL */}
-      <section className="sectionHeader">
-        <p className="eyebrow">Mano a mano</p>
-        <h2>Escala de puntos por Etapa.</h2>
-        <p>En la gran Final todos los aciertos tienen mayor valor para definir al campeón del prode.</p>
-      </section>
-
-      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Puntos por etapa">
+      <section className="scoreRuleGrid knockoutScoreGrid" aria-label="Máximos por tipo de partido">
         <article>
-          <span>Semifinales</span>
-          <strong>3 / 1 / 1</strong>
-          <p className="scoreRuleLegend">Exacto (3 pts) · Ganador/Empate (1 pt) · Goleador (1 pt).</p>
-          <p>En partidos con definición por penales, el clasificado suma <strong>+1 pt extra</strong>.</p>
+          <span>Semifinal · Ida</span>
+          <strong>Máximo 4</strong>
+          <p className="scoreRuleLegend">Exacto 3 + goleador 1. La ida no pide clasificado ni habilita bonus de minoría, incluso si termina empatada.</p>
+        </article>
+        <article>
+          <span>Semifinal · Definitorio</span>
+          <strong>Máximo 7</strong>
+          <p className="scoreRuleLegend">Exacto 3 + clasificado 1 + goleador 1 + minoría 2.</p>
         </article>
         <article>
           <span>Final</span>
-          <strong>5 / 3 / 2</strong>
-          <p className="scoreRuleLegend">Exacto (5 pts) · Ganador/Campeón (3 pts) · Goleador (2 pts).</p>
-          <p>Puntaje máximo de hasta 10 puntos en la final.</p>
+          <strong>Máximo 9</strong>
+          <p className="scoreRuleLegend">Exacto 5 + campeón 1 + goleador 1 + minoría 2. Si no acertás el exacto, el resultado correcto vale 3.</p>
         </article>
       </section>
 
-      {/* 6. FORMATO DE LAS 4 COMPETENCIAS */}
       <section className="sectionHeader">
-        <p className="eyebrow">Competencias</p>
-        <h2>Formato de las 4 Copas Estelares.</h2>
-        <p>La Copa Se mató Pavón unifica las etapas decisivas de cuatro torneos clave:</p>
+        <p className="eyebrow">Definición</p>
+        <h2>Marcador y clasificación se pronostican por separado</h2>
+        <p>
+          En una vuelta, elegís quién clasifica aunque tu marcador no sea empate. La clasificación puede definirse por el resultado global, tiempo extra o penales. En un partido único de semifinal o final también elegís siempre al clasificado o campeón.
+        </p>
+        <p>
+          Ejemplo: Boca gana la ida 2-0 y Vasco gana la vuelta 1-0. Vasco ganó ese partido, pero Boca clasificó 2-1 en el resultado global. Si pronosticaste 1-0, sumás los 3 puntos del exacto aunque hayas elegido mal al clasificado; el clasificado se evalúa aparte y vale +1.
+        </p>
+        <p>
+          También podés errar el marcador y sumar por la serie: acertar que Boca clasifica vale +1 y, si lo eligieron 7 participantes o menos, agrega +2 de minoría.
+        </p>
       </section>
 
       <div className="reportCardsGrid">
         <article className="reportCard proximamenteCard">
           <header>
-            <span style={{ fontSize: "1.6rem" }}>🌎</span>
-            <h3>COPA SUDAMERICANA</h3>
-            <span className="reportPts">Ida y Vuelta</span>
+            <Brackets size={24} aria-hidden="true" />
+            <h3>Sudamericana y Libertadores</h3>
+            <span className="reportPts">Ida y vuelta</span>
           </header>
-          <p>
-            <strong>Semifinales:</strong> 2 partidos (Ida y Vuelta). El partido de Ida puede terminar en empate sin definición. La Vuelta define al clasificado (tiempo extra / penales).
-          </p>
-          <p style={{ marginTop: "6px" }}>
-            <strong>Final:</strong> Partido Único en sede neutral con definición de campeón.
-          </p>
+          <p>Las semifinales tienen dos partidos. La ida puntúa solo marcador/resultado y goleador; la vuelta agrega clasificado y posible bonus de minoría. La final es un partido único definitorio.</p>
         </article>
-
-        <article className="reportCard proximamenteCard">
-          <header>
-            <span style={{ fontSize: "1.6rem" }}>🏆</span>
-            <h3>COPA LIBERTADORES</h3>
-            <span className="reportPts">Ida y Vuelta</span>
-          </header>
-          <p>
-            <strong>Semifinales:</strong> 2 partidos (Ida y Vuelta). La Ida no tiene penales; la Vuelta define quién pasa a la final.
-          </p>
-          <p style={{ marginTop: "6px" }}>
-            <strong>Final:</strong> Partido Único por la gloria eterna.
-          </p>
-        </article>
-
         <article className="reportCard proximamenteCard">
           <header>
             <ArgentinaFlagBadge />
-            <h3>COPA ARGENTINA</h3>
-            <span className="reportPts">Partido Único</span>
+            <h3>Copa Argentina y Copa de la Liga</h3>
+            <span className="reportPts">Partido único</span>
           </header>
-          <p>
-            <strong>Semifinales:</strong> 1 solo partido mano a mano. Si termina empatado en los 90', va directamente a definición por penales.
-          </p>
-          <p style={{ marginTop: "6px" }}>
-            <strong>Final:</strong> Partido Único con definición por penales en caso de empate.
-          </p>
-        </article>
-
-        <article className="reportCard proximamenteCard">
-          <header>
-            <span style={{ fontSize: "1.6rem" }}>⚽</span>
-            <h3>COPA DE LA LIGA</h3>
-            <span className="reportPts">Partido Único</span>
-          </header>
-          <p>
-            <strong>Semifinales:</strong> 1 solo partido eliminatorio en cancha neutral. En caso de igualdad, se define por penales.
-          </p>
-          <p style={{ marginTop: "6px" }}>
-            <strong>Final:</strong> Partido Único decisivo por el título local.
-          </p>
+          <p>Semifinales y final se definen en un solo partido. Siempre se elige quién clasifica o sale campeón, aunque el marcador pronosticado tenga un ganador.</p>
         </article>
       </div>
 
-      {/* 7. CIERRE & LLAMADO A LA ACCIÓN */}
       <section className="rulesCallout">
         <Brackets size={28} aria-hidden="true" />
         <div>
-          <h2>Cierre de partidos</h2>
+          <h2>Cierre de cada partido</h2>
           <p>
-            Cada cruce se puede cargar o editar hasta <strong>10 minutos antes</strong> de su horario oficial de inicio. Pasado ese límite, el partido queda bloqueado y se hace público para todos.
+            Cada pronóstico se puede cargar o editar hasta <strong>10 minutos antes de su propio horario de inicio</strong>. En partidos únicos, la minoría se mide al cierre de ese partido; en series, al cierre de la vuelta.
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>

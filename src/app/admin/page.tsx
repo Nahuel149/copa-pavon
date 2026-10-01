@@ -6,6 +6,7 @@ import { TeamBadge } from "@/app/components/TeamBadge";
 import { argentinaInputToIso, formatArgentinaDate, formatArgentinaDateTime, isoToArgentinaInput } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { getKnockoutKickoffAt } from "@/lib/knockout-deadlines";
+import { isSecondLeg, needsQualifierSelection } from "@/lib/knockout-format";
 import {
   groups,
   knockoutStageLabels,
@@ -140,7 +141,9 @@ function buildResultsPayload(
         fixtureId: fixture.id,
         homeGoals: Number(value.homeGoals),
         awayGoals: Number(value.awayGoals),
-        ...(value.homeGoals === value.awayGoals && value.qualifiedTeam ? { qualifiedTeam: value.qualifiedTeam } : {}),
+        ...(needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) && value.qualifiedTeam
+          ? { qualifiedTeam: value.qualifiedTeam }
+          : {}),
         scorerNames: (value.scorerNames ?? "")
           .split(",")
           .map((scorer) => scorer.trim())
@@ -215,8 +218,16 @@ function hasCompleteKnockoutProde(submission: Submission, fixtures: KnockoutFixt
     const prediction = predictionByFixture.get(fixture.id);
     if (!prediction) return false;
     if (!Number.isFinite(prediction.homeGoals) || !Number.isFinite(prediction.awayGoals)) return false;
-    if (prediction.homeGoals === prediction.awayGoals && !prediction.qualifiedTeam) return false;
+    if (needsQualifierSelection(fixture, prediction.homeGoals, prediction.awayGoals) && !prediction.qualifiedTeam) return false;
     return true;
+  });
+}
+
+function findKnockoutResultMissingQualifier(fixtures: KnockoutFixture[], draft: ResultDraft) {
+  return fixtures.find((fixture) => {
+    const value = draft[fixture.id];
+    if (!value || value.homeGoals === "" || value.awayGoals === "") return false;
+    return needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) && !value.qualifiedTeam;
   });
 }
 
@@ -420,6 +431,12 @@ export default function AdminPage() {
   }
 
   async function saveResults() {
+    const missingQualifier = findKnockoutResultMissingQualifier(knockoutFixtures, knockoutDraft);
+    if (missingQualifier) {
+      setError(`Elegí el equipo que clasificó oficialmente en ${missingQualifier.home} vs. ${missingQualifier.away} antes de guardar.`);
+      return;
+    }
+
     setStatus("saving");
     setError("");
     const response = await fetch("/api/results", {
@@ -1104,7 +1121,7 @@ export default function AdminPage() {
             <section className="sectionHeader">
               <p className="eyebrow">Resultados</p>
               <h2>Marcadores reales de eliminatorias.</h2>
-              <p>Carga estos resultados manualmente si la API falla. Si el partido termina empatado tras 120 minutos, elegi el clasificado por penales.</p>
+              <p>Cargá estos resultados manualmente si la API falla. En cada partido definitorio, elegí también el equipo que clasifica, sin importar el marcador.</p>
             </section>
 
             <section className="resultGrid" aria-label="Resultados eliminatorias">
@@ -1131,14 +1148,15 @@ export default function AdminPage() {
                         <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
                       </label>
                     </div>
-                    {value.homeGoals !== "" && value.homeGoals === value.awayGoals ? (
+                    {needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) ? (
                       <label className="adminTextInput">
-                        <span>Clasificado por penales</span>
+                        <span>{isSecondLeg(fixture) ? "Equipo que clasifica (serie completa)" : fixture.stage === "FINAL" ? "Equipo campeón" : "Equipo que clasifica"}</span>
                         <select
+                          required
                           value={value.qualifiedTeam ?? ""}
                           onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
                         >
-                          <option value="">Elegir</option>
+                          <option value="">Elegir (obligatorio)</option>
                           <option value="home">{fixture.home}</option>
                           <option value="away">{fixture.away}</option>
                         </select>
@@ -1382,7 +1400,9 @@ export default function AdminPage() {
                     <div className="knockoutReviewRows">
                       {submissions.map((submission) => {
                         const prediction = (submission.knockoutPredictions ?? []).find((item) => item.fixtureId === fixture.id);
-                        const completePrediction = prediction ? prediction.homeGoals !== prediction.awayGoals || Boolean(prediction.qualifiedTeam) : false;
+                        const completePrediction = prediction
+                          ? !needsQualifierSelection(fixture, prediction.homeGoals, prediction.awayGoals) || Boolean(prediction.qualifiedTeam)
+                          : false;
                         return (
                           <div className={completePrediction ? "knockoutReviewRow ok" : "knockoutReviewRow missing"} key={`${fixture.id}-${submission.id}`}>
                             <span>{submission.name}</span>
