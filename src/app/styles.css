@@ -8116,7 +8116,7 @@ canvas {
 
 .homeFixturesPanel { display: grid; gap: 20px; }
 .homeCompetitionGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.homeCompetition { border: 2px solid currentColor; padding: 20px; }
+.homeCompetition { border: 2px solid currentColor; padding: 20px; background: var(--panel); }
 .homeCompetition header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
 .homeCompetition h2 { font-size: 1.2rem; margin: 0; }
 .homeFixture { padding: 16px 0; border-top: 1px solid currentColor; }
@@ -8126,3 +8126,5 @@ canvas {
 .homeStandingsTable th, .homeStandingsTable td { text-align: left; padding: 16px 12px; border-bottom: 1px solid currentColor; }
 .homeStandingsTable th[scope="row"] { min-width: 170px; white-space: normal; }
 @media (max-width: 800px) { .homeCompetitionGrid { grid-template-columns: 1fr; } .homeStandingsTable { min-width: 620px; } }
+
+.homeFixturesPanel .tableNote > div, section[aria-labelledby="home-standings-title"] .tableNote > div { display: grid; gap: 6px; }

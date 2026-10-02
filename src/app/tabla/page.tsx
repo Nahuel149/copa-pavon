@@ -5,7 +5,7 @@ import Link from "next/link";
 import { TeamBadge } from "@/app/components/TeamBadge";
 import { type KnockoutFixture } from "@/lib/matches";
 import { ChevronDown, Download, Loader2, MessageSquare, RefreshCw, Send, Share2, SmilePlus, Trophy } from "lucide-react";
-import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
+import { formatArgentinaDateTime, formatArgentinaTime, isoToArgentinaInput } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { tablaReactionEmojis, type TablaCommentReactions, type TablaReactionEmoji } from "@/lib/comment-reactions";
 import { type ClanId, type StandingRow } from "@/lib/prode";
@@ -944,7 +944,7 @@ export default function TablaPage() {
                 <div className="homeFixture" key={fixture.id}>
                   <span className="eyebrow">{fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : "Semifinal"}</span>
                   <div className="homeFixtureTeams"><TeamBadge team={fixture.home} /><span>vs.</span><TeamBadge team={fixture.away} /></div>
-                  <p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar · carga pendiente" : `${formatArgentinaDateTime(fixture.kickoffAt)} (ARG)`}</p>
+                  <p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar · carga pendiente" : `${isoToArgentinaInput(fixture.kickoffAt).slice(0, 10).split("-").reverse().join("/")} · ${isoToArgentinaInput(fixture.kickoffAt).slice(11)} (ARG)`}</p>
                 </div>
               ))}
               {homeFixtures.length === 0 ? <p>{status === "loading" ? "Cargando cruces…" : "Sin cruces disponibles."}</p> : null}
