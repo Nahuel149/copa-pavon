@@ -771,6 +771,10 @@ export default function EliminatoriasPage() {
         </>
       )}
 
+      <div className="prodeFooterImage">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/pavon-story.png" alt="Collage de Cristian Pavón: para todos los que se preocuparon, estoy mejor que nunca." width={941} height={1672} loading="lazy" />
+      </div>
     </form>
   );
 }
