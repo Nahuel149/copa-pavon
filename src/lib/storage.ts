@@ -196,6 +196,19 @@ export async function writeSubmissionStore(store: SubmissionStore) {
   return { submissions };
 }
 
+export async function deleteSubmissionById(id: string) {
+  const collections = await getMongoCollections();
+  if (collections) {
+    const deleted = await collections.submissions.findOneAndDelete({ id });
+    return deleted ? cleanSubmission(deleted) : null;
+  }
+  const store = await readSubmissionStore();
+  const submission = store.submissions.find((item) => item.id === id);
+  if (!submission) return null;
+  await writeSubmissionStore({ submissions: store.submissions.filter((item) => item.id !== id) });
+  return submission;
+}
+
 export async function appendSubmission(submission: Submission) {
   const collections = await getMongoCollections();
   if (collections) {

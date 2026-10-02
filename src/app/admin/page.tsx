@@ -321,6 +321,8 @@ export default function AdminPage() {
   const [resetParticipantPin, setResetParticipantPin] = useState("");
   const [resetPinStatus, setResetPinStatus] = useState<"idle" | "saving">("idle");
   const [resetPinMessage, setResetPinMessage] = useState("");
+  const [deletingParticipantId, setDeletingParticipantId] = useState<string | null>(null);
+  const [deleteParticipantMessage, setDeleteParticipantMessage] = useState("");
   const [recopaAdminData, setRecopaAdminData] = useState<{
     submissions?: Array<{ participant: string; predictions: Array<{ matchId: string; homeGoals: number; awayGoals: number; goalScorer?: string }> }>;
     results?: Array<{ matchId: string; homeGoals: number; awayGoals: number; scorerNames?: string[] }>;
@@ -556,6 +558,30 @@ export default function AdminPage() {
       setError(restoreError instanceof Error ? restoreError.message : "No se pudo restaurar el backup.");
     } finally {
       setRestoreStatus("idle");
+    }
+  }
+
+  async function deleteParticipant(id: string, name: string) {
+    if (deletingParticipantId || !window.confirm(`¿Eliminar a "${name}"? Se borrarán su registro y todos sus pronósticos. Esta acción no se puede deshacer desde el panel.`)) return;
+    setDeletingParticipantId(id);
+    setDeleteParticipantMessage("");
+    try {
+      const response = await fetch("/api/admin-delete-participant", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "x-prode-admin-pin": pin },
+        body: JSON.stringify({ submissionId: id }),
+      });
+      const body = await readJsonResponse<{ ok?: boolean; error?: string }>(response);
+      if (!response.ok || !body.ok) throw new Error(body.error ?? "No se pudo eliminar el participante.");
+      setSubmissions((current) => current.filter((submission) => submission.id !== id));
+      if (expandedPointsId === id) setExpandedPointsId(null);
+      const removed = submissions.find((submission) => submission.id === id);
+      if (removed?.normalizedName === resetPinSubmission) setResetPinSubmission("");
+      setDeleteParticipantMessage(`Se eliminó a ${name} y sus pronósticos.`);
+    } catch (deleteError) {
+      setDeleteParticipantMessage(deleteError instanceof Error ? deleteError.message : "No se pudo eliminar el participante.");
+    } finally {
+      setDeletingParticipantId(null);
     }
   }
 
@@ -876,6 +902,7 @@ export default function AdminPage() {
 
       <details className="adminFold" open>
         <summary>Tabla y puntos</summary>
+        {deleteParticipantMessage ? <p role="status">{deleteParticipantMessage}</p> : null}
       <section className="tableShell">
         <table className="standingsTable adminStandingsTable">
           <colgroup>
@@ -915,9 +942,14 @@ export default function AdminPage() {
                 <tr>
                   <td data-label="Posicion">{index + 1}</td>
                   <td className="playerCell" data-label="Participante" title={row.name}>
+                    <div className="adminParticipantActions">
                     <button className="tableButton inlineButton" onClick={() => setExpandedPointsId(expandedPointsId === row.submissionId ? null : row.submissionId)} type="button">
                       {shortParticipantName(row.name)}
                     </button>
+                    <button className="adminDeleteParticipant" type="button" aria-label={`Eliminar a ${row.name}`} title={`Eliminar a ${row.name}`} disabled={deletingParticipantId !== null} onClick={() => void deleteParticipant(row.submissionId, row.name)}>
+                      {deletingParticipantId === row.submissionId ? <Loader2 size={17} className="spin" aria-hidden="true" /> : <Trash2 size={17} aria-hidden="true" />}
+                    </button>
+                    </div>
                   </td>
                   <td className="pointsCell" data-label="Total"><strong>{row.totalPoints}</strong></td>
                   <td data-label="Pts partidos">{row.matchPoints}</td>

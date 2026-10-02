@@ -4134,6 +4134,11 @@ tbody tr.relegationRow:hover {
   line-height: 1;
 }
 
+.adminParticipantActions { display: flex; align-items: center; gap: 8px; }
+.adminDeleteParticipant { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid currentColor; background: transparent; color: var(--accent, #ff7043); cursor: pointer; }
+.adminDeleteParticipant:hover { background: rgba(255, 112, 67, .15); }
+.adminDeleteParticipant:disabled { opacity: .5; cursor: wait; }
+
 .standingsTable .playerCell {
   min-width: 180px;
 }
