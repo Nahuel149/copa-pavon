@@ -20,7 +20,11 @@ const champions = [
 
 const totalTrophies = champions.reduce((total, c) => total + c.trophies.length, 0);
 
-const relegated = ["Fer", "Maxi", "Nahuel"];
+const relegationHistory = [
+  { title: "Copa Kahl 2026", players: ["Fer", "Maxi", "Nahuel"] },
+  { title: "Copa Chiqui Bauch 2026", players: ["Javi", "Buda (Matías Nicolas)"] },
+  { title: "Copa Fiss 2025", players: ["Miguel", "Gonza"] },
+];
 const thirdDivision = [{ name: "Ale con Pelo", note: "Suspendido para jugar las próximas 3 copas" }];
 
 export default function CampeonesPage() {
@@ -31,11 +35,10 @@ export default function CampeonesPage() {
   const hasGroupsColumn = currentEdition.table?.some((r) => r.groups !== undefined && r.groups !== "");
 
   return (
-    <div className="pageStack">
+    <div className="pageStack championsPage">
       {/* Hero Header */}
       <section className="heroBand championsHero">
         <div>
-          <p className="eyebrow">Historial & Museo Oficial</p>
           <h1>Campeones, Historia y Descendidos.</h1>
           <p className="heroCopy">
             La vitrina oficial de la Copa Kahl: gloria arriba con los campeones, las tablas históricas completas y la B Nacional abajo.
@@ -51,7 +54,6 @@ export default function CampeonesPage() {
       {/* Hall of Fame / Vitrina de Campeones */}
       <section>
         <div className="panelHeader" style={{ marginBottom: "16px" }}>
-          <p className="eyebrow">Galería de Gloria</p>
           <h2>Vitrina Oficial de Campeones</h2>
         </div>
 
@@ -62,7 +64,6 @@ export default function CampeonesPage() {
                 <img src={champion.image} alt={`Foto de ${champion.name}, campeón`} />
               </figure>
               <div>
-                <p className="eyebrow">Campeón consagrado</p>
                 <h2>{champion.name}</h2>
                 <div className="championTrophies">
                   {champion.trophies.map((trophy) => (
@@ -81,13 +82,13 @@ export default function CampeonesPage() {
       {/* Main View Mode Selector for Historical Tables */}
       <section style={{ marginTop: "16px" }}>
         <div className="panelHeader" style={{ marginBottom: "16px" }}>
-          <p className="eyebrow">Archivo de Torneos</p>
           <h2>Tablas Históricas por Edición</h2>
         </div>
 
         <nav className="historyViewNav" aria-label="Modo de vista histórica">
           <button
             className={viewMode === "ediciones" ? "modeTab active" : "modeTab"}
+            aria-pressed={viewMode === "ediciones"}
             onClick={() => setViewMode("ediciones")}
             type="button"
           >
@@ -97,6 +98,7 @@ export default function CampeonesPage() {
 
           <button
             className={viewMode === "palmares" ? "modeTab active" : "modeTab"}
+            aria-pressed={viewMode === "palmares"}
             onClick={() => setViewMode("palmares")}
             type="button"
           >
@@ -114,6 +116,7 @@ export default function CampeonesPage() {
                   key={edition.id}
                   type="button"
                   className={`editionTabItem ${selectedEditionId === edition.id ? "active" : ""}`}
+                  aria-pressed={selectedEditionId === edition.id}
                   onClick={() => setSelectedEditionId(edition.id)}
                 >
                   <div className="tabHeaderRow">
@@ -157,7 +160,6 @@ export default function CampeonesPage() {
             {/* Historical Standings Table (if available) */}
             <section className="historyTablePanel">
               <div className="panelHeader">
-                <p className="eyebrow">Posiciones Oficiales</p>
                 <h3>{currentEdition.title} ({currentEdition.year})</h3>
               </div>
               {currentEdition.table && currentEdition.table.length > 0 ? (
@@ -636,7 +638,6 @@ export default function CampeonesPage() {
         ) : (
           <section className="palmaresPanel" style={{ marginTop: "16px" }}>
             <div className="panelHeader">
-              <p className="eyebrow">Medallero Histórico Acumulado</p>
               <h2>Palmarés Completo de Campeones y Podios</h2>
               <p>Clasificación histórica acumulada según medallas de Oro (Campeón), Plata (Subcampeón) y Bronce (3er Puesto) obtenidas en todas las copas.</p>
             </div>
@@ -699,48 +700,23 @@ export default function CampeonesPage() {
       <section style={{ marginTop: "24px", display: "grid", gap: "16px" }}>
         <section className="relegationPanel" aria-label="Descendidos">
           <div>
-            <p className="eyebrow">Historial de Perdedores</p>
             <h2>B Nacional</h2>
             <p>Los participantes que perdieron la categoría en las distintas ediciones.</p>
           </div>
-          <div className="relegatedList" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <span style={{ fontWeight: 900, color: "#ffffff", background: "#b91c1c", borderColor: "#7f1d1d", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Kahl 2026:</span>
-              {["Fer", "Maxi", "Nahuel"].map((name) => (
-                <span key={name}>
-                  <ShieldAlert size={18} aria-hidden="true" />
-                  {name}
-                </span>
-              ))}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
-              <span style={{ fontWeight: 900, color: "#ffffff", background: "#b91c1c", borderColor: "#7f1d1d", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Chiqui Bauch 2026:</span>
-              {["Javi", "Buda (Matías Nicolas)"].map((name) => (
-                <span key={name}>
-                  <ShieldAlert size={18} aria-hidden="true" />
-                  {name}
-                </span>
-              ))}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
-              <span style={{ fontWeight: 900, color: "#ffffff", background: "#b91c1c", borderColor: "#7f1d1d", fontSize: "0.85rem", textTransform: "uppercase" }}>Copa Fiss 2025:</span>
-              {["Miguel", "Gonza"].map((name) => (
-                <span key={name}>
-                  <ShieldAlert size={18} aria-hidden="true" />
-                  {name}
-                </span>
-              ))}
-            </div>
+          <div className="relegationHistory">
+            {relegationHistory.map((edition) => <div className="relegationEdition" key={edition.title}>
+              <h3>{edition.title}</h3>
+              <ul>{edition.players.map((name) => <li key={name}><ShieldAlert size={17} aria-hidden="true" />{name}</li>)}</ul>
+            </div>)}
           </div>
         </section>
 
         <section className="relegationPanel thirdDivisionPanel" aria-label="C">
           <div>
-            <p className="eyebrow">Sanciones Administrativas</p>
             <h2>La C</h2>
             <p>Zona de castigo deportivo y administrativo.</p>
           </div>
-          <div className="relegatedList">
+          <div className="disciplinaryList">
             {thirdDivision.map((player) => (
               <span key={player.name}>
                 <ShieldAlert size={18} aria-hidden="true" />
