@@ -8144,3 +8144,9 @@ canvas {
 .publicPredictionTable th, .publicPredictionTable td { padding: 12px 8px; border-bottom: 1px solid currentColor; text-align: left; }
 .publicPredictionTable th[scope="row"] { min-width: 150px; }
 @media (max-width: 800px) { .publicPredictionsGrid { grid-template-columns: 1fr; } }
+
+.standingsHero,
+:root[data-theme="dark"] .standingsHero {
+  background: linear-gradient(90deg, rgba(5, 5, 5, .82), rgba(5, 5, 5, .3) 58%, rgba(5, 5, 5, .12)), url("/images/pavon-hero.png") center 46% / cover no-repeat;
+}
+
