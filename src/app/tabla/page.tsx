@@ -877,6 +877,8 @@ export default function TablaPage() {
             La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Anotate y cargá tus pronósticos para las semifinales.
           </p>
         </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="pavonHeroImage" src="/images/pavon-hero.png" alt="Cristian Pavón junto a la Copa Libertadores" width={1774} height={887} fetchPriority="high" />
       </section>
 
       <section className="registrationPanel" aria-labelledby="registration-title">

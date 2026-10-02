@@ -48,6 +48,8 @@ export default function PronosticosPage() {
           <h1>Copa Se mató Pavón</h1>
           <p className="heroCopy">Compará los marcadores, clasificados y goleadores de cada participante. Los pronósticos se hacen públicos cuando cierra la edición de cada partido, 10 minutos antes del inicio.</p>
         </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="pavonHeroImage" src="/images/pavon-hero.png" alt="Cristian Pavón junto a la Copa Libertadores" width={1774} height={887} fetchPriority="high" />
       </section>
       <section className="publicPredictionsPanel" aria-labelledby="predictions-title">
         <div className="tableNote">

@@ -8203,3 +8203,18 @@ canvas {
   .championsPage .editionMeta { min-width: 0; }
 }
 
+
+.standingsHero,
+:root[data-theme="dark"] .standingsHero {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 28px;
+  background: #101b2b;
+  padding: clamp(20px, 3vw, 44px);
+}
+.standingsHero h1 { font-size: clamp(2rem, 3.6vw, 4.2rem); }
+.standingsHero .pavonHeroImage { display: block; width: 100%; height: auto; object-fit: contain; }
+@media (max-width: 800px) {
+  .standingsHero, :root[data-theme="dark"] .standingsHero { grid-template-columns: 1fr; gap: 24px; }
+}
