@@ -8194,3 +8194,12 @@ canvas {
   .championsPage .recopaTable { min-width: 650px; }
   .championsPage .championsHero .scoreSeal { display: none; }
 }
+
+.championsPage .recopaTable th, .championsPage .recopaTable td { word-break: normal; overflow-wrap: normal; }
+.championsPage .recopaTable th { white-space: nowrap; }
+@media (max-width: 800px) {
+  .championsPage .selectedEditionCard { grid-template-columns: 1fr; gap: 20px; }
+  .championsPage .editionChampionFigure { margin: 0; }
+  .championsPage .editionMeta { min-width: 0; }
+}
+
