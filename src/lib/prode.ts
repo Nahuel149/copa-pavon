@@ -10,7 +10,7 @@ import {
   type KnockoutStage,
 } from "./matches";
 import { getKnockoutScorerRole, knockoutScorerRolePoints } from "./knockout-rosters";
-import { isKnockoutFixtureEditable } from "./knockout-deadlines";
+import { isKnockoutFixtureEditable, isKnockoutSchedulePending } from "./knockout-deadlines";
 import { isFirstLeg, needsQualifierSelection, requiresQualifier, usesSeparatedKnockoutScoring } from "./knockout-format";
 
 export type PredictionChoice = "home" | "draw" | "away";
@@ -762,6 +762,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       stage: item.stage,
       home,
       away,
+      ...(item.schedulePending === true ? { schedulePending: true } : {}),
       ...(typeof item.kickoffAt === "string" && !Number.isNaN(new Date(item.kickoffAt).getTime()) ? { kickoffAt: item.kickoffAt } : {}),
     };
     fixtureById.set(fixture.id, fixture);
@@ -858,7 +859,7 @@ function hasValidKnockoutPrediction(prediction: KnockoutPrediction | undefined, 
 export function countMissedClosedKnockoutPredictions(submission: Submission, results: ResultStore, now = new Date()) {
   const predictionByFixture = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
   return results.knockoutFixtures.reduce((total, fixture) => {
-    if (isKnockoutFixtureEditable(fixture, now, results.knockoutFixtures)) return total;
+    if (isKnockoutSchedulePending(fixture) || isKnockoutFixtureEditable(fixture, now, results.knockoutFixtures)) return total;
     return hasValidKnockoutPrediction(predictionByFixture.get(fixture.id), fixture) ? total : total + 1;
   }, 0);
 }

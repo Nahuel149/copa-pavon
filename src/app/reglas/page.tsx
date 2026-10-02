@@ -180,7 +180,7 @@ export default function ReglasPage() {
         <div>
           <h2>Cierre de cada partido</h2>
           <p>
-            Cada pronóstico se puede cargar o editar hasta <strong>10 minutos antes de su propio horario de inicio</strong>. En partidos únicos, la minoría se mide al cierre de ese partido; en series, al cierre de la vuelta.
+            Cada pronóstico se puede cargar o editar hasta <strong>10 minutos antes de su propio horario de inicio</strong>. Los partidos con fecha y horario a confirmar todavía no admiten pronósticos ni cuentan como partidos omitidos. En partidos únicos, la minoría se mide al cierre de ese partido; en series, al cierre de la vuelta.
           </p>
         </div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>

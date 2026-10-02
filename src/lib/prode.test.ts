@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   compareKnockoutFixturesByKickoff,
   getKnockoutEditDeadline,
+  getKnockoutKickoffAt,
+  knockoutFixtureStatus,
   isKnockoutFixtureEditable,
   isKnockoutStageSuperseded,
 } from "./knockout-deadlines";
@@ -1091,5 +1093,37 @@ describe("continental semifinals", () => {
     expect(getKnockoutUnderdogBonus({ ...prediction, qualifiedTeam: "home" }, result, vuelta, voters)).toBe(0);
     expect(getKnockoutUnderdogBonus({ ...prediction, fixtureId: ida.id }, { ...result, fixtureId: ida.id }, ida, voters)).toBe(0);
     expect(scoreKnockoutPredictionForFixture(prediction, undefined, vuelta, { underdogBonus: 2 }).totalPoints).toBe(0);
+  });
+});
+
+
+describe("confirmed fixtures awaiting official schedules", () => {
+  const pending: KnockoutFixture = { id: "copa-argentina-2026-sf-banfield-boca", order: 9, stage: "SF", home: "Banfield", away: "Boca Juniors", schedulePending: true };
+  const now = new Date("2026-10-02T10:00:00Z");
+
+  it("preserves the pending schedule and avoids historical kickoff/deadline fallbacks", () => {
+    const store = validateResultStore({ ...emptyResults, knockoutFixtures: [pending] });
+    expect(store.knockoutFixtures[0].schedulePending).toBe(true);
+    expect(getKnockoutKickoffAt(pending)).toBe("");
+    expect(getKnockoutEditDeadline(pending)).toBe("");
+    expect(knockoutFixtureStatus(pending, now)).toMatchObject({ open: false, schedulePending: true, kickoffAt: "", editDeadline: "" });
+  });
+
+  it("neither reveals predictions nor eliminates participants for two unscheduled matches", () => {
+    const other = { ...pending, id: "copa-argentina-2026-sf-tucuman-platense", order: 10, home: "Atlético Tucumán", away: "Platense" };
+    const fixtures = [pending, other];
+    expect(buildStandings([submissionFromPayload()], { ...emptyResults, knockoutFixtures: fixtures }, now)).toHaveLength(1);
+    expect(filterPublicKnockoutPredictions([{ fixtureId: pending.id, homeGoals: 1, awayGoals: 0 }], fixtures, now)).toEqual([]);
+  });
+
+  it("sorts unscheduled matches after scheduled fixtures", () => {
+    const scheduled = { ...pending, id: "scheduled", order: 11, kickoffAt: "2026-10-20T21:30:00-03:00" };
+    expect([pending, scheduled].toSorted(compareKnockoutFixturesByKickoff).map(f => f.id)).toEqual(["scheduled", pending.id]);
+  });
+
+  it("activates the normal ten-minute cutoff when the admin enters a kickoff", () => {
+    const scheduled = { ...pending, kickoffAt: "2026-10-25T21:00:00-03:00" };
+    expect(knockoutFixtureStatus(scheduled, now)).toMatchObject({ open: true, schedulePending: false, editDeadline: "2026-10-25T23:50:00.000Z" });
+    expect(isKnockoutFixtureEditable(scheduled, new Date("2026-10-25T23:50:00Z"))).toBe(false);
   });
 });

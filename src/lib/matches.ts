@@ -26,6 +26,7 @@ export type KnockoutFixture = {
   home: string;
   away: string;
   kickoffAt?: string;
+  schedulePending?: boolean;
 };
 
 export const groups: Group[] = [

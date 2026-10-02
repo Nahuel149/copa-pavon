@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Loader2, LogIn, Send } from "lucide-react";
 import { TeamBadge } from "@/app/components/TeamBadge";
+import { isKnockoutSchedulePending } from "@/lib/knockout-deadlines";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import { isFirstLeg, isSecondLeg, needsQualifierSelection } from "@/lib/knockout-format";
@@ -150,7 +151,7 @@ export default function EliminatoriasPage() {
       knockoutStages
         .map((stage) => {
           const stageFixtures = (fixturesByStage[stage] ?? []).toSorted((a, b) => a.order - b.order);
-          const closed = stageFixtures.length > 0 && stageFixtures.every((fixture) => fixtureStatus[fixture.id]?.open === false);
+          const closed = stageFixtures.length > 0 && stageFixtures.every((fixture) => !isKnockoutSchedulePending(fixture) && fixtureStatus[fixture.id]?.open === false);
           return { stage, fixtures: stageFixtures, closed };
         })
         .filter((group) => group.fixtures.length > 0),
@@ -503,7 +504,7 @@ export default function EliminatoriasPage() {
           <TeamBadge team={fixture.away} />
         </h2>
         <small className={fixtureOpen ? "editState open" : "editState closed"}>
-          {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
+          {isKnockoutSchedulePending(fixture) ? "Fecha y horario a confirmar. Pronósticos disponibles cuando se programe." : fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
         </small>
         {renderFixtureRuleNote(fixture)}
         <div className="scoreInputs">
@@ -671,7 +672,7 @@ export default function EliminatoriasPage() {
                       <TeamBadge team={fixture.away} />
                     </h2>
                     <small className={fixtureOpen ? "editState open" : "editState closed"}>
-                      {fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
+                      {isKnockoutSchedulePending(fixture) ? "Fecha y horario a confirmar. Pronósticos disponibles cuando se programe." : fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
                     </small>
                     {renderFixtureRuleNote(fixture)}
                     <div className="scoreInputs">

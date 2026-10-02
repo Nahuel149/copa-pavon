@@ -39,14 +39,20 @@ const defaultRoundOf32Kickoffs = [
   "2026-07-04T01:30:00.000Z",
 ];
 
+export function isKnockoutSchedulePending(fixture: KnockoutFixture) {
+  return fixture.schedulePending === true && (!fixture.kickoffAt || Number.isNaN(new Date(fixture.kickoffAt).getTime()));
+}
+
 export function getKnockoutKickoffAt(fixture: KnockoutFixture) {
+  if (isKnockoutSchedulePending(fixture)) return "";
   if (fixture.kickoffAt && !Number.isNaN(new Date(fixture.kickoffAt).getTime())) return fixture.kickoffAt;
   if (fixture.stage === "R32") return defaultRoundOf32Kickoffs[fixture.order - 1] ?? fallbackStageKickoffs.R32;
   return fallbackStageKickoffs[fixture.stage];
 }
 
 export function compareKnockoutFixturesByKickoff(a: KnockoutFixture, b: KnockoutFixture) {
-  const byKickoff = new Date(getKnockoutKickoffAt(a)).getTime() - new Date(getKnockoutKickoffAt(b)).getTime();
+  const time = (fixture: KnockoutFixture) => isKnockoutSchedulePending(fixture) ? Infinity : new Date(getKnockoutKickoffAt(fixture)).getTime();
+  const byKickoff = time(a) - time(b);
   return byKickoff || a.order - b.order || a.id.localeCompare(b.id);
 }
 
@@ -61,6 +67,7 @@ export function getKnockoutStageEditDeadline(stage: KnockoutStage, fixtures: Kno
 }
 
 export function getKnockoutEditDeadline(fixture: KnockoutFixture, fixtures: KnockoutFixture[] = []) {
+  if (isKnockoutSchedulePending(fixture)) return "";
   const kickoff = new Date(getKnockoutKickoffAt(fixture)).getTime();
   const fallback = new Date(getKnockoutStageEditDeadline(fixture.stage, fixtures.length > 0 ? fixtures : [fixture])).getTime();
   const baseTime = Number.isNaN(kickoff) ? fallback : kickoff;
@@ -73,12 +80,14 @@ export function isKnockoutStageSuperseded(stage: KnockoutStage, fixtures: Knocko
 }
 
 export function isKnockoutFixtureEditable(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
+  if (isKnockoutSchedulePending(fixture)) return false;
   if (isKnockoutStageSuperseded(fixture.stage, fixtures)) return false;
   return now.getTime() < new Date(getKnockoutEditDeadline(fixture, fixtures)).getTime();
 }
 
 export function knockoutFixtureStatus(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
   return {
+    schedulePending: isKnockoutSchedulePending(fixture),
     kickoffAt: getKnockoutKickoffAt(fixture),
     editDeadline: getKnockoutEditDeadline(fixture, fixtures),
     open: isKnockoutFixtureEditable(fixture, now, fixtures),
