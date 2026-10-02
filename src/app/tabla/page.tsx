@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { TeamBadge } from "@/app/components/TeamBadge";
+import { type KnockoutFixture } from "@/lib/matches";
 import { ChevronDown, Download, Loader2, MessageSquare, RefreshCw, Send, Share2, SmilePlus, Trophy } from "lucide-react";
 import { formatArgentinaDateTime, formatArgentinaTime } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
@@ -153,6 +155,8 @@ export default function TablaPage() {
     dailyRecap: null,
     updatedAt: "",
   });
+  const [homeFixtures, setHomeFixtures] = useState<KnockoutFixture[]>([]);
+  const [fixtureError, setFixtureError] = useState("");
   const [status, setStatus] = useState<"loading" | "ready">("loading");
   const [error, setError] = useState("");
   const [historyLimit, setHistoryLimit] = useState(0);
@@ -179,7 +183,7 @@ export default function TablaPage() {
   const [regPin, setRegPin] = useState("");
   const [regStatus, setRegStatus] = useState<"idle" | "saving" | "done">("idle");
   const [regMessage, setRegMessage] = useState("");
-  const rows = data.standingsByClan?.["river-plate"] ?? data.standings.filter((row) => row.clan === "river-plate");
+  const rows = data.standings;
   const sortedRows = useMemo(() => {
     const originalPositionById = new Map(rows.map((row, index) => [row.submissionId, index + 1]));
     const valueForSort = (row: StandingRow) => {
@@ -652,6 +656,14 @@ export default function TablaPage() {
       const body = await readJsonResponse<StandingsResponse>(response);
       if (!response.ok || body.error) throw new Error(body.error ?? "No se pudo actualizar la tabla.");
       setData(body);
+      const fixtureResponse = await fetch("/api/knockout-fixtures", { cache: "no-store" });
+      const fixtureBody = await readJsonResponse<{ fixtures?: KnockoutFixture[]; error?: string }>(fixtureResponse);
+      if (fixtureResponse.ok && Array.isArray(fixtureBody.fixtures)) {
+        setHomeFixtures(fixtureBody.fixtures);
+        setFixtureError("");
+      } else {
+        setFixtureError("No se pudieron actualizar los cruces. Volvé a intentar.");
+      }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "No se pudo actualizar la tabla.");
     } finally {
@@ -858,11 +870,11 @@ export default function TablaPage() {
       <section className="heroBand tableHero standingsHero">
         <div>
           <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
-            PRÓXIMAMENTE 🏆
+            INSCRIPCIONES ABIERTAS 🏆
           </p>
           <h1>Copa Se mató Pavón</h1>
           <p className="heroCopy">
-            La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Prepará tus pronósticos!
+            La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Anotate y cargá tus pronósticos para las semifinales.
           </p>
         </div>
       </section>
@@ -914,67 +926,46 @@ export default function TablaPage() {
         ) : null}
       </section>
 
-      {/* ANUNCIO OFICIAL PROXIMAMENTE */}
-      <section className="proximamentePanel" style={{ padding: "28px 24px", textAlign: "center" }}>
-        <div className="panelHeader" style={{ textAlign: "center" }}>
-          <p className="eyebrow" style={{ background: "#ef4444", color: "#fff", border: "2px solid #000", fontWeight: 900, display: "inline-block", padding: "5px 14px", borderRadius: "12px", fontSize: "0.85rem", margin: "0 auto 12px" }}>
-            🔥 Edición Confirmada
-          </p>
-          <h2 style={{ fontSize: "1.65rem", margin: "8px 0", fontWeight: 900, textAlign: "center" }}>
-            Competencias que disputan la Copa Se mató Pavón
-          </h2>
-          <p style={{ fontSize: "1.05rem", lineHeight: "1.5", textAlign: "center", maxWidth: "720px", margin: "0 auto 16px" }}>
-            Esta nueva copa unificará los pronósticos de las fases decisivas y finales de cuatro competiciones estelares:
-          </p>
+      <section className="homeFixturesPanel" aria-labelledby="home-fixtures-title">
+        <div className="tableNote">
+          <div><strong id="home-fixtures-title">Cruces de semifinales</strong><span>Horarios de Argentina. Cada partido cierra 10 minutos antes del inicio.</span></div>
+          <Link className="primaryAction" href="/editar_prode">Cargar mi prode</Link>
         </div>
-
-        <div className="reportCardsGrid" style={{ marginTop: "20px" }}>
-          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
-            <header style={{ justifyContent: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.6rem" }}>🌎</span>
-              <h3 style={{ margin: 0 }}>COPA SUDAMERICANA</h3>
-              <span className="reportPts">Semifinales + Final</span>
-            </header>
-            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Partidos de ida y vuelta de semifinales y la gran definición por el título sudamericano.</p>
-          </article>
-
-          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
-            <header style={{ justifyContent: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.6rem" }}>🏆</span>
-              <h3 style={{ margin: 0 }}>COPA LIBERTADORES</h3>
-              <span className="reportPts">Semifinales + Final</span>
-            </header>
-            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Los 4 mejores del continente definiendo a la gloria eterna.</p>
-          </article>
-
-          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
-            <header style={{ justifyContent: "center", gap: "10px" }}>
-              <ArgentinaFlagBadge />
-              <h3 style={{ margin: 0 }}>COPA ARGENTINA</h3>
-              <span className="reportPts">Fase Eliminatoria</span>
-            </header>
-            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Cruces mano a mano a todo o nada en canchas neutrales del fútbol argentino.</p>
-          </article>
-
-          <article className="reportCard proximamenteCard" style={{ textAlign: "center" }}>
-            <header style={{ justifyContent: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.6rem" }}>⚽</span>
-              <h3 style={{ margin: 0 }}>COPA DE LA LIGA</h3>
-              <span className="reportPts">Fase Final</span>
-            </header>
-            <p style={{ textAlign: "center", margin: "8px 0 0" }}>Los playoffs decisivos de la Primera División del fútbol argentino.</p>
-          </article>
+        {fixtureError ? <p role="alert">{fixtureError}</p> : null}
+        <div className="homeCompetitionGrid">
+          {[
+            { prefix: "sudamericana-", title: "Copa Sudamericana", format: "Ida y vuelta" },
+            { prefix: "libertadores-", title: "Copa Libertadores", format: "Ida y vuelta" },
+            { prefix: "copa-argentina-", title: "Copa Argentina", format: "Partido único" },
+          ].map((competition) => (
+            <article className="homeCompetition" key={competition.prefix}>
+              <header><h2>{competition.title}</h2><span>{competition.format}</span></header>
+              {homeFixtures.filter((fixture) => fixture.id.startsWith(competition.prefix)).map((fixture) => (
+                <div className="homeFixture" key={fixture.id}>
+                  <span className="eyebrow">{fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : "Semifinal"}</span>
+                  <div className="homeFixtureTeams"><TeamBadge team={fixture.home} /><span>vs.</span><TeamBadge team={fixture.away} /></div>
+                  <p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar · carga pendiente" : `${formatArgentinaDateTime(fixture.kickoffAt)} (ARG)`}</p>
+                </div>
+              ))}
+              {homeFixtures.length === 0 ? <p>{status === "loading" ? "Cargando cruces…" : "Sin cruces disponibles."}</p> : null}
+            </article>
+          ))}
         </div>
+        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales se agregarán al definirse los clasificados.</p>
+      </section>
 
-        <div className="proximamenteFooter" style={{ justifyContent: "center", textAlign: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-            <span className="historyBadge championTag" style={{ fontSize: "0.9rem", padding: "8px 16px", fontWeight: 800 }}>
-              ⏳ Estado: Carga de pronósticos Próximamente
-            </span>
-          </div>
-          <a className="primaryAction light" href="/campeones" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-            🏆 Ver Historial de Copas y Campeones
-          </a>
+      <section aria-labelledby="home-standings-title">
+        <div className="tableNote">
+          <div><strong id="home-standings-title">Tabla de participantes</strong><span>{rows.length} anotados · {data.playedKnockoutMatches === 0 ? "Todos arrancan con 0 puntos. La tabla se actualizará al cargar los resultados." : "Puntajes actualizados con los resultados cargados."}</span></div>
+          <button className="tableButton" type="button" disabled={status === "loading"} onClick={() => void loadStandings()}><RefreshCw size={17} aria-hidden="true" /> Actualizar</button>
+        </div>
+        {error ? <p role="alert">{error}</p> : null}
+        <div className="tableShell">
+          <table className="homeStandingsTable">
+            <thead><tr><th scope="col">#</th><th scope="col">Participante</th><th scope="col">Puntos</th><th scope="col">Jugados</th><th scope="col">Exactos</th><th scope="col">Goleadores</th></tr></thead>
+            <tbody>{rows.map((row, index) => <tr key={row.submissionId}><td>{data.playedKnockoutMatches === 0 ? "—" : index + 1}</td><th scope="row">{row.name}</th><td><strong>{row.totalPoints}</strong></td><td>{row.playedKnockoutMatches}</td><td>{row.knockoutExactHits}</td><td>{row.knockoutScorerHits}</td></tr>)}</tbody>
+          </table>
+          {rows.length === 0 ? <p>{status === "loading" ? "Cargando participantes…" : "Todavía no hay participantes anotados. ¡Sé el primero!"}</p> : null}
         </div>
       </section>
 
