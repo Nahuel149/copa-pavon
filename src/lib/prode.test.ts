@@ -687,6 +687,7 @@ describe("prode scoring", () => {
       knockoutPredictions: [{ fixtureId: "k-1", homeGoals: 2, awayGoals: 1 }],
     };
     const twoMissing = submissionFromPayload("Falta dos");
+    twoMissing.createdAt = "2026-06-01T00:00:00Z";
 
     const standings = buildStandings(
       [complete, oneMissing, twoMissing],
@@ -1125,5 +1126,27 @@ describe("confirmed fixtures awaiting official schedules", () => {
     const scheduled = { ...pending, kickoffAt: "2026-10-25T21:00:00-03:00" };
     expect(knockoutFixtureStatus(scheduled, now)).toMatchObject({ open: true, schedulePending: false, editDeadline: "2026-10-25T23:50:00.000Z" });
     expect(isKnockoutFixtureEditable(scheduled, new Date("2026-10-25T23:50:00Z"))).toBe(false);
+  });
+});
+
+
+describe("late registration after knockout deadlines", () => {
+  const fixtures: KnockoutFixture[] = [
+    { id: "closed-one", order: 1, stage: "SF", home: "Boca Juniors", away: "Vasco da Gama", kickoffAt: "2026-10-13T21:30:00-03:00" },
+    { id: "closed-two", order: 2, stage: "SF", home: "Fluminense", away: "Palmeiras", kickoffAt: "2026-10-14T19:00:00-03:00" },
+  ];
+  const now = new Date("2026-10-15T00:00:00Z");
+  it("keeps late entrants in the table without retroactive missing predictions", () => {
+    const late = { ...submissionFromPayload("Nuevo"), createdAt: "2026-10-14T23:00:00Z", knockoutPredictions: [] };
+    expect(buildStandings([late], { ...emptyResults, knockoutFixtures: fixtures }, now)).toHaveLength(1);
+  });
+  it("still eliminates existing participants who miss two eligible matches", () => {
+    const early = { ...submissionFromPayload("Anterior"), createdAt: "2026-10-01T00:00:00Z", knockoutPredictions: [] };
+    expect(buildStandings([early], { ...emptyResults, knockoutFixtures: fixtures }, now)).toHaveLength(0);
+  });
+  it("never permits predictions on a closed match, while later fixtures remain open", () => {
+    expect(isKnockoutFixtureEditable(fixtures[0], now, fixtures)).toBe(false);
+    const next = { ...fixtures[0], id: "vuelta", kickoffAt: "2026-10-20T21:30:00-03:00" };
+    expect(isKnockoutFixtureEditable(next, now, [...fixtures, next])).toBe(true);
   });
 });

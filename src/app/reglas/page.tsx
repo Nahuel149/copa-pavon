@@ -179,6 +179,7 @@ export default function ReglasPage() {
         <Brackets size={28} aria-hidden="true" />
         <div>
           <h2>Cierre de cada partido</h2>
+          <p>Si te anotás después de que un partido cerró, ese partido queda cerrado y suma 0 puntos. No tenés que completarlo para enviar los próximos y no cuenta como faltante para la eliminación. La eliminación por dos partidos omitidos se aplica a los que cerraron después de tu inscripción.</p>
           <p>
             Cada pronóstico se puede cargar o editar hasta <strong>10 minutos antes de su propio horario de inicio</strong>. Los partidos con fecha y horario a confirmar todavía no admiten pronósticos ni cuentan como partidos omitidos. En partidos únicos, la minoría se mide al cierre de ese partido; en series, al cierre de la vuelta.
           </p>

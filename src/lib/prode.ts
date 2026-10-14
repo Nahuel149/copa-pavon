@@ -10,7 +10,7 @@ import {
   type KnockoutStage,
 } from "./matches";
 import { getKnockoutScorerRole, knockoutScorerRolePoints } from "./knockout-rosters";
-import { isKnockoutFixtureEditable, isKnockoutSchedulePending } from "./knockout-deadlines";
+import { getKnockoutEditDeadline, isKnockoutFixtureEditable, isKnockoutSchedulePending } from "./knockout-deadlines";
 import { isFirstLeg, needsQualifierSelection, requiresQualifier, usesSeparatedKnockoutScoring } from "./knockout-format";
 
 export type PredictionChoice = "home" | "draw" | "away";
@@ -860,6 +860,10 @@ export function countMissedClosedKnockoutPredictions(submission: Submission, res
   const predictionByFixture = new Map((submission.knockoutPredictions ?? []).map((prediction) => [prediction.fixtureId, prediction]));
   return results.knockoutFixtures.reduce((total, fixture) => {
     if (isKnockoutSchedulePending(fixture) || isKnockoutFixtureEditable(fixture, now, results.knockoutFixtures)) return total;
+    // Late entrants were never able to predict matches that had already closed.
+    const registeredAt = new Date(submission.createdAt).getTime();
+    const closedAt = new Date(getKnockoutEditDeadline(fixture, results.knockoutFixtures)).getTime();
+    if (Number.isFinite(registeredAt) && registeredAt >= closedAt) return total;
     return hasValidKnockoutPrediction(predictionByFixture.get(fixture.id), fixture) ? total : total + 1;
   }, 0);
 }

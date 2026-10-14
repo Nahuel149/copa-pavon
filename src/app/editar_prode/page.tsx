@@ -755,6 +755,7 @@ export default function EliminatoriasPage() {
 
       {closedStageGroups.length > 0 ? (
         <section className="pageStack closedRoundsStack" aria-label="Rondas cerradas">
+          <p>Los partidos cerrados no se pueden completar ni editar y no impiden enviar los próximos. Si te anotaste después del cierre, esos partidos suman 0 puntos y no cuentan como faltantes para la eliminación.</p>
           {closedStageGroups.map((group) => (
             <details className="closedRoundFold" key={group.stage}>
               <summary>
