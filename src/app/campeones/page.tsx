@@ -163,7 +163,20 @@ export default function CampeonesPage() {
                 <h3>{currentEdition.title} ({currentEdition.year})</h3>
               </div>
               {currentEdition.table && currentEdition.table.length > 0 ? (
-                <div className="tableWrapper">
+                <>
+                <div className="mobileHistoryList" aria-label={`Posiciones de ${currentEdition.title}`}>
+                  {currentEdition.table.map((row) => <article className={`mobileHistoryEntry ${row.badge || ""}`} key={`${row.pos}-${row.participant}`}>
+                    <header><span className="mobileHistoryPosition">{row.pos}.</span><h4>{row.participant}</h4><strong>{row.points} pts</strong></header>
+                    {row.badge ? <p className="mobileHistoryDistinction">{row.badge === "champion" ? "Campeón" : row.badge === "runner-up" ? "Subcampeón" : row.badge === "podium" ? "Podio" : "Descendido"}</p>:null}
+                    <dl className="mobileHistoryStats">
+                      {([
+                        ["Jugados", row.played], ["Ganados", row.won], ["Perdidos", row.lost], ["Exactos", row.exactHits], ["Goleadores", row.goals], ["Grupos", row.groups], ["Aciertos", row.totalHits], ["Racha", row.streak],
+                      ] as const).filter(([,value])=>value!==undefined && value!=="").map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+                    </dl>
+                    {row.notes ? row.notes.length>120 ? <details className="mobileHistoryNotes"><summary>Leer análisis</summary><p>{row.notes}</p></details>:<p className="mobileHistoryShortNote">{row.notes}</p>:null}
+                  </article>)}
+                </div>
+                <div className="tableWrapper desktopArchiveTable">
                   {currentEdition.table[0]?.played !== undefined ? (
                     <table className="recopaTable historyTable">
                       <thead>
@@ -332,6 +345,7 @@ export default function CampeonesPage() {
                     </table>
                   )}
                 </div>
+                </>
               ) : (
                 <div className="emptyTableNotice">
                   <History size={28} style={{ marginBottom: "8px" }} />
@@ -642,7 +656,14 @@ export default function CampeonesPage() {
               <p>Clasificación histórica acumulada según medallas de Oro (Campeón), Plata (Subcampeón) y Bronce (3er Puesto) obtenidas en todas las copas.</p>
             </div>
 
-            <div className="tableWrapper">
+            <div className="mobilePalmaresList" aria-label="Palmarés histórico">
+              {allTimePalmares.map((player,index)=><article className="mobilePalmaresEntry" key={player.participant}>
+                <header><span className="mobileHistoryPosition">{index+1}.</span><h3>{player.participant}</h3></header>
+                <dl className="mobileMedalStats"><div><dt>Oro</dt><dd>{player.gold}</dd></div><div><dt>Plata</dt><dd>{player.silver}</dd></div><div><dt>Bronce</dt><dd>{player.bronze}</dd></div></dl>
+                <ul className="mobileMedalList">{player.medals.map((medal,index)=><li key={`${medal.title}-${index}`}><span>{medal.type==="gold"?"Oro":medal.type==="silver"?"Plata":"Bronce"}</span>{medal.title}</li>)}</ul>
+              </article>)}
+            </div>
+            <div className="tableWrapper desktopArchiveTable">
               <table className="recopaTable palmaresTable">
                 <thead>
                   <tr>
