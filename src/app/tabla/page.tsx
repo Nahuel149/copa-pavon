@@ -490,14 +490,39 @@ export default function TablaPage() {
     </svg>`;
   }
 
-  async function shareStandingsImage() {
+  function buildHomeStandingsShareSvg() {
+    const width = 1080;
+    const rowHeight = 76;
+    const top = 210;
+    const height = top + 50 + rows.length * rowHeight + 100;
+    const positions = [40, 100, 610, 710, 800, 890, 995];
+    const headers = ["#", "Participante", "Pts", "Jug", "Ex", "Res", "Gol"];
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="${width}" height="${height}" fill="#fffdf7"/>
+      <rect width="${width}" height="170" fill="#101b2b"/>
+      ${svgText("Copa Se mató Pavón", 40, 70, {size: 48, weight: 900, fill: "#fffdf7"})}
+      ${svgText("Tabla de participantes", 40, 116, {size: 28, fill: "#fffdf7"})}
+      ${svgText(`Actualizada ${isoToArgentinaInput(data.updatedAt || new Date().toISOString()).replace("T", " ")} (ARG)`,40,153,{size:18,fill:"#fffdf7"})}
+      ${headers.map((label,i)=>svgText(label,positions[i],top+22,{size:22,weight:900,anchor:i>1?"middle":"start"})).join("")}
+      ${rows.map((row,index)=>{
+        const y=top+50+index*rowHeight;
+        const fill=index===0?"#d6f3df":index>=Math.max(1,rows.length-3)?"#ffe0df":"#fffdf7";
+        const values=[String(index+1),row.name,String(row.totalPoints),String(row.playedKnockoutMatches),String(row.knockoutExactHits),String(row.knockoutWinnerHits),String(row.knockoutScorerHits)];
+        return `<rect x="24" y="${y}" width="1032" height="${rowHeight}" fill="${fill}"/><path d="M24 ${y+rowHeight}H1056" stroke="#c6c6c6"/>${values.map((value,i)=>svgText(value,positions[i],y+46,{size:i===1?(row.name.length>32?18:24):26,weight:i===2?900:700,anchor:i>1?"middle":"start"})).join("")}`;
+      }).join("")}
+      ${svgText("Verde: campeón · Rojo: últimos 3, descenso",40,height-54,{size:21})}
+      ${svgText("Pts: puntos · Jug: jugados · Ex: exactos · Res: resultado sin exacto · Gol: goleadores",40,height-22,{size:19})}
+    </svg>`;
+  }
+
+  async function shareStandingsImage(downloadOnly = false) {
     if (rows.length === 0 || shareStatus === "working") return;
     setShareStatus("working");
     setShareMessage("");
     try {
-      const file = await svgToPngFile(buildStandingsShareSvg(), `copa-kahl-tabla-${new Date().toISOString().slice(0, 10)}.png`);
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: "Tabla Copa Kahl", text: "Tabla actual de la Copa Kahl", files: [file] });
+      const file = await svgToPngFile(buildHomeStandingsShareSvg(), `copa-pavon-tabla-${new Date().toISOString().slice(0, 10)}.png`);
+      if (!downloadOnly && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: "Tabla Copa Se mató Pavón", text: "Tabla actual de la Copa Se mató Pavón", files: [file] });
         setShareMessage("Imagen lista para compartir.");
       } else {
         const url = URL.createObjectURL(file);
@@ -509,10 +534,8 @@ export default function TablaPage() {
         setShareMessage("Imagen descargada.");
       }
     } catch (shareError) {
-      setShareMessage(shareError instanceof Error ? shareError.message : "No se pudo generar la imagen.");
-    } finally {
-      setShareStatus("idle");
-    }
+      if (!(shareError instanceof Error && shareError.name === "AbortError")) setShareMessage(shareError instanceof Error ? shareError.message : "No se pudo generar la imagen.");
+    } finally { setShareStatus("idle"); }
   }
 
   function buildKnockoutStandingsShareSvg() {
@@ -956,19 +979,26 @@ export default function TablaPage() {
         <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales se agregarán al definirse los clasificados.</p>
       </section>
 
-      <section aria-labelledby="home-standings-title">
+      <section className="homeStandingsPanel" aria-labelledby="home-standings-title">
         <div className="tableNote">
           <div><strong id="home-standings-title">Tabla de participantes</strong><span>{rows.length} anotados · {data.playedKnockoutMatches === 0 ? "Todos arrancan con 0 puntos. La tabla se actualizará al cargar los resultados." : "Puntajes actualizados con los resultados cargados."}</span></div>
-          <button className="tableButton" type="button" disabled={status === "loading"} onClick={() => void loadStandings()}><RefreshCw size={17} aria-hidden="true" /> Actualizar</button>
+          <div className="homeStandingsActions">
+            <button className="tableButton" type="button" disabled={status === "loading"} onClick={() => void loadStandings()}><RefreshCw size={17} aria-hidden="true" /> Actualizar</button>
+            <button className="tableButton" type="button" disabled={shareStatus === "working" || rows.length === 0} onClick={() => void shareStandingsImage()}><Share2 size={17} aria-hidden="true" /> Compartir</button>
+            <button className="tableButton" type="button" disabled={shareStatus === "working" || rows.length === 0} onClick={() => void shareStandingsImage(true)}><Download size={17} aria-hidden="true" /> Guardar foto</button>
+          </div>
         </div>
         {error ? <p role="alert">{error}</p> : null}
         <div className="tableShell">
           <table className="homeStandingsTable">
-            <thead><tr><th scope="col">#</th><th scope="col">Participante</th><th scope="col">Puntos</th><th scope="col">Jugados</th><th scope="col">Exactos</th><th scope="col">Goleadores</th></tr></thead>
-            <tbody>{rows.map((row, index) => <tr key={row.submissionId}><td>{data.playedKnockoutMatches === 0 ? "—" : index + 1}</td><th scope="row">{row.name}</th><td><strong>{row.totalPoints}</strong></td><td>{row.playedKnockoutMatches}</td><td>{row.knockoutExactHits}</td><td>{row.knockoutScorerHits}</td></tr>)}</tbody>
+            <colgroup><col className="homeRankCol"/><col className="homeNameCol"/>{Array.from({length:5},(_,i)=><col className="homeStatCol" key={i}/>)}</colgroup>
+            <thead><tr><th scope="col">#</th><th scope="col">Participante</th><th scope="col"><abbr title="Puntos">Pts</abbr></th><th scope="col"><abbr title="Partidos jugados">Jug</abbr></th><th scope="col"><abbr title="Marcadores exactos">Ex</abbr></th><th scope="col"><abbr title="Resultados acertados sin marcador exacto">Res</abbr></th><th scope="col"><abbr title="Goleadores acertados">Gol</abbr></th></tr></thead>
+            <tbody>{rows.map((row, index) => <tr className={index===0?"homeChampionRow":index>=Math.max(1,rows.length-3)?"homeRelegationRow":""} key={row.submissionId}><td>{index + 1}</td><th scope="row">{row.name}</th><td><strong>{row.totalPoints}</strong></td><td>{row.playedKnockoutMatches}</td><td>{row.knockoutExactHits}</td><td>{row.knockoutWinnerHits}</td><td>{row.knockoutScorerHits}</td></tr>)}</tbody>
           </table>
           {rows.length === 0 ? <p>{status === "loading" ? "Cargando participantes…" : "Todavía no hay participantes anotados. ¡Sé el primero!"}</p> : null}
         </div>
+        <p className="homeStandingsLegend"><span className="championLegend">Verde: campeón</span> · <span className="relegationLegend">Rojo: últimos 3, descenso</span><br/>Pts: puntos · Jug: jugados · Ex: exactos · Res: resultados sin exacto · Gol: goleadores</p>
+        {shareMessage ? <p role="status">{shareMessage}</p> : null}
       </section>
 
       <section className="commentsPanel" aria-label="Comentarios">

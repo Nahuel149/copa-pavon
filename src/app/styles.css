@@ -8218,3 +8218,32 @@ canvas {
 @media (max-width: 800px) {
   .standingsHero, :root[data-theme="dark"] .standingsHero { grid-template-columns: 1fr; gap: 24px; }
 }
+
+/* The public table always fits its container, including narrow phones. */
+.homeStandingsActions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.homeStandingsActions .tableButton { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.homeStandingsPanel .homeStandingsTable { table-layout: fixed; width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.homeStandingsTable .homeRankCol { width: 6%; }
+.homeStandingsTable .homeNameCol { width: 34%; }
+.homeStandingsTable .homeStatCol { width: 12%; }
+.homeStandingsPanel .homeStandingsTable th, .homeStandingsPanel .homeStandingsTable td { min-width: 0; padding: 14px 8px; text-align: center; overflow-wrap: normal; word-break: normal; }
+.homeStandingsPanel .homeStandingsTable th:nth-child(2) { text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.homeStandingsTable abbr { text-decoration: none; }
+.homeStandingsPanel .homeStandingsTable .homeChampionRow > * { background: #d6f3df; color: #12512a; }
+.homeStandingsPanel .homeStandingsTable .homeRelegationRow > * { background: #ffe0df; color: #7b1c21; }
+:root[data-theme="dark"] .homeStandingsPanel .homeStandingsTable .homeChampionRow > * { background: #16432e; color: #d7ffe4; }
+:root[data-theme="dark"] .homeStandingsPanel .homeStandingsTable .homeRelegationRow > * { background: #571e29; color: #ffe1e6; }
+.homeStandingsLegend { margin: 12px 0 0; font-size: .8rem; line-height: 1.6; }
+.homeStandingsLegend .championLegend { color: #18773c; font-weight: 800; }
+.homeStandingsLegend .relegationLegend { color: #b32232; font-weight: 800; }
+:root[data-theme="dark"] .homeStandingsLegend .championLegend { color: #9ae6b1; }
+:root[data-theme="dark"] .homeStandingsLegend .relegationLegend { color: #ffadb9; }
+@media (max-width: 600px) {
+  .homeStandingsPanel .homeStandingsTable th, .homeStandingsPanel .homeStandingsTable td { padding: 12px 3px; font-size: .73rem; line-height: 1.35; }
+  .homeStandingsPanel .tableNote { gap: 16px; }
+  .homeStandingsActions { width: 100%; }
+  .homeStandingsActions .tableButton { padding: 9px 8px; font-size: .75rem; min-height: 40px; }
+}
+
+.homeStandingsPanel .tableNote > .homeStandingsActions { display: flex; flex-direction: row; flex-wrap: wrap; }
+.homeStandingsPanel .homeStandingsTable tbody tr:not(.homeChampionRow):not(.homeRelegationRow) > * { background: var(--panel); }
