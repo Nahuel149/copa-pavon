@@ -900,6 +900,73 @@ export default function AdminPage() {
         </section>
       ) : null}
 
+          {/* 2. Resultados de eliminatorias */}
+          <details className="adminFold" open>
+            <summary>Resultados de eliminatorias</summary>
+            <section className="sectionHeader">
+              <p className="eyebrow">Resultados</p>
+              <h2>Marcadores reales de eliminatorias.</h2>
+              <p>Cargá estos resultados manualmente si la API falla. En cada partido definitorio, elegí también el equipo que clasifica, sin importar el marcador.</p>
+              <button className="primaryAction" disabled={status === "saving"} onClick={saveResults} type="button">
+                <Save size={18} aria-hidden="true" />
+                {status === "saving" ? "Guardando…" : "Guardar resultados"}
+              </button>
+            </section>
+
+            <section className="resultGrid" aria-label="Resultados eliminatorias">
+              {knockoutFixtures.map((fixture) => {
+                const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
+                return (
+                  <article className="resultCard knockoutResult" key={fixture.id}>
+                    <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
+                    {value.source ? (
+                      <small className={`resultSource ${value.source}`}>
+                        {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
+                        {value.source === "manual" ? "Admin" : "API"}
+                      </small>
+                    ) : null}
+                    <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
+                    <div className="scoreInputs compact">
+                      <label>
+                        <TeamBadge compact team={fixture.home} />
+                        <input inputMode="numeric" value={value.homeGoals} onChange={(event) => setKnockoutResult(fixture.id, "homeGoals", event.target.value)} />
+                      </label>
+                      <b>-</b>
+                      <label>
+                        <TeamBadge compact team={fixture.away} />
+                        <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
+                      </label>
+                    </div>
+                    {needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) ? (
+                      <label className="adminTextInput">
+                        <span>{isSecondLeg(fixture) ? "Equipo que clasifica (serie completa)" : fixture.stage === "FINAL" ? "Equipo campeón" : "Equipo que clasifica"}</span>
+                        <select
+                          required
+                          value={value.qualifiedTeam ?? ""}
+                          onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
+                        >
+                          <option value="">Elegir (obligatorio)</option>
+                          <option value="home">{fixture.home}</option>
+                          <option value="away">{fixture.away}</option>
+                        </select>
+                      </label>
+                    ) : null}
+                    <label className="adminTextInput">
+                      <span>Goleadores oficiales</span>
+                      <input
+                        value={value.scorerNames ?? ""}
+                        onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
+                        placeholder="Balogun, Messi"
+                      />
+                    </label>
+                  </article>
+                );
+              })}
+              {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
+            </section>
+          </details>
+
+
       <details className="adminFold" open>
         <summary>Tabla y puntos</summary>
         {deleteParticipantMessage ? <p role="status">{deleteParticipantMessage}</p> : null}
@@ -1144,68 +1211,6 @@ export default function AdminPage() {
                   </article>
                 );
               })}
-            </section>
-          </details>
-
-          {/* 2. Resultados de eliminatorias */}
-          <details className="adminFold">
-            <summary>Resultados de eliminatorias</summary>
-            <section className="sectionHeader">
-              <p className="eyebrow">Resultados</p>
-              <h2>Marcadores reales de eliminatorias.</h2>
-              <p>Cargá estos resultados manualmente si la API falla. En cada partido definitorio, elegí también el equipo que clasifica, sin importar el marcador.</p>
-            </section>
-
-            <section className="resultGrid" aria-label="Resultados eliminatorias">
-              {knockoutFixtures.map((fixture) => {
-                const value = knockoutDraft[fixture.id] ?? { homeGoals: "", awayGoals: "" };
-                return (
-                  <article className="resultCard knockoutResult" key={fixture.id}>
-                    <span>#{fixture.order} - {knockoutStageLabels[fixture.stage]}</span>
-                    {value.source ? (
-                      <small className={`resultSource ${value.source}`}>
-                        {value.source === "manual" ? <ShieldCheck size={13} aria-hidden="true" /> : <RefreshCw size={13} aria-hidden="true" />}
-                        {value.source === "manual" ? "Admin" : "API"}
-                      </small>
-                    ) : null}
-                    <strong><TeamBadge team={fixture.home} /> <span>vs.</span> <TeamBadge team={fixture.away} /></strong>
-                    <div className="scoreInputs compact">
-                      <label>
-                        <TeamBadge compact team={fixture.home} />
-                        <input inputMode="numeric" value={value.homeGoals} onChange={(event) => setKnockoutResult(fixture.id, "homeGoals", event.target.value)} />
-                      </label>
-                      <b>-</b>
-                      <label>
-                        <TeamBadge compact team={fixture.away} />
-                        <input inputMode="numeric" value={value.awayGoals} onChange={(event) => setKnockoutResult(fixture.id, "awayGoals", event.target.value)} />
-                      </label>
-                    </div>
-                    {needsQualifierSelection(fixture, value.homeGoals, value.awayGoals) ? (
-                      <label className="adminTextInput">
-                        <span>{isSecondLeg(fixture) ? "Equipo que clasifica (serie completa)" : fixture.stage === "FINAL" ? "Equipo campeón" : "Equipo que clasifica"}</span>
-                        <select
-                          required
-                          value={value.qualifiedTeam ?? ""}
-                          onChange={(event) => setKnockoutQualified(fixture.id, event.target.value as "home" | "away" | "")}
-                        >
-                          <option value="">Elegir (obligatorio)</option>
-                          <option value="home">{fixture.home}</option>
-                          <option value="away">{fixture.away}</option>
-                        </select>
-                      </label>
-                    ) : null}
-                    <label className="adminTextInput">
-                      <span>Goleadores oficiales</span>
-                      <input
-                        value={value.scorerNames ?? ""}
-                        onChange={(event) => setKnockoutScorers(fixture.id, event.target.value)}
-                        placeholder="Balogun, Messi"
-                      />
-                    </label>
-                  </article>
-                );
-              })}
-              {knockoutFixtures.length === 0 ? <div className="emptyState">Sin cruces eliminatorios cargados.</div> : null}
             </section>
           </details>
 
