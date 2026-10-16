@@ -8257,3 +8257,13 @@ canvas {
 .homeFixturesDisclosure[open] .fixturesHideLabel { display: inline; }
 .homeFixturesDisclosure[open] > summary svg { transform: rotate(180deg); }
 .homeFixturesDisclosure[open] .homeCompetitionGrid { margin-top: 20px; }
+
+.publicPredictionCard .publicPredictionTable { table-layout: fixed; width: 100%; min-width: 0; }
+.publicPredictionCard .publicPredictionTable th, .publicPredictionCard .publicPredictionTable td { min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: normal; padding: 12px 6px; font-variant-numeric: tabular-nums; }
+.predictionShareActions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.predictionShareActions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+@media (max-width:600px) {
+  .publicPredictionCard { padding: 12px; }
+  .publicPredictionCard .publicPredictionTable th, .publicPredictionCard .publicPredictionTable td { font-size: .73rem; padding: 12px 4px; line-height: 1.45; }
+  .predictionShareActions button { font-size: .8rem; padding: 10px; }
+}
