@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 const storage = vi.hoisted(() => ({ readAppSettings: vi.fn(), appendSubmission: vi.fn(), findSubmissionByNormalizedName: vi.fn() }));
 vi.mock("@/lib/storage", () => storage);
+vi.mock("@/lib/pin", () => ({ createPinHash: vi.fn(), validateParticipantPin: vi.fn() }));
+vi.mock("@/lib/prode", () => ({ normalizeName: vi.fn() }));
 import { POST } from "./route";
 
 describe("registration closure", () => {
