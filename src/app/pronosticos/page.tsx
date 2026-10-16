@@ -8,11 +8,12 @@ import { TeamBadge } from "@/app/components/TeamBadge";
 import { isoToArgentinaInput } from "@/lib/argentina-time";
 import { readJsonResponse } from "@/lib/client-json";
 import type { KnockoutFixture } from "@/lib/matches";
-import type { Submission } from "@/lib/prode";
+import { predictionVerdict, predictionVerdictLabels } from "@/lib/prediction-verdict";
+import type { KnockoutResult, Submission } from "@/lib/prode";
 
 type PublicPredictions = {
   submissions: Omit<Submission, "pinHash">[];
-  results: { knockoutFixtures: KnockoutFixture[] };
+  results: { knockoutFixtures: KnockoutFixture[]; knockoutResults: KnockoutResult[] };
   knockoutVisibility: Record<string, { public: boolean; unlockAt: string }>;
   error?: string;
 };
@@ -32,7 +33,7 @@ export default function PronosticosPage() {
     setSharing(fixture.id);
     setShareMessage(current=>({...current,[fixture.id]:""}));
     try {
-      const file=await predictionImageFile(buildPredictionShareSvg(fixture,visibleParticipants,data?.knockoutVisibility[fixture.id]?.public===true),`pronosticos-${fixture.id}.png`);
+      const file=await predictionImageFile(buildPredictionShareSvg(fixture,visibleParticipants,data?.knockoutVisibility[fixture.id]?.public===true,data?.results.knockoutResults?.find(result=>result.fixtureId===fixture.id)),`pronosticos-${fixture.id}.png`);
       if(!downloadOnly && navigator.canShare?.({files:[file]})) {
         await navigator.share({title:`${fixture.home} vs ${fixture.away}`,files:[file]});
         setShareMessage(current=>({...current,[fixture.id]:"Imagen lista para compartir."}));
@@ -85,12 +86,14 @@ export default function PronosticosPage() {
         {!loading && data && fixtures.length === 0 ? <p>No hay partidos cargados todavía.</p> : null}
         <div className="publicPredictionsGrid">
           {fixtures.map((fixture) => {
+            const officialResult = data?.results.knockoutResults?.find(result=>result.fixtureId===fixture.id);
             const visibility = data?.knockoutVisibility[fixture.id];
             const isPublic = visibility?.public === true;
             const competition = fixture.id.startsWith("sudamericana-") ? "Copa Sudamericana" : fixture.id.startsWith("libertadores-") ? "Copa Libertadores" : fixture.id.startsWith("copa-argentina-") ? "Copa Argentina" : "Eliminatorias";
             return <article className="publicPredictionCard" key={fixture.id}>
               <header><span className="eyebrow">{competition} · {fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : "Semifinal"}</span><div className="homeFixtureTeams"><TeamBadge team={fixture.home} /><span>vs.</span><TeamBadge team={fixture.away} /></div><p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar" : argentinaDate(fixture.kickoffAt)}</p></header>
               {!isPublic ? <p className="predictionPrivacyNote">{fixture.schedulePending || !fixture.kickoffAt ? "Los pronósticos se publicarán al cierre, una vez confirmado el horario." : `Pronósticos privados hasta ${visibility?.unlockAt ? argentinaDate(visibility.unlockAt) : "el cierre del partido"}.`}</p> : null}
+              {officialResult ? <div className="predictionResultSummary"><strong>Resultado oficial: {officialResult.homeGoals}–{officialResult.awayGoals}</strong>{officialResult.qualifiedTeam ? <span>Clasificado: {officialResult.qualifiedTeam==="home"?fixture.home:fixture.away}</span>:null}<p><span>Verde: exacto</span> · <span>Amarillo: resultado o clasificado</span> · <span>Rojo: sin aciertos</span>. El goleador no influye en el color.</p></div>:null}
               <div className="predictionShareActions">
                 <button className="tableButton" type="button" disabled={sharing!==null || visibleParticipants.length===0} onClick={()=>void sharePredictions(fixture)}><Share2 size={16} aria-hidden="true"/> Compartir</button>
                 <button className="tableButton" type="button" disabled={sharing!==null || visibleParticipants.length===0} onClick={()=>void sharePredictions(fixture,true)}><Download size={16} aria-hidden="true"/> {sharing===fixture.id?"Preparando…":"Guardar foto"}</button>
@@ -98,7 +101,8 @@ export default function PronosticosPage() {
               {shareMessage[fixture.id]?<p role="status">{shareMessage[fixture.id]}</p>:null}
               <div className="tableShell"><table className="publicPredictionTable"><colgroup><col style={{width:"34%"}}/><col style={{width:"18%"}}/><col style={{width:"24%"}}/><col style={{width:"24%"}}/></colgroup><thead><tr><th scope="col">Participante</th><th scope="col">Marcador</th><th scope="col">Clasificado</th><th scope="col">Goleador</th></tr></thead><tbody>{visibleParticipants.map((participant) => {
                 const prediction = participant.knockoutPredictions.find((item) => item.fixtureId === fixture.id);
-                return <tr key={participant.id}><th scope="row">{participant.name}</th>{isPublic ? <><td>{prediction ? `${prediction.homeGoals} - ${prediction.awayGoals}` : "Sin cargar"}</td><td>{prediction?.qualifiedTeam ? (prediction.qualifiedTeam === "home" ? fixture.home : fixture.away) : "—"}</td><td>{prediction?.goalScorer || "—"}</td></> : <td colSpan={3}>Privado hasta el cierre</td>}</tr>;
+                const verdict = isPublic ? predictionVerdict(fixture,prediction,officialResult) : "pending";
+                return <tr className={`predictionVerdict-${verdict}`} title={predictionVerdictLabels[verdict]} key={participant.id}><th scope="row">{participant.name}</th>{isPublic ? <><td>{prediction ? `${prediction.homeGoals} - ${prediction.awayGoals}` : "Sin cargar"}</td><td>{prediction?.qualifiedTeam ? (prediction.qualifiedTeam === "home" ? fixture.home : fixture.away) : "—"}</td><td>{prediction?.goalScorer || "—"}</td></> : <td colSpan={3}>Privado hasta el cierre</td>}</tr>;
               })}</tbody></table></div>
               {participants.length === 0 ? <p>Todavía no hay participantes anotados.</p> : null}
             </article>;

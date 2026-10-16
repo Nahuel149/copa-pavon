@@ -8267,3 +8267,14 @@ canvas {
   .publicPredictionCard .publicPredictionTable th, .publicPredictionCard .publicPredictionTable td { font-size: .73rem; padding: 12px 4px; line-height: 1.45; }
   .predictionShareActions button { font-size: .8rem; padding: 10px; }
 }
+
+.publicPredictionCard .publicPredictionTable tbody tr > * { background: var(--panel); }
+.publicPredictionCard .publicPredictionTable .predictionVerdict-exact > * { background: #d6f3df; color: #12512a; }
+.publicPredictionCard .publicPredictionTable .predictionVerdict-result > * { background: #fff0b8; color: #654500; }
+.publicPredictionCard .publicPredictionTable .predictionVerdict-miss > * { background: #ffe0df; color: #7b1c21; }
+:root[data-theme="dark"] .publicPredictionCard .publicPredictionTable .predictionVerdict-exact > * { background: #16432e; color: #d7ffe4; }
+:root[data-theme="dark"] .publicPredictionCard .publicPredictionTable .predictionVerdict-result > * { background: #554316; color: #fff1bb; }
+:root[data-theme="dark"] .publicPredictionCard .publicPredictionTable .predictionVerdict-miss > * { background: #571e29; color: #ffe1e6; }
+.predictionResultSummary { padding: 12px 0; }
+.predictionResultSummary > strong, .predictionResultSummary > span { display: block; margin-bottom: 6px; }
+.predictionResultSummary p { font-size: .8rem; line-height: 1.5; }

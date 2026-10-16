@@ -16,4 +16,11 @@ describe("prediction share images", () => {
     expect(svg).not.toContain("2 - 1");
     expect(svg).not.toContain("Carrillo");
   });
+  it("colors exported rows by the official score rather than the scorer", () => {
+    const result = { fixtureId: fixture.id, homeGoals: 2, awayGoals: 1, scorerNames: ["Other"] };
+    expect(buildPredictionShareSvg(fixture, participants, true, result)).toContain('fill="#d6f3df"');
+    expect(buildPredictionShareSvg(fixture, participants, true, { ...result, homeGoals: 3 })).toContain('fill="#fff0b8"');
+    expect(buildPredictionShareSvg(fixture, participants, true, { ...result, homeGoals: 0 })).toContain('fill="#ffe0df"');
+    expect(buildPredictionShareSvg(fixture, participants, false, result)).not.toContain('fill="#d6f3df"');
+  });
 });
