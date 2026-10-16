@@ -951,34 +951,6 @@ export default function TablaPage() {
         ) : null}
       </section>
 
-      <section className="homeFixturesPanel" aria-labelledby="home-fixtures-title">
-        <div className="tableNote">
-          <div><strong id="home-fixtures-title">Cruces de semifinales</strong><span>Horarios de Argentina. Cada partido cierra 10 minutos antes del inicio.</span></div>
-          <Link className="primaryAction" href="/editar_prode">Cargar mi prode</Link>
-        </div>
-        {fixtureError ? <p role="alert">{fixtureError}</p> : null}
-        <div className="homeCompetitionGrid">
-          {[
-            { prefix: "sudamericana-", title: "Copa Sudamericana", format: "Ida y vuelta" },
-            { prefix: "libertadores-", title: "Copa Libertadores", format: "Ida y vuelta" },
-            { prefix: "copa-argentina-", title: "Copa Argentina", format: "Partido único" },
-          ].map((competition) => (
-            <article className="homeCompetition" key={competition.prefix}>
-              <header><h2>{competition.title}</h2><span>{competition.format}</span></header>
-              {homeFixtures.filter((fixture) => fixture.id.startsWith(competition.prefix)).map((fixture) => (
-                <div className="homeFixture" key={fixture.id}>
-                  <span className="eyebrow">{fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : "Semifinal"}</span>
-                  <div className="homeFixtureTeams"><TeamBadge team={fixture.home} /><span>vs.</span><TeamBadge team={fixture.away} /></div>
-                  <p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar · carga pendiente" : `${isoToArgentinaInput(fixture.kickoffAt).slice(0, 10).split("-").reverse().join("/")} · ${isoToArgentinaInput(fixture.kickoffAt).slice(11)} (ARG)`}</p>
-                </div>
-              ))}
-              {homeFixtures.length === 0 ? <p>{status === "loading" ? "Cargando cruces…" : "Sin cruces disponibles."}</p> : null}
-            </article>
-          ))}
-        </div>
-        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales se agregarán al definirse los clasificados.</p>
-      </section>
-
       <section className="homeStandingsPanel" aria-labelledby="home-standings-title">
         <div className="tableNote">
           <div><strong id="home-standings-title">Tabla de participantes</strong><span>{rows.length} anotados · {data.playedKnockoutMatches === 0 ? "Todos arrancan con 0 puntos. La tabla se actualizará al cargar los resultados." : "Puntajes actualizados con los resultados cargados."}</span></div>
@@ -999,6 +971,37 @@ export default function TablaPage() {
         </div>
         <p className="homeStandingsLegend"><span className="championLegend">Verde: campeón</span> · <span className="relegationLegend">Rojo: últimos 3, descenso</span><br/>Pts: puntos · Jug: jugados · Ex: exactos · Res: resultados sin exacto · Gol: goleadores</p>
         {shareMessage ? <p role="status">{shareMessage}</p> : null}
+      </section>
+
+      <section className="homeFixturesPanel" aria-labelledby="home-fixtures-title">
+        <div className="tableNote">
+          <div><strong id="home-fixtures-title">Cruces de semifinales</strong><span>Horarios de Argentina. Cada partido cierra 10 minutos antes del inicio.</span></div>
+          <Link className="primaryAction" href="/editar_prode">Cargar mi prode</Link>
+        </div>
+        {fixtureError ? <p role="alert">{fixtureError}</p> : null}
+        <details className="homeFixturesDisclosure">
+          <summary><span className="fixturesShowLabel">Ver partidos</span><span className="fixturesHideLabel">Ocultar partidos</span><ChevronDown size={20} aria-hidden="true" /></summary>
+        <div className="homeCompetitionGrid">
+          {[
+            { prefix: "sudamericana-", title: "Copa Sudamericana", format: "Ida y vuelta" },
+            { prefix: "libertadores-", title: "Copa Libertadores", format: "Ida y vuelta" },
+            { prefix: "copa-argentina-", title: "Copa Argentina", format: "Partido único" },
+          ].map((competition) => (
+            <article className="homeCompetition" key={competition.prefix}>
+              <header><h2>{competition.title}</h2><span>{competition.format}</span></header>
+              {homeFixtures.filter((fixture) => fixture.id.startsWith(competition.prefix)).map((fixture) => (
+                <div className="homeFixture" key={fixture.id}>
+                  <span className="eyebrow">{fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : "Semifinal"}</span>
+                  <div className="homeFixtureTeams"><TeamBadge team={fixture.home} /><span>vs.</span><TeamBadge team={fixture.away} /></div>
+                  <p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar · carga pendiente" : `${isoToArgentinaInput(fixture.kickoffAt).slice(0, 10).split("-").reverse().join("/")} · ${isoToArgentinaInput(fixture.kickoffAt).slice(11)} (ARG)`}</p>
+                </div>
+              ))}
+              {homeFixtures.length === 0 ? <p>{status === "loading" ? "Cargando cruces…" : "Sin cruces disponibles."}</p> : null}
+            </article>
+          ))}
+        </div>
+        </details>
+        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales se agregarán al definirse los clasificados.</p>
       </section>
 
       <section className="commentsPanel" aria-label="Comentarios">

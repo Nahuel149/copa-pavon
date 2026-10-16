@@ -8247,3 +8247,13 @@ canvas {
 
 .homeStandingsPanel .tableNote > .homeStandingsActions { display: flex; flex-direction: row; flex-wrap: wrap; }
 .homeStandingsPanel .homeStandingsTable tbody tr:not(.homeChampionRow):not(.homeRelegationRow) > * { background: var(--panel); }
+
+.homeFixturesDisclosure > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border: 2px solid currentColor; background: var(--panel); font-weight: 800; cursor: pointer; list-style: none; }
+.homeFixturesDisclosure > summary::-webkit-details-marker { display: none; }
+.homeFixturesDisclosure > summary:focus-visible { outline: 3px solid var(--red); outline-offset: 4px; }
+.homeFixturesDisclosure > summary:hover { text-decoration: underline; text-underline-offset: 4px; }
+.homeFixturesDisclosure .fixturesHideLabel { display: none; }
+.homeFixturesDisclosure[open] .fixturesShowLabel { display: none; }
+.homeFixturesDisclosure[open] .fixturesHideLabel { display: inline; }
+.homeFixturesDisclosure[open] > summary svg { transform: rotate(180deg); }
+.homeFixturesDisclosure[open] .homeCompetitionGrid { margin-top: 20px; }
