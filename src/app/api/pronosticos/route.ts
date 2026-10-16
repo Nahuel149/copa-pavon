@@ -20,11 +20,13 @@ export async function GET() {
     const now = new Date();
     const knockoutFixtures = results.knockoutFixtures.toSorted(compareKnockoutFixturesByKickoff);
     const publicResults = { ...results, knockoutFixtures };
+    const standings = buildStandings(submissionStore.submissions, results, now);
+    const activeIds = new Set(standings.map((row) => row.submissionId));
     const submissions = submissionStore.submissions
+      .filter((submission) => activeIds.has(submission.id))
       .toSorted((a, b) => a.name.localeCompare(b.name, "es"))
       .map(publicSubmission)
       .map((submission) => hideLockedKnockoutPredictions(submission, knockoutFixtures, now));
-    const standings = buildStandings(submissionStore.submissions, results);
 
     return NextResponse.json({
       submissions,
