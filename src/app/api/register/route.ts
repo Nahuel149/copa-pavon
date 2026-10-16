@@ -2,12 +2,16 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createPinHash, validateParticipantPin } from "@/lib/pin";
 import { normalizeName } from "@/lib/prode";
-import { appendSubmission, findSubmissionByNormalizedName } from "@/lib/storage";
+import { appendSubmission, findSubmissionByNormalizedName, readAppSettings } from "@/lib/storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const settings = await readAppSettings();
+  if (!settings.submissionsOpen) {
+    return NextResponse.json({ errors: ["Las inscripciones están cerradas."] }, { status: 403 });
+  }
   let payload: unknown;
   try {
     payload = await request.json();

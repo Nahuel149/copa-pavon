@@ -179,10 +179,6 @@ export default function TablaPage() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, CommentReplyDraft>>({});
   const [replySaving, setReplySaving] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: "position", direction: "asc" });
-  const [regName, setRegName] = useState("");
-  const [regPin, setRegPin] = useState("");
-  const [regStatus, setRegStatus] = useState<"idle" | "saving" | "done">("idle");
-  const [regMessage, setRegMessage] = useState("");
   const rows = data.standings;
   const sortedRows = useMemo(() => {
     const originalPositionById = new Map(rows.map((row, index) => [row.submissionId, index + 1]));
@@ -694,33 +690,6 @@ export default function TablaPage() {
     }
   }
 
-  async function registerParticipant(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (regStatus === "saving") return;
-
-    setRegStatus("saving");
-    setRegMessage("");
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: regName, pin: regPin }),
-      });
-      const body = await readJsonResponse<{ ok?: boolean; name?: string; errors?: string[] }>(response);
-      if (!response.ok || !body.ok) {
-        throw new Error(body.errors?.[0] ?? "No se pudo crear el participante.");
-      }
-
-      setRegStatus("done");
-      setRegPin("");
-      setRegMessage(`Listo, ${body.name ?? regName.trim()}. Ya podes entrar a Editar Prode con tu PIN.`);
-      await loadStandings();
-    } catch (registrationError) {
-      setRegStatus("idle");
-      setRegMessage(registrationError instanceof Error ? registrationError.message : "No se pudo crear el participante.");
-    }
-  }
-
   async function loadComments() {
     try {
       const response = await fetch("/api/comments", { cache: "no-store" });
@@ -893,62 +862,15 @@ export default function TablaPage() {
       <section className="heroBand tableHero standingsHero">
         <div>
           <p className="eyebrow" style={{ background: "#fef08a", color: "#854d0e", border: "2px solid #000", fontWeight: 900 }}>
-            INSCRIPCIONES ABIERTAS 🏆
+            INSCRIPCIONES CERRADAS
           </p>
           <h1>Copa Se mató Pavón</h1>
           <p className="heroCopy">
-            La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Anotate y cargá tus pronósticos para las semifinales.
+            La nueva edición oficial del prode para las definiciones más calientes del fútbol argentino y sudamericano. Seguí la tabla y cargá tus pronósticos para los partidos que siguen abiertos.
           </p>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="pavonHeroImage" src="/images/pavon-hero.png" alt="Cristian Pavón junto a la Copa Libertadores" width={1774} height={887} fetchPriority="high" />
-      </section>
-
-      <section className="registrationPanel" aria-labelledby="registration-title">
-        <div className="registrationCopy">
-          <p className="eyebrow">NUEVO PARTICIPANTE</p>
-          <h2 id="registration-title">Anotate a la Copa.</h2>
-          <p>Elegi tu nombre y un PIN de 4 a 10 numeros. Despues usalos para entrar y editar tu prode.</p>
-        </div>
-        <form className="registrationForm" onSubmit={registerParticipant}>
-          <label className="registrationField">
-            <span>Nombre</span>
-            <input
-              autoComplete="nickname"
-              maxLength={40}
-              minLength={2}
-              onChange={(event) => setRegName(event.target.value)}
-              placeholder="Tu nombre"
-              required
-              value={regName}
-            />
-          </label>
-          <label className="registrationField">
-            <span>PIN</span>
-            <input
-              autoComplete="new-password"
-              inputMode="numeric"
-              maxLength={10}
-              minLength={4}
-              onChange={(event) => setRegPin(event.target.value.replace(/\D/g, "").slice(0, 10))}
-              pattern="[0-9]{4,10}"
-              placeholder="4 a 10 numeros"
-              required
-              type="password"
-              value={regPin}
-            />
-          </label>
-          <button className="primaryAction registrationSubmit" disabled={regStatus === "saving"} type="submit">
-            {regStatus === "saving" ? <Loader2 className="spin" size={18} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
-            Anotarme
-          </button>
-        </form>
-        {regMessage ? (
-          <p className={`registrationMessage ${regStatus === "done" ? "successMessage" : "errorMessage"}`} role="status">
-            {regMessage}
-            {regStatus === "done" ? <Link href="/editar_prode">Ir a Editar Prode</Link> : null}
-          </p>
-        ) : null}
       </section>
 
       <section className="homeStandingsPanel" aria-labelledby="home-standings-title">
