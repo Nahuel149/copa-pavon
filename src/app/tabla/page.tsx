@@ -13,6 +13,10 @@ import { type ClanId, type StandingRow } from "@/lib/prode";
 const worldCupTotalMatches = 104;
 const commentReactionStorageKey = "copa-kahl-comment-reactions";
 
+function standingBonusPoints(row: StandingRow, bonus: "minority" | "qualifier") {
+  return row.pointAudit.reduce((total, entry) => total + ((bonus === "minority" ? entry.category === "underdog" : entry.category === "knockout" && entry.id.endsWith("-qualifier")) ? entry.points : 0), 0);
+}
+
 function shortParticipantName(name: string) {
   return name.length > 8 ? `${name.slice(0, 8)}...` : name;
 }
@@ -491,8 +495,8 @@ export default function TablaPage() {
     const rowHeight = 76;
     const top = 210;
     const height = top + 50 + rows.length * rowHeight + 100;
-    const positions = [40, 100, 610, 710, 800, 890, 995];
-    const headers = ["#", "Participante", "Pts", "Jug", "Ex", "Res", "Gol"];
+    const positions = [40, 90, 525, 605, 685, 765, 845, 925, 1005];
+    const headers = ["#", "Participante", "Pts", "Jug", "Ex", "Res", "Gol", "Min", "Cla"];
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
       <rect width="${width}" height="${height}" fill="#fffdf7"/>
       <rect width="${width}" height="170" fill="#101b2b"/>
@@ -503,11 +507,11 @@ export default function TablaPage() {
       ${rows.map((row,index)=>{
         const y=top+50+index*rowHeight;
         const fill=index===0?"#d6f3df":index>=Math.max(1,rows.length-3)?"#ffe0df":"#fffdf7";
-        const values=[String(index+1),row.name,String(row.totalPoints),String(row.playedKnockoutMatches),String(row.knockoutExactHits),String(row.knockoutWinnerHits),String(row.knockoutScorerHits)];
-        return `<rect x="24" y="${y}" width="1032" height="${rowHeight}" fill="${fill}"/><path d="M24 ${y+rowHeight}H1056" stroke="#c6c6c6"/>${values.map((value,i)=>svgText(value,positions[i],y+46,{size:i===1?(row.name.length>32?18:24):26,weight:i===2?900:700,anchor:i>1?"middle":"start"})).join("")}`;
+        const values=[String(index+1),row.name,String(row.totalPoints),String(row.playedKnockoutMatches),String(row.knockoutExactHits),String(row.knockoutWinnerHits),String(row.knockoutScorerHits),String(standingBonusPoints(row,"minority")),String(standingBonusPoints(row,"qualifier"))];
+        return `<rect x="24" y="${y}" width="1032" height="${rowHeight}" fill="${fill}"/><path d="M24 ${y+rowHeight}H1056" stroke="#c6c6c6"/>${values.map((value,i)=>svgText(value,positions[i],y+46,{size:i===1?(row.name.length>26?16:22):26,weight:i===2?900:700,anchor:i>1?"middle":"start"})).join("")}`;
       }).join("")}
       ${svgText("Verde: campeón · Rojo: últimos 3, descenso",40,height-54,{size:21})}
-      ${svgText("Pts: puntos · Jug: jugados · Ex: exactos · Res: resultado sin exacto · Gol: goleadores",40,height-22,{size:19})}
+      ${svgText("Pts: puntos · Jug: jugados · Ex: exactos · Res: sin exacto · Gol: goleadores · Min: pts minoría · Cla: pts clasificado",40,height-22,{size:16})}
     </svg>`;
   }
 
@@ -885,13 +889,13 @@ export default function TablaPage() {
         {error ? <p role="alert">{error}</p> : null}
         <div className="tableShell">
           <table className="homeStandingsTable">
-            <colgroup><col className="homeRankCol"/><col className="homeNameCol"/>{Array.from({length:5},(_,i)=><col className="homeStatCol" key={i}/>)}</colgroup>
-            <thead><tr><th scope="col">#</th><th scope="col">Participante</th><th scope="col"><abbr title="Puntos">Pts</abbr></th><th scope="col"><abbr title="Partidos jugados">Jug</abbr></th><th scope="col"><abbr title="Marcadores exactos">Ex</abbr></th><th scope="col"><abbr title="Resultados acertados sin marcador exacto">Res</abbr></th><th scope="col"><abbr title="Goleadores acertados">Gol</abbr></th></tr></thead>
-            <tbody>{rows.map((row, index) => <tr className={index===0?"homeChampionRow":index>=Math.max(1,rows.length-3)?"homeRelegationRow":""} key={row.submissionId}><td>{index + 1}</td><th scope="row">{row.name}</th><td><strong>{row.totalPoints}</strong></td><td>{row.playedKnockoutMatches}</td><td>{row.knockoutExactHits}</td><td>{row.knockoutWinnerHits}</td><td>{row.knockoutScorerHits}</td></tr>)}</tbody>
+            <colgroup><col className="homeRankCol"/><col className="homeNameCol"/>{Array.from({length:7},(_,i)=><col className="homeStatCol" key={i}/>)}</colgroup>
+            <thead><tr><th scope="col">#</th><th scope="col">Participante</th><th scope="col"><abbr title="Puntos">Pts</abbr></th><th scope="col"><abbr title="Partidos jugados">Jug</abbr></th><th scope="col"><abbr title="Marcadores exactos">Ex</abbr></th><th scope="col"><abbr title="Resultados acertados sin marcador exacto">Res</abbr></th><th scope="col"><abbr title="Goleadores acertados">Gol</abbr></th><th scope="col"><abbr title="Puntos por minoría">Min</abbr></th><th scope="col"><abbr title="Puntos por equipo clasificado">Cla</abbr></th></tr></thead>
+            <tbody>{rows.map((row, index) => <tr className={index===0?"homeChampionRow":index>=Math.max(1,rows.length-3)?"homeRelegationRow":""} key={row.submissionId}><td>{index + 1}</td><th scope="row">{row.name}</th><td><strong>{row.totalPoints}</strong></td><td>{row.playedKnockoutMatches}</td><td>{row.knockoutExactHits}</td><td>{row.knockoutWinnerHits}</td><td>{row.knockoutScorerHits}</td><td>{standingBonusPoints(row,"minority")}</td><td>{standingBonusPoints(row,"qualifier")}</td></tr>)}</tbody>
           </table>
           {rows.length === 0 ? <p>{status === "loading" ? "Cargando participantes…" : "Todavía no hay participantes anotados. ¡Sé el primero!"}</p> : null}
         </div>
-        <p className="homeStandingsLegend"><span className="championLegend">Verde: campeón</span> · <span className="relegationLegend">Rojo: últimos 3, descenso</span><br/>Pts: puntos · Jug: jugados · Ex: exactos · Res: resultados sin exacto · Gol: goleadores</p>
+        <p className="homeStandingsLegend"><span className="championLegend">Verde: campeón</span> · <span className="relegationLegend">Rojo: últimos 3, descenso</span><br/>Pts: puntos · Jug: jugados · Ex: exactos · Res: resultados sin exacto · Gol: goleadores · Min: puntos por minoría · Cla: puntos por clasificado</p>
         {shareMessage ? <p role="status">{shareMessage}</p> : null}
       </section>
 

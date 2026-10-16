@@ -8278,3 +8278,10 @@ canvas {
 .predictionResultSummary { padding: 12px 0; }
 .predictionResultSummary > strong, .predictionResultSummary > span { display: block; margin-bottom: 6px; }
 .predictionResultSummary p { font-size: .8rem; line-height: 1.5; }
+
+.homeStandingsTable .homeRankCol { width: 5%; }
+.homeStandingsTable .homeNameCol { width: 32%; }
+.homeStandingsTable .homeStatCol { width: 9%; }
+@media (max-width:600px) {
+  .homeStandingsPanel .homeStandingsTable th, .homeStandingsPanel .homeStandingsTable td { padding: 12px 2px; font-size: .7rem; }
+}
