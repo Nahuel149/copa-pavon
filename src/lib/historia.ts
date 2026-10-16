@@ -1,3 +1,5 @@
+import { kahlParticipantAnalyses } from "./kahl-participant-analyses";
+
 export type HistoricalEdition = {
   id: string;
   title: string;
@@ -46,21 +48,21 @@ export const historicalEditions: HistoricalEdition[] = [
     description: "Tabla oficial de posiciones de la Copa Kahl.",
     image: "/kahl-assets/campeon-gonza-fiss.jpeg",
     table: [
-      { pos: 1, participant: "Gonza el + Fachero.", points: 162, played: 104, won: 71, lost: 33, exactHits: 10, goals: 17, groups: "7/12", totalHits: 105, badge: "champion", notes: "CAMPEÓN" },
-      { pos: 2, participant: "Nicolas Montes", points: 157, played: 104, won: 65, lost: 39, exactHits: 10, goals: 14, groups: "9/12", totalHits: 98, badge: "runner-up", notes: "Subcampeón" },
-      { pos: 3, participant: "Miguel (El Borracho)", points: 157, played: 104, won: 72, lost: 32, exactHits: 6, goals: 15, groups: "9/12", totalHits: 102, badge: "podium", notes: "Tercer Puesto" },
-      { pos: 4, participant: "Ale Bauch", points: 153, played: 104, won: 66, lost: 38, exactHits: 8, goals: 15, groups: "6/12", totalHits: 95 },
-      { pos: 5, participant: "Zino", points: 152, played: 104, won: 69, lost: 35, exactHits: 8, goals: 14, groups: "8/12", totalHits: 99 },
-      { pos: 6, participant: "Lautaro", points: 150, played: 100, won: 64, lost: 36, exactHits: 7, goals: 17, groups: "7/12", totalHits: 95 },
-      { pos: 7, participant: "Javier", points: 150, played: 104, won: 66, lost: 38, exactHits: 6, goals: 12, groups: "5/12", totalHits: 89 },
-      { pos: 8, participant: "Enzo", points: 147, played: 104, won: 65, lost: 39, exactHits: 11, goals: 14, groups: "7/12", totalHits: 97 },
-      { pos: 9, participant: "Matías Nicolas", points: 147, played: 104, won: 58, lost: 46, exactHits: 4, goals: 13, groups: "7/12", totalHits: 82 },
-      { pos: 10, participant: "Tony", points: 142, played: 104, won: 66, lost: 38, exactHits: 9, goals: 14, groups: "5/12", totalHits: 94 },
-      { pos: 11, participant: "Lautaro", points: 136, played: 104, won: 65, lost: 39, exactHits: 6, goals: 14, groups: "6/12", totalHits: 91 },
-      { pos: 12, participant: "Andres", points: 135, played: 104, won: 62, lost: 42, exactHits: 5, goals: 9, groups: "8/12", totalHits: 84 },
-      { pos: 13, participant: "Nahuel", points: 129, played: 104, won: 56, lost: 48, exactHits: 5, goals: 9, groups: "9/12", totalHits: 79, badge: "relegated", notes: "Descendido a B Nacional" },
-      { pos: 14, participant: "Maxi", points: 124, played: 102, won: 64, lost: 38, exactHits: 6, goals: 13, groups: "3/12", totalHits: 86, badge: "relegated", notes: "Descendido a B Nacional" },
-      { pos: 15, participant: "Fer", points: 118, played: 104, won: 55, lost: 49, exactHits: 3, goals: 11, groups: "6/12", totalHits: 75, badge: "relegated", notes: "Descendido a B Nacional" },
+      { pos: 1, participant: "Gonza el + Fachero.", points: 162, played: 104, won: 71, lost: 33, exactHits: 10, goals: 17, groups: "7/12", totalHits: 105, badge: "champion", notes: kahlParticipantAnalyses[1] },
+      { pos: 2, participant: "Nicolas Montes", points: 157, played: 104, won: 65, lost: 39, exactHits: 10, goals: 14, groups: "9/12", totalHits: 98, badge: "runner-up", notes: kahlParticipantAnalyses[2] },
+      { pos: 3, participant: "Miguel (El Borracho)", points: 157, played: 104, won: 72, lost: 32, exactHits: 6, goals: 15, groups: "9/12", totalHits: 102, badge: "podium", notes: kahlParticipantAnalyses[3] },
+      { pos: 4, participant: "Ale Bauch", points: 153, played: 104, won: 66, lost: 38, exactHits: 8, goals: 15, groups: "6/12", totalHits: 95, notes: kahlParticipantAnalyses[4] },
+      { pos: 5, participant: "Zino", points: 152, played: 104, won: 69, lost: 35, exactHits: 8, goals: 14, groups: "8/12", totalHits: 99, notes: kahlParticipantAnalyses[5] },
+      { pos: 6, participant: "Lautaro", points: 150, played: 100, won: 64, lost: 36, exactHits: 7, goals: 17, groups: "7/12", totalHits: 95, notes: kahlParticipantAnalyses[6] },
+      { pos: 7, participant: "Javier", points: 150, played: 104, won: 66, lost: 38, exactHits: 6, goals: 12, groups: "5/12", totalHits: 89, notes: kahlParticipantAnalyses[7] },
+      { pos: 8, participant: "Enzo", points: 147, played: 104, won: 65, lost: 39, exactHits: 11, goals: 14, groups: "7/12", totalHits: 97, notes: kahlParticipantAnalyses[8] },
+      { pos: 9, participant: "Matías Nicolas", points: 147, played: 104, won: 58, lost: 46, exactHits: 4, goals: 13, groups: "7/12", totalHits: 82, notes: kahlParticipantAnalyses[9] },
+      { pos: 10, participant: "Tony", points: 142, played: 104, won: 66, lost: 38, exactHits: 9, goals: 14, groups: "5/12", totalHits: 94, notes: kahlParticipantAnalyses[10] },
+      { pos: 11, participant: "Lautaro", points: 136, played: 104, won: 65, lost: 39, exactHits: 6, goals: 14, groups: "6/12", totalHits: 91, notes: kahlParticipantAnalyses[11] },
+      { pos: 12, participant: "Andres", points: 135, played: 104, won: 62, lost: 42, exactHits: 5, goals: 9, groups: "8/12", totalHits: 84, notes: kahlParticipantAnalyses[12] },
+      { pos: 13, participant: "Nahuel", points: 129, played: 104, won: 56, lost: 48, exactHits: 5, goals: 9, groups: "9/12", totalHits: 79, badge: "relegated", notes: kahlParticipantAnalyses[13] },
+      { pos: 14, participant: "Maxi", points: 124, played: 102, won: 64, lost: 38, exactHits: 6, goals: 13, groups: "3/12", totalHits: 86, badge: "relegated", notes: kahlParticipantAnalyses[14] },
+      { pos: 15, participant: "Fer", points: 118, played: 104, won: 55, lost: 49, exactHits: 3, goals: 11, groups: "6/12", totalHits: 75, badge: "relegated", notes: kahlParticipantAnalyses[15] },
     ],
   },
   {

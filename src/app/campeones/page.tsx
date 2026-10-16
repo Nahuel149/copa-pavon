@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Award, Calendar, History, Medal, ShieldAlert, Trophy, Users } from "lucide-react";
 import { KahlImageScatter } from "@/app/components/KahlImageScatter";
 import { allTimePalmares, historicalEditions } from "@/lib/historia";
@@ -195,8 +195,8 @@ export default function CampeonesPage() {
                       </thead>
                       <tbody>
                         {currentEdition.table.map((row) => (
+                          <Fragment key={`${row.pos}-${row.participant}`}>
                           <tr
-                            key={`${row.pos}-${row.participant}`}
                             className={
                               row.badge === "champion"
                                 ? "championRow"
@@ -230,6 +230,8 @@ export default function CampeonesPage() {
                             {hasGroupsColumn && <td>{row.groups}</td>}
                             <td>{row.totalHits}</td>
                           </tr>
+                          {currentEdition.id === "copa-kahl-2026" && row.notes ? <tr className="historicalAnalysisRow"><td colSpan={hasGroupsColumn ? 10 : 9}><details><summary>Leer análisis de {row.participant}</summary><p>{row.notes}</p></details></td></tr>:null}
+                          </Fragment>
                         ))}
                       </tbody>
                     </table>
