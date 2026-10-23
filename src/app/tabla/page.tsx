@@ -927,7 +927,7 @@ export default function TablaPage() {
           ))}
         </div>
         </details>
-        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales continentales ya están cargadas; se habilitarán cuando se confirme el horario.</p>
+        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales continentales ya están habilitadas para pronosticar. Cierran 10 minutos antes del inicio.</p>
       </section>
 
       <section className="commentsPanel" aria-label="Comentarios">
