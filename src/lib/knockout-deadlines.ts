@@ -81,7 +81,9 @@ export function isKnockoutStageSuperseded(stage: KnockoutStage, fixtures: Knocko
 
 export function isKnockoutFixtureEditable(fixture: KnockoutFixture, now = new Date(), fixtures: KnockoutFixture[] = []) {
   if (isKnockoutSchedulePending(fixture)) return false;
-  if (isKnockoutStageSuperseded(fixture.stage, fixtures)) return false;
+  const competition = (item: KnockoutFixture) => item.id.match(/^(sudamericana|libertadores|copa-argentina)-/)?.[1] ?? "legacy";
+  const sameCompetition = fixtures.filter((item) => competition(item) === competition(fixture));
+  if (isKnockoutStageSuperseded(fixture.stage, sameCompetition)) return false;
   return now.getTime() < new Date(getKnockoutEditDeadline(fixture, fixtures)).getTime();
 }
 

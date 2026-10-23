@@ -763,6 +763,7 @@ export function validateResultStore(payload: unknown): ResultStore {
       home,
       away,
       ...(item.schedulePending === true ? { schedulePending: true } : {}),
+      ...(typeof item.scheduledDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.scheduledDate) ? { scheduledDate: item.scheduledDate } : {}),
       ...(typeof item.kickoffAt === "string" && !Number.isNaN(new Date(item.kickoffAt).getTime()) ? { kickoffAt: item.kickoffAt } : {}),
     };
     fixtureById.set(fixture.id, fixture);

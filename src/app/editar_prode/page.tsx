@@ -504,7 +504,7 @@ export default function EliminatoriasPage() {
           <TeamBadge team={fixture.away} />
         </h2>
         <small className={fixtureOpen ? "editState open" : "editState closed"}>
-          {isKnockoutSchedulePending(fixture) ? "Fecha y horario a confirmar. Pronósticos disponibles cuando se programe." : fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
+          {isKnockoutSchedulePending(fixture) ? (fixture.scheduledDate ? `${fixture.scheduledDate.split("-").reverse().join("/")} · horario a confirmar. Pronósticos disponibles cuando se confirme.` : "Fecha y horario a confirmar. Pronósticos disponibles cuando se programe.") : fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
         </small>
         {renderFixtureRuleNote(fixture)}
         <div className="scoreInputs">
@@ -672,7 +672,7 @@ export default function EliminatoriasPage() {
                       <TeamBadge team={fixture.away} />
                     </h2>
                     <small className={fixtureOpen ? "editState open" : "editState closed"}>
-                      {isKnockoutSchedulePending(fixture) ? "Fecha y horario a confirmar. Pronósticos disponibles cuando se programe." : fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
+                      {isKnockoutSchedulePending(fixture) ? (fixture.scheduledDate ? `${fixture.scheduledDate.split("-").reverse().join("/")} · horario a confirmar. Pronósticos disponibles cuando se confirme.` : "Fecha y horario a confirmar. Pronósticos disponibles cuando se programe.") : fixtureOpen ? `Partido editable hasta ${deadline}` : "Este partido ya cerro."}
                     </small>
                     {renderFixtureRuleNote(fixture)}
                     <div className="scoreInputs">

@@ -1150,3 +1150,16 @@ describe("late registration after knockout deadlines", () => {
     expect(isKnockoutFixtureEditable(next, now, [...fixtures, next])).toBe(true);
   });
 });
+
+
+describe("independent cup calendars", () => {
+  it("keeps Copa Argentina semifinals open after continental finals are added", () => {
+    const argentina: KnockoutFixture = { id: "copa-argentina-2026-sf-tucuman-platense", order: 10, stage: "SF", home: "Atlético Tucumán", away: "Platense", kickoffAt: "2026-10-28T21:15:00-03:00" };
+    const final: KnockoutFixture = { id: "libertadores-2026-final-palmeiras-estudiantes", order: 12, stage: "FINAL", home: "Palmeiras", away: "Estudiantes", scheduledDate: "2026-11-28", schedulePending: true };
+    const fixtures = [argentina, final];
+    const now = new Date("2026-10-23T12:00:00Z");
+    expect(isKnockoutFixtureEditable(argentina, now, fixtures)).toBe(true);
+    expect(isKnockoutFixtureEditable(final, now, fixtures)).toBe(false);
+    expect(validateResultStore({...emptyResults,knockoutFixtures:fixtures}).knockoutFixtures[1].scheduledDate).toBe("2026-11-28");
+  });
+});

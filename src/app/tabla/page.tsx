@@ -901,7 +901,7 @@ export default function TablaPage() {
 
       <section className="homeFixturesPanel" aria-labelledby="home-fixtures-title">
         <div className="tableNote">
-          <div><strong id="home-fixtures-title">Cruces de semifinales</strong><span>Horarios de Argentina. Cada partido cierra 10 minutos antes del inicio.</span></div>
+          <div><strong id="home-fixtures-title">Cruces de las copas</strong><span>Horarios de Argentina. Cada partido cierra 10 minutos antes del inicio.</span></div>
           <Link className="primaryAction" href="/editar_prode">Cargar mi prode</Link>
         </div>
         {fixtureError ? <p role="alert">{fixtureError}</p> : null}
@@ -909,17 +909,17 @@ export default function TablaPage() {
           <summary><span className="fixturesShowLabel">Ver partidos</span><span className="fixturesHideLabel">Ocultar partidos</span><ChevronDown size={20} aria-hidden="true" /></summary>
         <div className="homeCompetitionGrid">
           {[
-            { prefix: "sudamericana-", title: "Copa Sudamericana", format: "Ida y vuelta" },
-            { prefix: "libertadores-", title: "Copa Libertadores", format: "Ida y vuelta" },
+            { prefix: "sudamericana-", title: "Copa Sudamericana", format: "Semifinales y final" },
+            { prefix: "libertadores-", title: "Copa Libertadores", format: "Semifinales y final" },
             { prefix: "copa-argentina-", title: "Copa Argentina", format: "Partido único" },
           ].map((competition) => (
             <article className="homeCompetition" key={competition.prefix}>
               <header><h2>{competition.title}</h2><span>{competition.format}</span></header>
               {homeFixtures.filter((fixture) => fixture.id.startsWith(competition.prefix)).map((fixture) => (
                 <div className="homeFixture" key={fixture.id}>
-                  <span className="eyebrow">{fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : "Semifinal"}</span>
+                  <span className="eyebrow">{fixture.id.endsWith("-ida") ? "Ida" : fixture.id.endsWith("-vuelta") ? "Vuelta" : fixture.stage === "FINAL" ? "Final" : "Semifinal"}</span>
                   <div className="homeFixtureTeams"><TeamBadge team={fixture.home} /><span>vs.</span><TeamBadge team={fixture.away} /></div>
-                  <p>{fixture.schedulePending || !fixture.kickoffAt ? "Fecha y horario a confirmar · carga pendiente" : `${isoToArgentinaInput(fixture.kickoffAt).slice(0, 10).split("-").reverse().join("/")} · ${isoToArgentinaInput(fixture.kickoffAt).slice(11)} (ARG)`}</p>
+                  <p>{fixture.schedulePending || !fixture.kickoffAt ? (fixture.scheduledDate ? `${fixture.scheduledDate.split("-").reverse().join("/")} · horario a confirmar` : "Fecha y horario a confirmar · carga pendiente") : `${isoToArgentinaInput(fixture.kickoffAt).slice(0, 10).split("-").reverse().join("/")} · ${isoToArgentinaInput(fixture.kickoffAt).slice(11)} (ARG)`}</p>
                 </div>
               ))}
               {homeFixtures.length === 0 ? <p>{status === "loading" ? "Cargando cruces…" : "Sin cruces disponibles."}</p> : null}
@@ -927,7 +927,7 @@ export default function TablaPage() {
           ))}
         </div>
         </details>
-        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales se agregarán al definirse los clasificados.</p>
+        <p className="homeFixturesNote">Copa de la Liga: los cruces se publicarán cuando estén confirmados. Las finales continentales ya están cargadas; se habilitarán cuando se confirme el horario.</p>
       </section>
 
       <section className="commentsPanel" aria-label="Comentarios">
